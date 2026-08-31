@@ -1,0 +1,68 @@
+[
+  {
+    "id": "art_nepal_flood_1",
+    "title": "Severe Flash Floods in Kathmandu Valley, Nepal",
+    "url": "https://www.reuters.com/world/nepal-flash-floods-2026",
+    "source": {
+      "name": "Reuters",
+      "url": "https://www.reuters.com",
+      "category": "wire",
+      "tier": 2
+    },
+    "publishedAt": "2026-08-31T10:00:00.000Z",
+    "fetchedAt": "2026-08-31T10:15:00.000Z",
+    "summary": "Torrential monsoon rains triggered heavy flash flooding in Kathmandu, Nepal causing widespread inundation.",
+    "language": "en",
+    "sourceTier": 2,
+    "provenance": {
+      "provider": "Reuters",
+      "retrievedAt": "2026-08-31T10:15:00.000Z",
+      "observedAt": "2026-08-31T10:00:00.000Z",
+      "dataType": "observation"
+    }
+  },
+  {
+    "id": "art_nepal_flood_2",
+    "title": "Kathmandu Flood Inundation and Landslide Warnings Issued",
+    "url": "https://www.bbc.com/news/nepal-kathmandu-flooding-2026?utm_source=rss",
+    "source": {
+      "name": "BBC News",
+      "url": "https://www.bbc.com",
+      "category": "news",
+      "tier": 2
+    },
+    "publishedAt": "2026-08-31T11:30:00.000Z",
+    "fetchedAt": "2026-08-31T11:45:00.000Z",
+    "summary": "Officials in Kathmandu, Nepal issue emergency advisories as Bagmati river overflows.",
+    "language": "en",
+    "sourceTier": 2,
+    "provenance": {
+      "provider": "BBC News",
+      "retrievedAt": "2026-08-31T11:45:00.000Z",
+      "observedAt": "2026-08-31T11:30:00.000Z",
+      "dataType": "observation"
+    }
+  },
+  {
+    "id": "art_odisha_cyclone_1",
+    "title": "IMD Alert: Deep Depression in Bay of Bengal to Intensify into Cyclone",
+    "url": "https://mausam.imd.gov.in/odisha-cyclone-bulletin-1",
+    "source": {
+      "name": "India Meteorological Department (IMD)",
+      "url": "https://mausam.imd.gov.in",
+      "category": "official",
+      "tier": 1
+    },
+    "publishedAt": "2026-08-31T08:00:00.000Z",
+    "fetchedAt": "2026-08-31T08:10:00.000Z",
+    "summary": "A deep depression over the Bay of Bengal is likely to intensify into a cyclonic storm approaching Odisha and West Bengal coasts.",
+    "language": "en",
+    "sourceTier": 1,
+    "provenance": {
+      "provider": "IMD",
+      "retrievedAt": "2026-08-31T08:10:00.000Z",
+      "observedAt": "2026-08-31T08:00:00.000Z",
+      "dataType": "observation"
+    }
+  }
+]

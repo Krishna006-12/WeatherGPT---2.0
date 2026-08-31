@@ -1,26 +1,26 @@
 /**
- * News provider adapter interface.
+ * News and disaster feed provider adapter interface.
  *
- * Each news source implements this interface. The NewsService
- * consumes providers through this boundary — provider-specific
- * response shapes are never exposed beyond the adapter.
+ * Each news or official feed source implements this interface.
+ * The LiveIntelligenceService consumes providers through this boundary —
+ * provider-specific shapes are normalized into NewsArticle contracts.
  *
- * Flow: News API → Adapter (implements NewsProvider) → NewsArticle[]
+ * Flow: Feed XML/JSON → Adapter (implements NewsProvider) → NewsArticle[]
  */
 
-import type { NewsArticle } from '@/types/news';
+import type { NewsArticle } from "@/types/news";
 
 /**
  * Configuration for a news provider adapter.
  */
 export interface NewsProviderConfig {
-  apiKey: string;
-  baseUrl: string;
+  name: string;
+  feedUrl: string;
   timeout?: number;
 }
 
 /**
- * Query parameters for fetching news articles.
+ * Query parameters for fetching articles.
  */
 export interface NewsQuery {
   keywords?: string[];
@@ -29,7 +29,7 @@ export interface NewsQuery {
 }
 
 /**
- * The adapter contract that every news provider must implement.
+ * The adapter contract that every news/feed provider must implement.
  */
 export interface NewsProvider {
   /** Unique identifier for this provider. */
@@ -37,8 +37,8 @@ export interface NewsProvider {
 
   /**
    * Fetch articles matching the given query.
-   * The adapter transforms provider-specific responses
+   * The adapter transforms provider-specific feed entries
    * into normalized NewsArticle shapes.
    */
-  getArticles(query: NewsQuery): Promise<NewsArticle[]>;
+  getArticles(query?: NewsQuery): Promise<NewsArticle[]>;
 }

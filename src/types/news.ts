@@ -1,35 +1,43 @@
 /**
- * Normalized news article contracts.
- * Raw articles from any news provider are validated and
- * normalized into these types before entering the system.
+ * Normalized news and information article contracts.
+ * Raw articles and feed entries from any source are validated and
+ * normalized into these types before entering the event pipeline.
  */
 
-import type { ISOTimestamp } from './common';
+import type { ISOTimestamp } from "./common";
+import type { DataProvenance } from "./weather";
 
-/** Categorization of a news source by trustworthiness tier. */
+/** Source trustworthiness tier. */
+export type SourceTier = 1 | 2 | 3;
+
+/** Categorization of a news source by origin type. */
 export type NewsSourceCategory =
-  | 'official'
-  | 'government'
-  | 'wire'
-  | 'news'
-  | 'other';
+  | "official"
+  | "government"
+  | "wire"
+  | "news"
+  | "other";
 
-/** A news source identity. */
+/** A verified news/data source identity. */
 export interface NewsSource {
   name: string;
-  url: string;
+  url?: string;
   category: NewsSourceCategory;
+  tier: SourceTier;
 }
 
-/** A normalized news article from any provider. */
+/** A normalized article or alert item from an external feed. */
 export interface NewsArticle {
   id: string;
   title: string;
-  description: string;
-  content: string;
   url: string;
   source: NewsSource;
   publishedAt: ISOTimestamp;
-  retrievedAt: ISOTimestamp;
+  fetchedAt: ISOTimestamp;
+  summary?: string;
+  content?: string;
+  language?: string;
+  sourceTier: SourceTier;
+  provenance: DataProvenance;
   imageUrl?: string;
 }

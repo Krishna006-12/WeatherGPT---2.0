@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Global Disaster Alerts and Coordination System</title>
+    <link>https://www.gdacs.org</link>
+    <description>Live disaster alerts and monitoring</description>
+    <language>en</language>
+    <item>
+      <title>Flash Floods and Landslides in Kathmandu, Nepal</title>
+      <link>https://www.gdacs.org/report.aspx?eventtype=FL&amp;eventid=1001&amp;utm_source=rss</link>
+      <pubDate>Mon, 31 Aug 2026 12:00:00 GMT</pubDate>
+      <description><![CDATA[Severe flash flooding and landslides reported across Kathmandu valley after torrential rains.]]></description>
+      <content:encoded><![CDATA[<p>Heavy inundation and landslide warnings issued by Nepal DHM authorities for Bagmati river basin.</p>]]></content:encoded>
+      <guid>https://www.gdacs.org/report.aspx?eventtype=FL&amp;eventid=1001</guid>
+    </item>
+    <item>
+      <title>Cyclone Alert: Severe Cyclonic Storm in Bay of Bengal approaching Odisha coast</title>
+      <link>https://www.gdacs.org/report.aspx?eventtype=TC&amp;eventid=1002</link>
+      <pubDate>Mon, 31 Aug 2026 14:30:00 GMT</pubDate>
+      <description>Tropical cyclone intensifying over Bay of Bengal, expected to make landfall near Odisha, India.</description>
+      <guid>https://www.gdacs.org/report.aspx?eventtype=TC&amp;eventid=1002</guid>
+    </item>
+    <item>
+      <title>Heatwave Advisory for Uttar Pradesh and Bihar</title>
+      <link>https://www.gdacs.org/report.aspx?eventtype=HW&amp;eventid=1003#section</link>
+      <pubDate>Mon, 31 Aug 2026 09:15:00 GMT</pubDate>
+      <description>Scorching heatwave conditions prevail over Lucknow and Kanpur, Uttar Pradesh.</description>
+      <guid>https://www.gdacs.org/report.aspx?eventtype=HW&amp;eventid=1003</guid>
+    </item>
+  </channel>
+</rss>
