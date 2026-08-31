@@ -1,0 +1,34 @@
+{
+  "results": [
+    {
+      "id": 1267995,
+      "name": "Kanpur",
+      "latitude": 26.46523,
+      "longitude": 80.34975,
+      "elevation": 137.0,
+      "feature_code": "PPL",
+      "country_code": "IN",
+      "admin1_id": 1253626,
+      "timezone": "Asia/Kolkata",
+      "population": 2823249,
+      "country": "India",
+      "admin1": "Uttar Pradesh",
+      "admin2": "Kanpur Nagar"
+    },
+    {
+      "id": 1267996,
+      "name": "Kanpur Cantonment",
+      "latitude": 26.43333,
+      "longitude": 80.38333,
+      "elevation": 135.0,
+      "feature_code": "PPLX",
+      "country_code": "IN",
+      "admin1_id": 1253626,
+      "timezone": "Asia/Kolkata",
+      "population": 100000,
+      "country": "India",
+      "admin1": "Uttar Pradesh",
+      "admin2": "Kanpur Nagar"
+    }
+  ]
+}

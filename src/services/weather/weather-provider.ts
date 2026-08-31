@@ -16,8 +16,8 @@ import type { WeatherSnapshot } from '@/types/weather';
  * Configuration for a weather provider adapter.
  */
 export interface WeatherProviderConfig {
-  apiKey: string;
-  baseUrl: string;
+  apiKey?: string;
+  baseUrl?: string;
   timeout?: number;
 }
 
@@ -28,7 +28,7 @@ export interface WeatherProviderConfig {
  * passing it to the rest of the application.
  */
 export interface WeatherProvider {
-  /** Unique identifier for this provider (e.g., 'openweathermap'). */
+  /** Unique identifier for this provider (e.g., 'open-meteo'). */
   readonly name: string;
 
   /**
@@ -36,5 +36,8 @@ export interface WeatherProvider {
    * The adapter is responsible for transforming the provider's
    * native response into the normalized WeatherSnapshot shape.
    */
-  getWeather(coordinates: Coordinates): Promise<WeatherSnapshot>;
+  getWeather(
+    coordinates: Coordinates,
+    timezone?: string
+  ): Promise<WeatherSnapshot>;
 }

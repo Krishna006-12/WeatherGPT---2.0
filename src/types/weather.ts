@@ -27,6 +27,10 @@ export interface DataProvenance {
   provider: string;
   retrievedAt: ISOTimestamp;
   expiresAt?: ISOTimestamp;
+  observedAt?: ISOTimestamp;
+  modelRunAt?: ISOTimestamp;
+  timezone?: string;
+  dataType?: 'observation' | 'current' | 'forecast';
 }
 
 /** Weather condition code — extensible union. */
@@ -56,13 +60,17 @@ export interface CurrentWeather {
   temperature: number;
   feelsLike: number;
   humidity: number;
+  precipitation: number;
+  precipitationProbability?: number;
   windSpeed: number;
   windDirection: number;
+  windGust?: number;
   pressure: number;
-  visibility: number;
-  uvIndex: number;
+  visibility?: number;
+  uvIndex?: number;
+  cloudCover: number;
   condition: WeatherCondition;
-  description: string;
+  description?: string;
   observedAt: ISOTimestamp;
 }
 
@@ -72,12 +80,13 @@ export interface CurrentWeather {
 export interface HourlyWeather {
   time: ISOTimestamp;
   temperature: number;
-  feelsLike: number;
-  humidity: number;
+  precipitation: number;
+  feelsLike?: number;
+  humidity?: number;
   windSpeed: number;
   condition: WeatherCondition;
   precipitationProbability: number;
-  description: string;
+  description?: string;
 }
 
 /**
@@ -87,13 +96,14 @@ export interface DailyWeather {
   date: ISOTimestamp;
   temperatureHigh: number;
   temperatureLow: number;
-  humidity: number;
-  windSpeed: number;
+  humidity?: number;
+  windSpeed?: number;
   condition: WeatherCondition;
   precipitationProbability: number;
+  precipitationSum: number;
   sunrise: ISOTimestamp;
   sunset: ISOTimestamp;
-  description: string;
+  description?: string;
 }
 
 /** Alert severity levels. */

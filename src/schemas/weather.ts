@@ -16,15 +16,22 @@ const coordinatesSchema = z.object({
 const locationInfoSchema = z.object({
   name: z.string().min(1),
   region: z.string(),
-  country: z.string().min(1),
+  country: z.string(),
   coordinates: coordinatesSchema,
   timezone: z.string().min(1),
 });
 
+const isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+const isoDateStringSchema = z.string().regex(isoDateTimeRegex, 'Invalid ISO datetime string');
+
 const dataProvenanceSchema = z.object({
   provider: z.string().min(1),
-  retrievedAt: z.string().datetime(),
-  expiresAt: z.string().datetime().optional(),
+  retrievedAt: isoDateStringSchema,
+  expiresAt: isoDateStringSchema.optional(),
+  observedAt: isoDateStringSchema.optional(),
+  modelRunAt: isoDateStringSchema.optional(),
+  timezone: z.string().optional(),
+  dataType: z.enum(['observation', 'current', 'forecast']).optional(),
 });
 
 const weatherConditionSchema = z.enum([
@@ -51,38 +58,44 @@ const currentWeatherSchema = z.object({
   temperature: z.number(),
   feelsLike: z.number(),
   humidity: z.number().min(0).max(100),
+  precipitation: z.number().min(0),
+  precipitationProbability: z.number().min(0).max(100).optional(),
   windSpeed: z.number().min(0),
   windDirection: z.number().min(0).max(360),
+  windGust: z.number().min(0).optional(),
   pressure: z.number().min(0),
-  visibility: z.number().min(0),
-  uvIndex: z.number().min(0),
+  visibility: z.number().min(0).optional(),
+  uvIndex: z.number().min(0).optional(),
+  cloudCover: z.number().min(0).max(100),
   condition: weatherConditionSchema,
-  description: z.string(),
-  observedAt: z.string().datetime(),
+  description: z.string().optional(),
+  observedAt: isoDateStringSchema,
 });
 
 const hourlyWeatherSchema = z.object({
-  time: z.string().datetime(),
+  time: isoDateStringSchema,
   temperature: z.number(),
-  feelsLike: z.number(),
-  humidity: z.number().min(0).max(100),
+  precipitation: z.number().min(0),
+  feelsLike: z.number().optional(),
+  humidity: z.number().min(0).max(100).optional(),
   windSpeed: z.number().min(0),
   condition: weatherConditionSchema,
   precipitationProbability: z.number().min(0).max(100),
-  description: z.string(),
+  description: z.string().optional(),
 });
 
 const dailyWeatherSchema = z.object({
-  date: z.string().datetime(),
+  date: isoDateStringSchema,
   temperatureHigh: z.number(),
   temperatureLow: z.number(),
-  humidity: z.number().min(0).max(100),
-  windSpeed: z.number().min(0),
+  humidity: z.number().min(0).max(100).optional(),
+  windSpeed: z.number().min(0).optional(),
   condition: weatherConditionSchema,
   precipitationProbability: z.number().min(0).max(100),
-  sunrise: z.string().datetime(),
-  sunset: z.string().datetime(),
-  description: z.string(),
+  precipitationSum: z.number().min(0),
+  sunrise: isoDateStringSchema,
+  sunset: isoDateStringSchema,
+  description: z.string().optional(),
 });
 
 const alertSeveritySchema = z.enum(['minor', 'moderate', 'severe', 'extreme']);
@@ -93,13 +106,13 @@ const weatherAlertSchema = z.object({
   severity: alertSeveritySchema,
   description: z.string(),
   source: z.string().min(1),
-  effectiveAt: z.string().datetime(),
-  expiresAt: z.string().datetime(),
+  effectiveAt: isoDateStringSchema,
+  expiresAt: isoDateStringSchema,
 });
 
 export const weatherSnapshotSchema = z.object({
   location: locationInfoSchema,
-  observedAt: z.string().datetime(),
+  observedAt: isoDateStringSchema,
   current: currentWeatherSchema,
   hourly: z.array(hourlyWeatherSchema),
   daily: z.array(dailyWeatherSchema),
