@@ -21,6 +21,61 @@ export interface IntentClassification {
   isForecastQuery?: boolean;
 }
 
+const TEMPORAL_WORDS = [
+  "today",
+  "tomorrow",
+  "yesterday",
+  "tonight",
+  "now",
+  "this week",
+  "next week",
+  "weekend",
+  "kal",
+  "aaj",
+  "parso",
+];
+
+const STOP_WORDS = [
+  "the",
+  "a",
+  "an",
+  "us",
+  "me",
+  "everything",
+  "anyone",
+  "the region",
+  "the area",
+  "it",
+  "there",
+  "here",
+  "kya",
+  "hai",
+  "hoga",
+  "par",
+  "aur",
+];
+
+function sanitizeExtractedLocation(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  let clean = raw.trim();
+
+  for (const word of TEMPORAL_WORDS) {
+    clean = clean.replace(new RegExp(`\\b${word}\\b`, "gi"), " ").trim();
+  }
+
+  // Remove common punctuation
+  clean = clean.replace(/[?.,!]/g, "").trim();
+
+  // Strip excessive spaces
+  clean = clean.replace(/\s+/g, " ").trim();
+
+  if (!clean || STOP_WORDS.includes(clean.toLowerCase()) || clean.length < 2) {
+    return undefined;
+  }
+
+  return clean;
+}
+
 export class IntentRouter {
   /**
    * Classify a natural language user query.
@@ -29,18 +84,20 @@ export class IntentRouter {
     const clean = query.trim().toLowerCase();
 
     // 1. Check for Impact Intent
-    // "Will Nepal floods affect UP?", "Is Patna impacted by the flood?", "Is Kanpur flooded from Nepal rain?"
+    // "Will Nepal floods affect UP?", "Is Patna impacted by the flood?", "Nepal flood ka effect UP par kya hai..."
     if (this.isImpactQuery(clean)) {
-      const location = this.extractLocation(clean);
-      const eventKeyword = this.extractEventKeyword(clean);
       const impactTarget = this.extractImpactTargetLocation(clean);
+      const generalLocation = this.extractLocation(clean);
+      const eventKeyword = this.extractEventKeyword(clean);
+
+      const target = impactTarget || generalLocation;
 
       return {
         intent: "impact",
         confidence: 0.9,
-        extractedLocation: impactTarget || location,
+        extractedLocation: target,
         extractedEventKeyword: eventKeyword,
-        targetImpactLocation: impactTarget || location,
+        targetImpactLocation: target,
       };
     }
 
@@ -68,7 +125,7 @@ export class IntentRouter {
     }
 
     // 4. Check for Forecast queries
-    // "Will it rain tomorrow?", "7-day forecast for Delhi", "Forecast for next week"
+    // "Will it rain tomorrow in Kanpur?", "7-day forecast for Delhi", "Forecast for next week"
     if (this.isForecastQuery(clean)) {
       const location = this.extractLocation(clean);
 
@@ -81,7 +138,7 @@ export class IntentRouter {
     }
 
     // 5. Check for Current Weather queries
-    // "What's the weather in Kanpur?", "Is it cold today?", "Current temperature in London"
+    // "What's the weather in Kanpur?", "Weather in Kanpur", "Current temperature in London"
     if (this.isWeatherQuery(clean)) {
       const location = this.extractLocation(clean);
 
@@ -113,7 +170,7 @@ export class IntentRouter {
       /\b(affect|effect|impacting|impacted|impacts|impact)\b/i,
       /\b(reach|threaten|threatens|threatening|hit|hitting|hits)\b/i,
       /\b(damage|damages|damaging|spread to|spread)\b/i,
-      /\b(asar|prabhav|effect hoga|asar hoga|asar padega)\b/i,
+      /\b(asar|prabhav|effect hoga|asar hoga|asar padega|asar hai|effect hai)\b/i,
       /\b(flooded from|flooding from|affected by|impacted by|flooded due to)\b/i,
     ];
 
@@ -191,17 +248,17 @@ export class IntentRouter {
    */
   extractLocation(text: string): string | undefined {
     const locationRegexes = [
-      /\b(?:in|for|at|around|near|across)\s+([A-Z][a-zA-Z\s]+?)(?:\?|\.|\,| tomorrow| today| yesterday| next week|$)/,
-      /\b(?:in|for|at|around|near|across)\s+([a-zA-Z\s]+?)(?:\?|\.|\,| tomorrow| today| yesterday| next week|$)/i,
+      /\b(?:in|for|at|around|near|across)\s+([a-zA-Z\s]+?)(?:\?|\.|\,| tomorrow| today| yesterday| next week| aur | and |$)/i,
+      /\b(?:weather in|temp in|forecast for|mausam in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|$)/i,
+      /\b([a-zA-Z]+)\s+mein\s+(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
       /\b([a-zA-Z]+)\s+(?:weather|temperature|forecast|mausam)\b/i,
-      /\b(?:weather|temperature|forecast|mausam)\s+(?:in|of|for)?\s*([a-zA-Z\s]+?)(?:\?|\.|$)/i,
     ];
 
     for (const regex of locationRegexes) {
       const match = text.match(regex);
       if (match && match[1]) {
-        const candidate = match[1].trim();
-        if (!["the", "a", "an", "my area", "here", "today", "tomorrow", "this week"].includes(candidate.toLowerCase())) {
+        const candidate = sanitizeExtractedLocation(match[1]);
+        if (candidate) {
           return candidate;
         }
       }
@@ -216,28 +273,18 @@ export class IntentRouter {
   private extractImpactTargetLocation(text: string): string | undefined {
     const targetPatterns = [
       /\b(?:is|will|can|could)\s+([a-zA-Z\s]+?)\s+(?:impacted|affected|hit|threatened|facing|flooded|submerged)\b/i,
-      /\b(?:affect|impacting|impact|hit|hitting|reach|threatening|threaten|damage)\s+([a-zA-Z\s]+?)(?:\?|\.|$)/i,
-      /\b(?:effect on|impact on|asar on|effect in|impact in|asar in)\s+([a-zA-Z\s]+?)(?:\?|\.|$)/i,
+      /\b(?:affect|impacting|impact|hit|hitting|reach|threatening|threaten|damage)\s+([a-zA-Z\s]+?)(?:\s+(?:today|tomorrow|now|soon)|\?|\.|$)/i,
+      /\b(?:effect on|impact on|asar on|effect in|impact in|asar in)\s+([a-zA-Z\s]+?)(?:\s+(?:par|aur|mein)|\?|\.|$)/i,
+      /\b(?:effect|asar)\s+([a-zA-Z\s]+?)\s+par\b/i,
+      /\b([a-zA-Z\s]+?)\s+par\s+(?:effect|asar|kya asar|kya effect)\b/i,
       /\b([a-zA-Z\s]+?)\s+(?:par effect|par asar|ko affect)\b/i,
     ];
 
     for (const pattern of targetPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
-        const candidate = match[1].trim();
-        if (
-          ![
-            "us",
-            "me",
-            "everything",
-            "anyone",
-            "the region",
-            "the area",
-            "it",
-            "there",
-            "here",
-          ].includes(candidate.toLowerCase())
-        ) {
+        const candidate = sanitizeExtractedLocation(match[1]);
+        if (candidate) {
           return candidate;
         }
       }

@@ -269,4 +269,44 @@ describe("AIOrchestrator End-to-End Pipeline (15 Required Scenarios)", () => {
     expect(res.data.citations.length).toBe(0);
     expect(res.data.groundingStatus).toBe("general_knowledge");
   });
+
+  it("Scenario 16: Evaluates impact query 'Will the Nepal floods affect Bihar?'", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Will the Nepal floods affect Bihar?",
+      location: { name: "Bihar", country: "India" },
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("impact");
+    expect(res.data.groundingStatus).toBe("insufficient_evidence");
+    expect(res.data.metadata?.relevanceStatus).toBe("unlikely");
+  });
+
+  it("Scenario 17: Evaluates impact with user location 'Will the Nepal floods affect Kanpur today?'", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Will the Nepal floods affect Kanpur today?",
+      location: { name: "Kanpur", country: "India", lat: 26.4499, lon: 80.3319 },
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("impact");
+    expect(res.data.groundingStatus).toBe("insufficient_evidence");
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+  });
+
+  it("Scenario 18: Evaluates mixed Hinglish query 'Nepal flood ka effect UP par kya hai aur Kanpur mein kal weather kaisa rahega?'", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Nepal flood ka effect UP par kya hai aur Kanpur mein kal weather kaisa rahega?",
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("impact");
+    expect(res.data.groundingStatus).toBe("insufficient_evidence");
+  });
 });
