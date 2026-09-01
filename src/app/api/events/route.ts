@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   const validation = eventFilterQuerySchema.safeParse(params);
   if (!validation.success) {
     const error = new AppError(
-      "INVALID_LOCATION",
+      "INVALID_REQUEST",
       validation.error.issues[0]?.message || "Invalid query parameters",
       400
     );

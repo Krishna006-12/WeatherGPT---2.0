@@ -64,9 +64,6 @@ export class ImpactEngine {
       event.category === "heavy_rain" ||
       event.category === "landslide";
 
-    const isCrossBorderOrCrossRegion =
-      !isRegionMatch &&
-      (!isCountryMatch || (targetRegion && !this.isRegionInEvent(event, targetRegion)));
 
     // --- 4. Weather Correlation (Supporting Evidence) ---
     if (weather) {
@@ -110,7 +107,7 @@ export class ImpactEngine {
     // Case C: Hydrological / Transboundary safety check without explicit regional evidence
     else if (
       isWaterHazard &&
-      (isCountryMatch || this.areTransboundaryNeighbors(event.location.country, targetCountry))
+      (isCountryMatch || this.areGeographicNeighbors(event.location.country, targetCountry))
     ) {
       evidence.push({
         type: "downstream_unestablished",
@@ -254,17 +251,24 @@ export class ImpactEngine {
     return false;
   }
 
-  private areTransboundaryNeighbors(countryA?: string, countryB?: string): boolean {
+  /**
+   * Checks if two countries share a geographic border.
+   * This is a conservative proximity hint only — it does NOT imply
+   * weather/disaster impact or causal downstream effects.
+   */
+  private areGeographicNeighbors(countryA?: string, countryB?: string): boolean {
     if (!countryA || !countryB || countryA === "Global" || countryB === "Global") return false;
     const a = countryA.toLowerCase();
     const b = countryB.toLowerCase();
-    if (a === b) return true;
+
+    // Same country is not "neighboring" — handled by separate country-match logic
+    if (a === b) return false;
 
     const neighbors: Record<string, string[]> = {
-      nepal: ["india", "bangladesh"],
-      india: ["nepal", "bangladesh", "pakistan", "bhutan"],
-      bangladesh: ["india", "nepal", "myanmar"],
-      pakistan: ["india", "afghanistan"],
+      nepal: ["india", "china"],
+      india: ["nepal", "bangladesh", "pakistan", "bhutan", "myanmar", "china"],
+      bangladesh: ["india", "myanmar"],
+      pakistan: ["india", "afghanistan", "china", "iran"],
     };
 
     return neighbors[a]?.includes(b) || neighbors[b]?.includes(a) || false;

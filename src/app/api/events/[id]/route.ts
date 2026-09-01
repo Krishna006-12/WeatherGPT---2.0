@@ -10,7 +10,7 @@ export async function GET(
   const { id } = params;
 
   if (!id) {
-    const error = new AppError("INVALID_LOCATION", "Event ID is required", 400);
+    const error = new AppError("INVALID_REQUEST", "Event ID is required", 400);
     return NextResponse.json(toErrorResponse(error), { status: error.statusCode });
   }
 

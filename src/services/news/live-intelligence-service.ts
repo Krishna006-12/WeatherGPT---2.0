@@ -130,7 +130,7 @@ export class LiveIntelligenceService {
           error instanceof AppError
             ? error
             : new AppError(
-                "WEATHER_PROVIDER_UNAVAILABLE",
+                "FEED_SYNC_FAILED",
                 error instanceof Error ? error.message : "Failed to sync feeds",
                 502
               ),
@@ -168,7 +168,7 @@ export class LiveIntelligenceService {
       if (!event) {
         return {
           success: false,
-          error: new AppError("LOCATION_NOT_FOUND", `Event ${id} not found`, 404),
+          error: new AppError("EVENT_NOT_FOUND", `Event ${id} not found`, 404),
         };
       }
 

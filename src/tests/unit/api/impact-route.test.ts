@@ -70,7 +70,7 @@ describe("GET /api/impact API Route", () => {
     expect(body.methodology).toBe("impact-engine-v1");
   });
 
-  it("returns 404 when event is not found in repository", async () => {
+  it("returns 404 with EVENT_NOT_FOUND when event does not exist", async () => {
     const req = new Request(
       "http://localhost:3000/api/impact?eventId=evt_non_existent&city=Patna"
     );
@@ -79,7 +79,7 @@ describe("GET /api/impact API Route", () => {
     expect(res.status).toBe(404);
 
     const body = await res.json();
-    expect(body.error.code).toBe("LOCATION_NOT_FOUND");
+    expect(body.error.code).toBe("EVENT_NOT_FOUND");
     expect(body.error.message).toContain("not found");
   });
 
@@ -93,5 +93,84 @@ describe("GET /api/impact API Route", () => {
 
     const body = await res.json();
     expect(body.error.code).toBe("INVALID_LOCATION");
+  });
+
+  // --- Timezone tests ---
+
+  it("accepts an explicit timezone parameter for India location", async () => {
+    const req = new Request(
+      "http://localhost:3000/api/impact?eventId=evt_test_100&city=Patna&region=Bihar&country=India&lat=25.5941&lon=85.1376&timezone=Asia/Kolkata"
+    );
+
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.eventId).toBe("evt_test_100");
+    expect(body.targetLocation.timezone).toBe("Asia/Kolkata");
+  });
+
+  it("works for non-India location without hardcoded timezone", async () => {
+    // London event
+    const londonEvent: WeatherEvent = {
+      ...mockEvent,
+      id: "evt_london_storm",
+      title: "Storm Warning for Greater London",
+      location: {
+        name: "London",
+        country: "United Kingdom",
+        region: "England",
+        city: "London",
+      },
+      locations: [
+        {
+          name: "London",
+          country: "United Kingdom",
+          region: "England",
+          city: "London",
+        },
+      ],
+      affectedRegions: [{ name: "England", country: "United Kingdom" }],
+    };
+    await globalEventRepository.save(londonEvent);
+
+    const req = new Request(
+      "http://localhost:3000/api/impact?eventId=evt_london_storm&city=London&region=England&country=United Kingdom&lat=51.5074&lon=-0.1278&timezone=Europe/London"
+    );
+
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.eventId).toBe("evt_london_storm");
+    expect(body.targetLocation.timezone).toBe("Europe/London");
+    expect(body.relevanceStatus).toBe("confirmed");
+  });
+
+  it("handles missing timezone gracefully (falls through to auto)", async () => {
+    const req = new Request(
+      "http://localhost:3000/api/impact?eventId=evt_test_100&city=Patna&region=Bihar&country=India&lat=25.5941&lon=85.1376"
+    );
+
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    // No timezone was provided, so targetLocation.timezone should be undefined
+    expect(body.targetLocation.timezone).toBeUndefined();
+  });
+
+  it("handles query with country but no coordinates", async () => {
+    const req = new Request(
+      "http://localhost:3000/api/impact?eventId=evt_test_100&city=Patna&region=Bihar&country=India"
+    );
+
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.relevanceStatus).toBe("confirmed");
+    // No weather correlation should occur without coordinates
+    expect(body.evidence.some((e: { type: string }) => e.type === "weather_condition_aligned")).toBe(false);
   });
 });

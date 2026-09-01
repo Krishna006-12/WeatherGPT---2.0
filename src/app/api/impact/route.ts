@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const event = await globalEventRepository.findById(query.eventId);
   if (!event) {
     const error = new AppError(
-      "LOCATION_NOT_FOUND",
+      "EVENT_NOT_FOUND",
       `Event with ID "${query.eventId}" was not found`,
       404
     );
@@ -45,9 +45,10 @@ export async function GET(request: Request) {
   // Construct target location
   const targetLocation: EventLocation = {
     name: query.city || query.region || query.country || "Target Location",
-    country: query.country || "India",
+    country: query.country || "Unknown",
     region: query.region,
     city: query.city,
+    timezone: query.timezone,
     coordinates:
       query.lat !== undefined && query.lon !== undefined
         ? { latitude: query.lat, longitude: query.lon }
@@ -58,9 +59,14 @@ export async function GET(request: Request) {
   let weather: WeatherSnapshot | undefined;
   if (query.lat !== undefined && query.lon !== undefined) {
     try {
+      // Timezone resolution chain:
+      // 1. Use caller-provided timezone if available
+      // 2. Otherwise pass undefined → WeatherService defaults to "auto"
+      //    which lets Open-Meteo detect timezone from coordinates
+      const tz = query.timezone || undefined;
       const weatherResult = await weatherService.getWeather(
         { latitude: query.lat, longitude: query.lon },
-        "Asia/Kolkata"
+        tz
       );
       if (weatherResult.success) {
         weather = weatherResult.data;

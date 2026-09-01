@@ -21,6 +21,9 @@ export const serverEnvSchema = z.object({
   // AI provider
   AI_API_KEY: z.string().min(1).optional(),
 
+  // Live Intelligence sync endpoint protection
+  LIVE_INTEL_SYNC_SECRET: z.string().min(8).optional(),
+
   // Application
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

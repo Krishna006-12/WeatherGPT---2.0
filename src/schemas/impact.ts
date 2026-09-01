@@ -63,7 +63,8 @@ export const impactQuerySchema = z.object({
   lon: z.coerce.number().min(-180).max(180).optional(),
   city: z.string().optional(),
   region: z.string().optional(),
-  country: z.string().optional().default("India"),
+  country: z.string().optional(),
+  timezone: z.string().optional(),
 });
 
 export type ImpactAssessmentInput = z.input<typeof impactAssessmentSchema>;

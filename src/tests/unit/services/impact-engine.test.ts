@@ -368,3 +368,138 @@ describe("ImpactEngine Core Evaluation", () => {
     expect(run1.evidence.length).toBe(run2.evidence.length);
   });
 });
+
+describe("ImpactEngine Geographic Neighbor Logic", () => {
+  let engine: ImpactEngine;
+
+  beforeEach(() => {
+    engine = new ImpactEngine();
+  });
+
+  const baseNepalFloodEvent: WeatherEvent = {
+    id: "evt_nepal_flood_neighbor_test",
+    slug: "nepal-flash-floods-neighbor",
+    title: "Severe Flash Flooding in Kathmandu Valley, Nepal",
+    category: "flash_flood",
+    hazard: "flash_flood",
+    severity: "high",
+    status: "active",
+    description: "Torrential monsoon rains triggered heavy flash flooding in Kathmandu, Nepal.",
+    location: {
+      name: "Kathmandu",
+      country: "Nepal",
+      region: "Bagmati",
+      city: "Kathmandu",
+      coordinates: { latitude: 27.7172, longitude: 85.324 },
+    },
+    locations: [
+      {
+        name: "Kathmandu",
+        country: "Nepal",
+        region: "Bagmati",
+        city: "Kathmandu",
+        coordinates: { latitude: 27.7172, longitude: 85.324 },
+      },
+    ],
+    affectedRegions: [{ name: "Bagmati", country: "Nepal" }],
+    firstSeenAt: "2026-08-31T10:00:00Z",
+    lastUpdatedAt: "2026-08-31T12:00:00Z",
+    confidence: 0.85,
+    sourceArticleIds: ["art_neighbor_1"],
+    sources: [
+      {
+        name: "Nepal DHM",
+        publishedAt: "2026-08-31T10:00:00Z",
+        category: "official",
+        tier: 1,
+      },
+    ],
+    impacts: [],
+    provenance: [
+      {
+        provider: "Nepal DHM",
+        retrievedAt: "2026-08-31T10:00:00Z",
+        dataType: "observation",
+      },
+    ],
+  };
+
+  it("neighboring country (India) does NOT get confirmed or likely status from Nepal flood", () => {
+    const targetBihar: EventLocation = {
+      name: "Patna",
+      country: "India",
+      region: "Bihar",
+      city: "Patna",
+      coordinates: { latitude: 25.5941, longitude: 85.1376 },
+    };
+
+    const assessment = engine.assessImpact(baseNepalFloodEvent, targetBihar);
+
+    // Must NOT be confirmed or likely — neighbor adjacency is a hint, not proof
+    expect(assessment.relevanceStatus).not.toBe("confirmed");
+    expect(assessment.relevanceStatus).not.toBe("likely");
+    expect(assessment.evidence.some((e) => e.type === "downstream_unestablished")).toBe(true);
+  });
+
+  it("Nepal flood does NOT automatically imply UP impact", () => {
+    const targetKanpur: EventLocation = {
+      name: "Kanpur",
+      country: "India",
+      region: "Uttar Pradesh",
+      city: "Kanpur",
+      coordinates: { latitude: 26.4499, longitude: 80.3319 },
+    };
+
+    const assessment = engine.assessImpact(baseNepalFloodEvent, targetKanpur);
+
+    expect(assessment.relevanceStatus).toBe("unlikely");
+    expect(assessment.impactLevel).toBe("none");
+    expect(assessment.evidence.some((e) => e.type === "downstream_unestablished")).toBe(true);
+  });
+
+  it("distant unrelated country (Japan) remains conservative", () => {
+    const targetTokyo: EventLocation = {
+      name: "Tokyo",
+      country: "Japan",
+      city: "Tokyo",
+    };
+
+    const assessment = engine.assessImpact(baseNepalFloodEvent, targetTokyo);
+
+    expect(assessment.relevanceStatus).toBe("unlikely");
+    expect(assessment.impactLevel).toBe("none");
+    expect(assessment.evidence.some((e) => e.type === "no_evidence_available")).toBe(true);
+  });
+
+  it("same-country event uses country match logic, not neighbor logic", () => {
+    const indianFloodEvent: WeatherEvent = {
+      ...baseNepalFloodEvent,
+      id: "evt_india_flood_test",
+      title: "Flood in Assam",
+      location: {
+        name: "Guwahati",
+        country: "India",
+        region: "Assam",
+        city: "Guwahati",
+      },
+      locations: [
+        { name: "Guwahati", country: "India", region: "Assam", city: "Guwahati" },
+      ],
+      affectedRegions: [{ name: "Assam", country: "India" }],
+    };
+
+    const targetMumbai: EventLocation = {
+      name: "Mumbai",
+      country: "India",
+      region: "Maharashtra",
+      city: "Mumbai",
+    };
+
+    const assessment = engine.assessImpact(indianFloodEvent, targetMumbai);
+
+    // Same country but different region without explicit listing — should NOT be confirmed
+    expect(assessment.relevanceStatus).not.toBe("confirmed");
+    expect(assessment.relevanceStatus).not.toBe("likely");
+  });
+});
+
