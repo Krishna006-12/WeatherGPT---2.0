@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LocationSearch } from "@/components/weather/location-search";
 import { WeatherDisplay } from "@/components/weather/weather-display";
 import { EventList } from "@/components/events/event-list";
+import { DevChat } from "@/components/chat/dev-chat";
 import { useWeather } from "@/hooks/use-weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
@@ -14,11 +15,12 @@ import type { NormalizedLocation } from "@/services/location/location-service";
  * Home page — Development verification UI.
  *
  * Allows switching between:
- * 1. Weather Engine inspection
- * 2. Live Weather Intelligence events inspection
+ * 1. AI Intelligence Assistant
+ * 2. Weather Engine inspection
+ * 3. Live Weather Intelligence events inspection
  */
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<"weather" | "events">("weather");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "events">("chat");
   const [selectedLocation, setSelectedLocation] = useState<NormalizedLocation | null>(null);
 
   const {
@@ -43,15 +45,22 @@ export default function HomePage() {
               <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
                 WeatherGPT 2.0
               </h1>
-              <Badge variant="secondary">Phase 3 — Live Intelligence Foundation</Badge>
+              <Badge variant="secondary">Phase 5 — Grounded AI Intelligence</Badge>
             </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Trusted weather pipeline &amp; deterministic live event intelligence foundation.
+              Trusted weather pipeline, live hazard events &amp; grounded AI intelligence layer.
             </p>
           </div>
 
           {/* Tab Switcher */}
           <div className="flex rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+            <Button
+              variant={activeTab === "chat" ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("chat")}
+            >
+              AI Assistant
+            </Button>
             <Button
               variant={activeTab === "weather" ? "primary" : "ghost"}
               size="sm"
@@ -64,11 +73,14 @@ export default function HomePage() {
               size="sm"
               onClick={() => setActiveTab("events")}
             >
-              Live Events Intelligence
+              Live Events
             </Button>
           </div>
 
-          {/* Tab 1: Weather Engine */}
+          {/* Tab 1: AI Assistant */}
+          {activeTab === "chat" && <DevChat />}
+
+          {/* Tab 2: Weather Engine */}
           {activeTab === "weather" && (
             <div className="flex w-full flex-col items-center gap-6">
               <LocationSearch
@@ -94,7 +106,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Tab 2: Live Weather Intelligence */}
+          {/* Tab 3: Live Weather Intelligence */}
           {activeTab === "events" && <EventList />}
         </div>
       </Container>

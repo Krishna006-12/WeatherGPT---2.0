@@ -18,8 +18,9 @@ export const serverEnvSchema = z.object({
   // News provider
   NEWS_API_KEY: z.string().min(1).optional(),
 
-  // AI provider
+  // AI provider (Phase 5)
   AI_API_KEY: z.string().min(1).optional(),
+  GEMINI_API_KEY: z.string().min(1).optional(),
 
   // Live Intelligence sync endpoint protection
   LIVE_INTEL_SYNC_SECRET: z.string().min(8).optional(),

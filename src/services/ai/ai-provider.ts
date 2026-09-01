@@ -1,49 +1,31 @@
 /**
- * AI provider adapter interface.
+ * AI Provider Adapter Interface.
  *
- * LLM providers exist behind this abstraction boundary.
- * AI calls must never be placed directly inside React components.
- *
- * This is the contract only — no implementation in Phase 1.
+ * LLM providers exist strictly behind this abstraction boundary.
+ * Business logic and React components must never depend directly on vendor SDKs.
  */
 
-/**
- * Configuration for an AI provider adapter.
- */
-export interface AIProviderConfig {
-  apiKey: string;
-  model: string;
-  maxTokens?: number;
+export interface AICompletionOptions {
+  model?: string;
   temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+  jsonMode?: boolean;
 }
 
 /**
- * A message in a conversation with the AI.
- */
-export interface AIMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-/**
- * The adapter contract that every AI provider must implement.
+ * Adapter contract that every AI provider (Gemini, Mock, etc.) must implement.
  */
 export interface AIProvider {
-  /** Unique identifier for this provider (e.g., 'openai', 'google'). */
+  /** Unique identifier for this provider (e.g. 'gemini', 'mock'). */
   readonly name: string;
 
   /**
-   * Generate a completion given a conversation history.
-   * The caller is responsible for building grounded context
-   * before calling this method.
+   * Generate a completion given a user prompt and optional system instructions.
    */
-  generateCompletion(messages: AIMessage[]): Promise<string>;
-
-  /**
-   * Generate a streaming completion.
-   * Returns an async iterable of text chunks.
-   */
-  generateStream(
-    messages: AIMessage[]
-  ): AsyncIterable<string>;
+  generateCompletion(
+    prompt: string,
+    systemInstruction?: string,
+    options?: AICompletionOptions
+  ): Promise<string>;
 }

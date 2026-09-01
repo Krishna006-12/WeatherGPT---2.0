@@ -66,3 +66,7 @@ export function normalizeTitleForComparison(title: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/** Alias for convenience. */
+export const sanitizeText = sanitizeUntrustedText;
+

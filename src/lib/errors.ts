@@ -8,6 +8,9 @@ export type AppErrorCode =
   | "FEED_SYNC_FAILED"
   | "SYNC_UNAUTHORIZED"
   | "SYNC_FORBIDDEN"
+  | "AI_PROVIDER_UNAVAILABLE"
+  | "AI_RESPONSE_INVALID"
+  | "AI_RATE_LIMITED"
   | "RATE_LIMITED"
   | "UNKNOWN_ERROR";
 
@@ -38,11 +41,14 @@ export class AppError extends Error {
       case "EVENT_NOT_FOUND":
         return 404;
       case "WEATHER_RESPONSE_INVALID":
+      case "AI_RESPONSE_INVALID":
         return 422;
       case "RATE_LIMITED":
+      case "AI_RATE_LIMITED":
         return 429;
       case "WEATHER_PROVIDER_UNAVAILABLE":
       case "FEED_SYNC_FAILED":
+      case "AI_PROVIDER_UNAVAILABLE":
         return 502;
       case "UNKNOWN_ERROR":
       default:
