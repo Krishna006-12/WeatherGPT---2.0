@@ -34,7 +34,26 @@ export async function GET(request: Request) {
   }
 
   const filter = validation.data;
-  const result = await globalLiveIntelligenceService.getEvents(filter);
+  let result = await globalLiveIntelligenceService.getEvents(filter);
+
+  // If repository is empty (cold start on serverless), attempt bounded live sync
+  if (result.success && result.data.length === 0) {
+    const totalInRepo = await globalLiveIntelligenceService.getEvents({ limit: 1 });
+    if (totalInRepo.success && totalInRepo.data.length === 0) {
+      try {
+        const syncResult = await Promise.race([
+          globalLiveIntelligenceService.syncFeeds(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+        ]);
+
+        if (syncResult && syncResult.success) {
+          result = await globalLiveIntelligenceService.getEvents(filter);
+        }
+      } catch {
+        // Fail gracefully without returning fabricated events
+      }
+    }
+  }
 
   if (!result.success) {
     const err =
@@ -49,5 +68,6 @@ export async function GET(request: Request) {
     total: result.data.length,
     offset: filter.offset,
     limit: filter.limit,
+    message: result.data.length === 0 ? "No verified live weather events are currently available." : undefined,
   });
 }

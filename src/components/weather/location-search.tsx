@@ -14,7 +14,7 @@ interface LocationSearchProps {
 
 export function LocationSearch({
   onSelectLocation,
-  selectedLocation,
+  selectedLocation: _selectedLocation,
 }: LocationSearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -95,12 +95,6 @@ export function LocationSearch({
               </button>
             ))}
         </Card>
-      )}
-
-      {selectedLocation && (
-        <div className="mt-2 text-xs text-neutral-500">
-          Selected: <span className="font-medium text-neutral-800 dark:text-neutral-200">{selectedLocation.displayName}</span> ({selectedLocation.latitude.toFixed(4)}, {selectedLocation.longitude.toFixed(4)}) • Timezone: {selectedLocation.timezone}
-        </div>
       )}
     </div>
   );

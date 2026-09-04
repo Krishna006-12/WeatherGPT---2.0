@@ -7,13 +7,18 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
   const today = weather.daily[0];
   if (!today) return null;
 
-  const sunrise = new Date(today.sunrise);
-  const sunset = new Date(today.sunset);
-  
-  const formatTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const timezone = weather.location.timezone;
+  const formatTime = (isoString: string) => {
+    const d = new Date(isoString);
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: timezone,
+    }).format(d);
+  };
   
   // Calculate length of day
-  const diff = sunset.getTime() - sunrise.getTime();
+  const diff = new Date(today.sunset).getTime() - new Date(today.sunrise).getTime();
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const mins = Math.floor((diff / (1000 * 60)) % 60);
 
@@ -23,10 +28,10 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
       
       <div className="z-10">
         <h4 className="text-xs font-bold text-neutral-400 tracking-wider mb-1 uppercase">Sunrise</h4>
-        <div className="text-3xl font-bold text-white mb-6">{formatTime(sunrise)}</div>
+        <div className="text-3xl font-bold text-white mb-6">{formatTime(today.sunrise)}</div>
         
         <h4 className="text-xs font-bold text-neutral-400 tracking-wider mb-1 uppercase">Sunset</h4>
-        <div className="text-3xl font-bold text-white">{formatTime(sunset)}</div>
+        <div className="text-3xl font-bold text-white">{formatTime(today.sunset)}</div>
       </div>
 
       <div className="z-10 mt-6">

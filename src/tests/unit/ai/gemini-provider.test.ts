@@ -69,4 +69,23 @@ describe("GeminiProvider Adapter", () => {
       statusCode: 422,
     });
   });
+
+  it("Configures model dynamically from GEMINI_MODEL env variable", async () => {
+    vi.stubEnv("GEMINI_MODEL", "gemini-2.5-flash");
+    const provider = new GeminiProvider({ apiKey: "test-valid-key" });
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: '{"answer":"OK"}' }] } }],
+      }),
+    } as unknown as Response);
+    global.fetch = fetchMock;
+
+    await provider.generateCompletion("Test prompt");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const calledUrl = fetchMock.mock.calls[0]![0] as string;
+    expect(calledUrl).toContain("/models/gemini-2.5-flash:generateContent");
+  });
 });

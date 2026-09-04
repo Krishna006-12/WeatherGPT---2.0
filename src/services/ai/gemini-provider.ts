@@ -26,7 +26,7 @@ export class GeminiProvider implements AIProvider {
 
   constructor(config: GeminiProviderConfig = {}) {
     this.apiKey = config.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
-    this.defaultModel = config.defaultModel || DEFAULT_MODEL;
+    this.defaultModel = config.defaultModel || process.env.GEMINI_MODEL || DEFAULT_MODEL;
     this.timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
   }
 

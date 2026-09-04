@@ -16,8 +16,24 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
     country: location?.country,
   });
 
-  if (eventsLoading || impactLoading) return <Skeleton className="h-48 rounded-3xl bg-[#1E1E1E]" />;
-  if (!event || !location) return null;
+  if (eventsLoading || (event && impactLoading)) return <Skeleton className="h-48 rounded-3xl bg-[#1E1E1E]" />;
+  if (!location) return null;
+
+  if (!event) {
+    return (
+      <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5 flex flex-col justify-between min-h-[192px]">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-white uppercase tracking-wide text-sm">Regional Impact</h3>
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-medium text-neutral-400">
+            Unassessed
+          </div>
+        </div>
+        <p className="text-sm text-neutral-400">
+          No verified event impact assessment is currently available for this location.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5">

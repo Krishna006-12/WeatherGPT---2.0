@@ -13,8 +13,19 @@ import { LiveEventCard } from "@/components/events/live-event-card";
 import { ImpactCard } from "@/components/impact/impact-card";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 
+const DEFAULT_LOCATION: NormalizedLocation = {
+  id: 1267995,
+  name: "Kanpur",
+  latitude: 26.46523,
+  longitude: 80.34975,
+  country: "India",
+  region: "Uttar Pradesh",
+  timezone: "Asia/Kolkata",
+  displayName: "Kanpur, Uttar Pradesh, India",
+};
+
 export default function HomePage() {
-  const [selectedLocation, setSelectedLocation] = useState<NormalizedLocation | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<NormalizedLocation | null>(DEFAULT_LOCATION);
 
   const {
     data: weather,
