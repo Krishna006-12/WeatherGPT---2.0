@@ -9,58 +9,27 @@
  * Conservative strategy: Never falsely merge unrelated regional events.
  */
 
-import type { NewsArticle } from "@/types/news";
-import type { WeatherEvent, Severity, EventStatus, EventLocation } from "@/types/events";
+import type { NewsArticle, SourceTier } from "@/types/news";
+import type {
+  WeatherEvent,
+  EventStatus,
+  EventLocation,
+  EventSource,
+  EventTimelineEntry,
+  SourceComparison,
+} from "@/types/events";
 import { detectEventCategory } from "./category-mapper";
 import { extractLocationsFromText, locationsToAffectedRegions } from "./geo-normalizer";
 import { computeTokenJaccardSimilarity, generateDeterministicHash } from "./deduplicator";
+import { globalSeverityEngine } from "@/services/news/severity-engine";
+import { globalFreshnessEngine } from "@/services/news/freshness-engine";
+import { globalLifecycleEngine } from "@/services/news/lifecycle-engine";
+import { globalConfidenceEngine } from "@/services/news/confidence-engine";
+import { globalImpactEngine } from "@/services/impact/impact-engine";
 
 const CLUSTERING_WINDOW_HOURS = 48;
 const MIN_TITLE_SIMILARITY_FOR_CLUSTER = 0.15;
 
-/**
- * Deterministically estimate severity from title and excerpt keywords.
- */
-function estimateSeverity(text: string): Severity {
-  if (
-    /\b(catastrophic|devastating|fatalities|massive|emergency|red\s*alert|extreme)\b/i.test(
-      text
-    )
-  ) {
-    return "extreme";
-  }
-  if (
-    /\b(severe|heavy|high|evacuat(e|ion)|danger|orange\s*alert|destructive)\b/i.test(
-      text
-    )
-  ) {
-    return "high";
-  }
-  if (/\b(moderate|warning|advisory|yellow\s*alert|alert)\b/i.test(text)) {
-    return "moderate";
-  }
-  return "low";
-}
-
-/**
- * Calculate event confidence based on source tiers and source count.
- */
-function calculateConfidence(articles: NewsArticle[]): number {
-  let highestTier = 3;
-  for (const art of articles) {
-    if (art.sourceTier < highestTier) {
-      highestTier = art.sourceTier;
-    }
-  }
-
-  let base = 0.45;
-  if (highestTier === 1) base = 0.85;
-  else if (highestTier === 2) base = 0.65;
-
-  // Add small bonus for multiple independent sources (up to +0.10)
-  const sourceBonus = Math.min(0.1, (articles.length - 1) * 0.03);
-  return Math.min(0.98, Number((base + sourceBonus).toFixed(2)));
-}
 
 /**
  * Generates a clean URL slug from a title.
@@ -214,9 +183,6 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
     });
 
     const leadArticle = cluster[0]!;
-    const combinedText = cluster
-      .map((a) => `${a.title} ${a.summary || ""}`)
-      .join(" ");
 
     const allLocations: EventLocation[] = [];
     const locationNamesSeen = new Set<string>();
@@ -234,8 +200,6 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
     const primaryLocation = allLocations[0] || { name: "Global", country: "Global" };
     const affectedRegions = locationsToAffectedRegions(allLocations);
     const category = metaMap.get(leadArticle.id)?.category || "other";
-    const severity = estimateSeverity(combinedText);
-    const confidence = calculateConfidence(cluster);
 
     const dates = cluster
       .map((a) => a.publishedAt)
@@ -247,14 +211,71 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
     const slug = slugify(`${primaryLocation.name}-${category}-${firstSeenAt.slice(0, 10)}`);
     const id = `evt_${generateDeterministicHash(slug + firstSeenAt)}`;
 
-    const event: WeatherEvent = {
+    // 1. Deterministic Freshness
+    const freshness = globalFreshnessEngine.calculateFreshness(lastUpdatedAt);
+
+    // 2. Deterministic Severity
+    const severity = globalSeverityEngine.calculateClusterSeverity(category, cluster);
+
+    // 3. Deterministic Confidence
+    const confEval = globalConfidenceEngine.evaluate(cluster, {
+      hasCoordinates: !!primaryLocation.coordinates,
+      freshnessLevel: freshness.level,
+    });
+    const confidence = confEval.score;
+
+    // 4. Deterministic Lifecycle Status
+    const status: EventStatus = globalLifecycleEngine.determineStatus({
+      category,
+      freshnessLevel: freshness.level,
+      ageMinutes: freshness.ageMinutes,
+    });
+
+    // 5. Sources & Source Comparison
+    const tierCounts: Record<SourceTier, number> = { 1: 0, 2: 0, 3: 0 };
+    for (const a of cluster) {
+      tierCounts[a.sourceTier] = (tierCounts[a.sourceTier] || 0) + 1;
+    }
+    const sources: EventSource[] = cluster.map((a) => ({
+      name: a.source.name,
+      url: a.source.url || a.url,
+      publishedAt: a.publishedAt,
+      category: a.source.category,
+      tier: a.sourceTier,
+    }));
+    const primarySource = sources[0]!;
+    const sourceComparison: SourceComparison = {
+      primarySource,
+      supportingSources: sources.slice(1),
+      highestTier: primarySource.tier,
+      tierBreakdown: tierCounts,
+    };
+
+    // 6. Timeline Construction
+    const timeline: EventTimelineEntry[] = [
+      {
+        timestamp: firstSeenAt,
+        type: "detected",
+        description: `Disaster event first detected from ${primarySource.name} (${category}).`,
+        sourceName: primarySource.name,
+      },
+    ];
+    if (sources.length > 1) {
+      timeline.push({
+        timestamp: lastUpdatedAt,
+        type: "source_added",
+        description: `Corroborated by ${sources.length} independent source reports.`,
+      });
+    }
+
+    const eventPrototype: WeatherEvent = {
       id,
       slug,
       title: leadArticle.title,
       category,
       hazard: category,
       severity,
-      status: "active" as EventStatus,
+      status,
       description: leadArticle.summary || leadArticle.title,
       summary: leadArticle.summary,
       location: primaryLocation,
@@ -264,13 +285,7 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
       lastUpdatedAt,
       confidence,
       sourceArticleIds: cluster.map((a) => a.id),
-      sources: cluster.map((a) => ({
-        name: a.source.name,
-        url: a.source.url || a.url,
-        publishedAt: a.publishedAt,
-        category: a.source.category,
-        tier: a.sourceTier,
-      })),
+      sources,
       impacts: [],
       provenance: [
         {
@@ -280,9 +295,15 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
           dataType: "observation",
         },
       ],
+      freshness,
+      timeline,
+      sourceComparison,
     };
 
-    events.push(event);
+    // 7. India Impact Assessment
+    eventPrototype.indiaImpact = globalImpactEngine.assessIndiaImpact(eventPrototype);
+
+    events.push(eventPrototype);
   }
 
   return events;

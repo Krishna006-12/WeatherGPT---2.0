@@ -131,7 +131,7 @@ export function EventList() {
                   </Badge>
                   <Badge
                     variant={
-                      evt.severity === "extreme" || evt.severity === "high"
+                      evt.severity === "extreme" || evt.severity === "high" || evt.severity === "critical"
                         ? "destructive"
                         : evt.severity === "moderate"
                         ? "warning"
@@ -143,6 +143,14 @@ export function EventList() {
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     Confidence: {Math.round(evt.confidence * 100)}%
+                  </Badge>
+                  {evt.freshness && (
+                    <Badge variant="secondary" className="text-xs">
+                      {evt.freshness.label}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {evt.status}
                   </Badge>
                 </div>
                 <div className="text-xs text-neutral-400">

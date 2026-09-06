@@ -89,7 +89,7 @@ export class ContextBuilder {
 
       for (const ev of context.events) {
         eventSnippets.push(
-          `<event id="${ev.id}">\nTitle: ${sanitizeText(ev.title)}\nHazard: ${ev.hazard || ev.category}\nSeverity: ${ev.severity}\nStatus: ${ev.status}\nEpicenter: ${ev.location.name}, ${ev.location.country}\nAffected Regions: ${ev.affectedRegions.map((r) => `${r.name} (${r.country})`).join(", ") || "None specified"}\nSummary: ${sanitizeText(ev.description)}\nConfidence: ${(ev.confidence * 100).toFixed(0)}%\n</event>`
+          `<event id="${ev.id}">\nTitle: ${sanitizeText(ev.title)}\nHazard: ${ev.hazard || ev.category}\nSeverity: ${ev.severity}\nStatus: ${ev.status}\nFreshness: ${ev.freshness?.level || "recent"} (${ev.freshness?.label || "recent"})\nEpicenter: ${ev.location.name}, ${ev.location.country}\nAffected Regions: ${ev.affectedRegions.map((r) => `${r.name} (${r.country})`).join(", ") || "None specified"}\nSummary: ${sanitizeText(ev.description)}\nConfidence: ${(ev.confidence * 100).toFixed(0)}%\nPrimary Source Tier: ${ev.sources[0]?.tier ? `Tier ${ev.sources[0].tier} (${ev.sources[0].name})` : "N/A"}\n</event>`
         );
 
         for (const src of ev.sources) {
@@ -114,7 +114,7 @@ export class ContextBuilder {
       const evidenceList = imp.evidence.map((e) => `- [${e.weight.toUpperCase()}] ${e.type}: ${e.description}`).join("\n");
 
       contextSections.push(
-        `<verified_impact_assessment id="${imp.id}" methodology="${imp.methodology}">\nHazard: ${imp.hazard}\nTarget Location: ${imp.targetLocation.name} (${imp.targetLocation.country})\nRelevance Status: ${imp.relevanceStatus.toUpperCase()}\nImpact Level: ${imp.impactLevel.toUpperCase()}\nConfidence Score: ${imp.confidence}\nKey Reasons:\n${reasonsList}\nUnderlying Evidence:\n${evidenceList}\n</verified_impact_assessment>`
+        `<verified_impact_assessment id="${imp.id}" methodology="${imp.methodology}">\nHazard: ${imp.hazard}\nTarget Location: ${imp.targetLocation.name} (${imp.targetLocation.country})\nRelevance Status: ${imp.relevanceStatus.toUpperCase()}\nImpact Level: ${imp.impactLevel.toUpperCase()}\nEvent Fact: ${imp.eventFact || "N/A"}\nGeographic Relevance: ${imp.geographicRelevance || imp.relevanceStatus.toUpperCase()}\nActual Hazard Impact: ${imp.actualHazardImpact || imp.impactLevel.toUpperCase()}\nIndia Impact Assessment: ${imp.indiaImpact?.level || "N/A"}${imp.indiaImpact ? ` (${imp.indiaImpact.summary})` : ""}\nOfficial Advisory: ${imp.advisory || "None"}\nConfidence Score: ${imp.confidence}\nKey Reasons:\n${reasonsList}\nUnderlying Evidence:\n${evidenceList}\n</verified_impact_assessment>`
       );
     }
 

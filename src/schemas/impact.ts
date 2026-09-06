@@ -3,7 +3,7 @@
  */
 
 import { z } from "zod";
-import { eventCategorySchema, eventLocationSchema } from "./events";
+import { eventCategorySchema, eventLocationSchema, indiaImpactAssessmentSchema } from "./events";
 import { dataProvenanceSchema } from "./weather";
 
 export const impactLevelSchema = z.enum([
@@ -55,6 +55,11 @@ export const impactAssessmentSchema = z.object({
   assessedAt: z.string().min(1),
   methodology: z.string().min(1),
   provenance: z.array(dataProvenanceSchema).min(1),
+  eventFact: z.string().optional(),
+  geographicRelevance: z.string().optional(),
+  actualHazardImpact: z.string().optional(),
+  advisory: z.string().optional(),
+  indiaImpact: indiaImpactAssessmentSchema.optional(),
 });
 
 export const impactQuerySchema = z.object({

@@ -1,8 +1,3 @@
-/**
- * In-memory development repository implementations for events and articles.
- * Thread-safe for Node.js runtime with sorting and filtering support.
- */
-
 import type { WeatherEvent } from "@/types/events";
 import type { NewsArticle } from "@/types/news";
 import type {
@@ -11,6 +6,7 @@ import type {
   EventFilter,
   ArticleFilter,
 } from "./repository-interfaces";
+import { calculateHaversineDistanceKm } from "@/lib/geo-distance";
 
 export class InMemoryEventRepository implements EventRepository {
   private events = new Map<string, WeatherEvent>();
@@ -50,6 +46,33 @@ export class InMemoryEventRepository implements EventRepository {
       }
       if (filter.status) {
         result = result.filter((e) => e.status === filter.status);
+      }
+      if (filter.active === true) {
+        result = result.filter((e) => e.status === "active");
+      }
+      if (filter.recent === true) {
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        result = result.filter(
+          (e) => new Date(e.lastUpdatedAt).getTime() >= oneDayAgo
+        );
+      }
+      if (filter.freshness) {
+        result = result.filter((e) => e.freshness?.level === filter.freshness);
+      }
+      if (filter.coordinates) {
+        const targetCoords = {
+          latitude: filter.coordinates.latitude,
+          longitude: filter.coordinates.longitude,
+        };
+        const maxDist = filter.coordinates.radiusKm;
+        result = result.filter((e) => {
+          if (!e.location.coordinates) return false;
+          const dist = calculateHaversineDistanceKm(
+            targetCoords,
+            e.location.coordinates
+          );
+          return dist <= maxDist;
+        });
       }
       if (filter.country) {
         const cLower = filter.country.toLowerCase();

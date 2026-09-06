@@ -6,7 +6,12 @@
  * and deterministic confidence scoring without relying on LLMs.
  */
 
-import type { WeatherEvent, EventLocation } from "@/types/events";
+import type {
+  WeatherEvent,
+  EventLocation,
+  Severity,
+  IndiaImpactAssessment,
+} from "@/types/events";
 import type { WeatherSnapshot } from "@/types/weather";
 import type {
   ImpactAssessment,
@@ -19,6 +24,24 @@ import { correlateWeatherWithHazard } from "@/lib/weather-correlator";
 import { generateDeterministicHash } from "@/lib/deduplicator";
 
 const METHODOLOGY_VERSION = "impact-engine-v1";
+
+function severityToImpactLevel(severity: Severity): ImpactLevel {
+  switch (severity) {
+    case "info":
+    case "low":
+      return "low";
+    case "moderate":
+      return "moderate";
+    case "high":
+    case "severe":
+      return "high";
+    case "extreme":
+    case "critical":
+      return "extreme";
+    default:
+      return "moderate";
+  }
+}
 
 export class ImpactEngine {
   /**
@@ -82,7 +105,7 @@ export class ImpactEngine {
     // Case A: Explicit City Match
     if (isCityMatch) {
       relevanceStatus = "confirmed";
-      impactLevel = event.severity;
+      impactLevel = severityToImpactLevel(event.severity);
       confidence = 0.95;
       evidence.push({
         type: "explicit_city_match",
@@ -95,7 +118,7 @@ export class ImpactEngine {
     else if (isRegionMatch) {
       const hasTier1 = event.sources.some((s) => s.tier === 1);
       relevanceStatus = hasTier1 ? "confirmed" : "likely";
-      impactLevel = event.severity;
+      impactLevel = severityToImpactLevel(event.severity);
       confidence = hasTier1 ? 0.88 : 0.78;
       evidence.push({
         type: "explicit_region_match",
@@ -170,6 +193,37 @@ export class ImpactEngine {
       });
     }
 
+    // Formulate explicit distinction fields
+    const eventFact = `Event active in ${event.location.name}, ${event.location.country} (${event.hazard || event.category}, severity: ${event.severity}).`;
+
+    let geographicRelevance = `Target location ${targetLocation.name} is in ${targetCountry}.`;
+    if (distanceKm !== undefined) {
+      geographicRelevance = `Target location is approximately ${distanceKm} km from event epicenter (${event.location.name}).`;
+    }
+
+    let actualHazardImpact = "No local meteorological hazard impact established.";
+    if (isCityMatch) {
+      actualHazardImpact = `Direct hazard impact confirmed in ${targetCity}.`;
+    } else if (isRegionMatch) {
+      actualHazardImpact = `Regional hazard impact confirmed in ${targetRegion}.`;
+    } else if (
+      isWaterHazard &&
+      (isCountryMatch || this.areGeographicNeighbors(event.location.country, targetCountry))
+    ) {
+      actualHazardImpact =
+        "Downstream hydrological impact across borders/states is not established without official hydrological bulletins.";
+    }
+
+    let advisory = "No direct action required.";
+    if (impactLevel === "extreme" || impactLevel === "high") {
+      advisory =
+        "High hazard risk. Follow official emergency agency instructions and suspend exposed activities.";
+    } else if (relevanceStatus === "monitoring") {
+      advisory = "Monitor local weather bulletins; no immediate local action required.";
+    }
+
+    const indiaImpact = this.assessIndiaImpact(event);
+
     const id = `imp_${generateDeterministicHash(
       `${event.id}_${targetLocation.name}_${targetLocation.country}_${assessedAt.slice(0, 10)}`
     )}`;
@@ -190,6 +244,112 @@ export class ImpactEngine {
         ...(event.provenance || []),
         ...(weather?.provenance || []),
       ],
+      eventFact,
+      geographicRelevance,
+      actualHazardImpact,
+      advisory,
+      indiaImpact,
+    };
+  }
+
+  /**
+   * Deterministically evaluate the specific relevance and impact of a WeatherEvent on India.
+   * Levels: DIRECT | REGIONAL | POSSIBLE | LOW | NONE | INSUFFICIENT_EVIDENCE
+   */
+  assessIndiaImpact(event: WeatherEvent): IndiaImpactAssessment {
+    const isDirectIndia = this.checkCountryMatch(event, "India");
+
+    if (isDirectIndia) {
+      return {
+        level: "DIRECT",
+        relevanceStatus: "confirmed",
+        confidence: 0.95,
+        summary: `Direct verified event impact in India (${event.location.name}).`,
+        reasons: ["Event location or affected regions explicitly identify territory in India."],
+        isTransboundary: false,
+      };
+    }
+
+    const eventCountry = event.location.country.toLowerCase();
+
+    // Check if event is in a neighboring country to India
+    const neighboringCountries = ["nepal", "bangladesh", "pakistan", "bhutan", "myanmar", "china"];
+    if (neighboringCountries.includes(eventCountry)) {
+      const isWaterHazard =
+        event.category === "flood" ||
+        event.category === "flash_flood" ||
+        event.category === "heavy_rain" ||
+        event.category === "landslide";
+
+      if (isWaterHazard) {
+        return {
+          level: "REGIONAL",
+          relevanceStatus: "monitoring",
+          confidence: 0.70,
+          summary: `The event is in ${event.location.name} (${event.location.country}). India relevance is regional/possible based on geographic proximity and available evidence. Direct downstream impact on Indian locations is not established without official cross-border hydrological advisories.`,
+          reasons: [
+            `Event epicenter is located in neighboring country ${event.location.country}.`,
+            "Downstream flood propagation across international borders requires explicit CWC/IMD bulletin evidence.",
+          ],
+          isTransboundary: true,
+        };
+      }
+
+      if (
+        event.category === "cyclone" ||
+        event.category === "tropical_storm" ||
+        event.category === "severe_storm"
+      ) {
+        return {
+          level: "POSSIBLE",
+          relevanceStatus: "monitoring",
+          confidence: 0.65,
+          summary: `Severe storm system active in neighboring ${event.location.country}. Precautionary border tracking in effect.`,
+          reasons: [`Severe storm activity active in border-adjacent ${event.location.country}.`],
+          isTransboundary: true,
+        };
+      }
+
+      if (event.category === "earthquake") {
+        return {
+          level: "POSSIBLE",
+          relevanceStatus: "monitoring",
+          confidence: 0.75,
+          summary: `Earthquake reported in neighboring ${event.location.country}. Tremors may be felt in northern and border Indian states.`,
+          reasons: [`Seismic shockwave propagation in adjacent geographic zone (${event.location.country}).`],
+          isTransboundary: true,
+        };
+      }
+
+      return {
+        level: "REGIONAL",
+        relevanceStatus: "monitoring",
+        confidence: 0.60,
+        summary: `Event active in neighboring ${event.location.country} with potential regional proximity.`,
+        reasons: [`Geographic proximity to Indian border from ${event.location.country}.`],
+        isTransboundary: true,
+      };
+    }
+
+    if (!eventCountry || eventCountry === "global" || eventCountry === "unknown") {
+      return {
+        level: "INSUFFICIENT_EVIDENCE",
+        relevanceStatus: "unknown",
+        confidence: 0.30,
+        summary: "Insufficient geographic evidence to establish Indian relevance.",
+        reasons: ["No verified coordinates or country details provided in event records."],
+        isTransboundary: false,
+      };
+    }
+
+    // Distant country
+    return {
+      level: "NONE",
+      relevanceStatus: "unlikely",
+      confidence: 0.90,
+      summary: `Event is located in ${event.location.country} with no geographic relevance to India.`,
+      reasons: [`Event domain (${event.location.country}) is geographically distinct from India.`],
+      isTransboundary: false,
     };
   }
 

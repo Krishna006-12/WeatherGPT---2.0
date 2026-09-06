@@ -5,7 +5,13 @@
  * PostgreSQL/Supabase in future phases.
  */
 
-import type { WeatherEvent, EventCategory, Severity, EventStatus } from "@/types/events";
+import type {
+  WeatherEvent,
+  EventCategory,
+  Severity,
+  EventStatus,
+  FreshnessLevel,
+} from "@/types/events";
 import type { NewsArticle, SourceTier } from "@/types/news";
 
 export interface EventFilter {
@@ -14,6 +20,14 @@ export interface EventFilter {
   region?: string;
   severity?: Severity;
   status?: EventStatus;
+  active?: boolean;
+  recent?: boolean;
+  freshness?: FreshnessLevel;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+    radiusKm: number;
+  };
   since?: string;
   limit?: number;
   offset?: number;

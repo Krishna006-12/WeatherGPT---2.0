@@ -33,10 +33,22 @@ export type EventCategory =
 export type HazardType = EventCategory;
 
 /** Event severity level. */
-export type Severity = "low" | "moderate" | "high" | "extreme";
+export type Severity =
+  | "info"
+  | "low"
+  | "moderate"
+  | "high"
+  | "severe"
+  | "extreme"
+  | "critical";
 
 /** Event lifecycle state. */
-export type EventStatus = "monitoring" | "active" | "resolved" | "archived";
+export type EventStatus =
+  | "monitoring"
+  | "active"
+  | "resolved"
+  | "archived"
+  | "expired";
 
 /** Structured impact status. */
 export type ImpactStatus =
@@ -81,6 +93,53 @@ export interface RegionalImpact {
   description?: string;
 }
 
+/** Freshness classification levels. */
+export type FreshnessLevel = "fresh" | "recent" | "aging" | "stale" | "expired";
+
+/** Freshness metadata for an event. */
+export interface FreshnessInfo {
+  level: FreshnessLevel;
+  label: string;
+  isLive: boolean;
+  ageMinutes: number;
+  lastCheckedAt: ISOTimestamp;
+}
+
+/** India impact relevance taxonomy. */
+export type IndiaImpactLevel =
+  | "DIRECT"
+  | "REGIONAL"
+  | "POSSIBLE"
+  | "LOW"
+  | "NONE"
+  | "INSUFFICIENT_EVIDENCE";
+
+/** Structured assessment of event relevance to India. */
+export interface IndiaImpactAssessment {
+  level: IndiaImpactLevel;
+  relevanceStatus: ImpactStatus;
+  confidence: number;
+  summary: string;
+  reasons: string[];
+  isTransboundary: boolean;
+}
+
+/** Timeline entry capturing event detection or status transition. */
+export interface EventTimelineEntry {
+  timestamp: ISOTimestamp;
+  type: "detected" | "source_added" | "severity_updated" | "status_changed";
+  description: string;
+  sourceName?: string;
+}
+
+/** Source comparison breakdown. */
+export interface SourceComparison {
+  primarySource: EventSource;
+  supportingSources: EventSource[];
+  highestTier: SourceTier;
+  tierBreakdown: Record<SourceTier, number>;
+}
+
 /**
  * The normalized weather event contract.
  * Every live-intelligence consumer uses this shape.
@@ -105,4 +164,8 @@ export interface WeatherEvent {
   sources: EventSource[];
   impacts: RegionalImpact[];
   provenance: DataProvenance[];
+  freshness?: FreshnessInfo;
+  indiaImpact?: IndiaImpactAssessment;
+  timeline?: EventTimelineEntry[];
+  sourceComparison?: SourceComparison;
 }

@@ -4,7 +4,7 @@
  */
 
 import type { ISOTimestamp } from "./common";
-import type { EventCategory, EventLocation } from "./events";
+import type { EventCategory, EventLocation, IndiaImpactAssessment } from "./events";
 import type { DataProvenance } from "./weather";
 
 /** Structured impact level. */
@@ -56,4 +56,9 @@ export interface ImpactAssessment {
   assessedAt: ISOTimestamp;
   methodology: string; // e.g. "impact-engine-v1"
   provenance: DataProvenance[];
+  eventFact?: string;
+  geographicRelevance?: string;
+  actualHazardImpact?: string;
+  advisory?: string;
+  indiaImpact?: IndiaImpactAssessment;
 }

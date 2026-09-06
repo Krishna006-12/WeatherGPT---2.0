@@ -60,7 +60,13 @@ export class MockAIProvider implements AIProvider {
     const isGeneral = prompt.includes("Intent Detected: general");
 
     if (isImpact) {
-      if (prompt.includes("DOWNSTREAM_UNESTABLISHED") || prompt.includes("MONITORING") || prompt.includes("UNLIKELY")) {
+      const promptUpper = prompt.toUpperCase();
+      if (
+        promptUpper.includes("DOWNSTREAM_UNESTABLISHED") ||
+        promptUpper.includes("MONITORING") ||
+        promptUpper.includes("UNLIKELY") ||
+        prompt.includes('"groundingStatus": "insufficient_evidence"')
+      ) {
         return JSON.stringify({
           answer: "Based on official advisories, direct downstream flood impact on this location is not established by current reports. Authorities are monitoring the situation.",
           groundingStatus: "insufficient_evidence",
