@@ -151,7 +151,7 @@ export function Sidebar() {
                   <Cpu className="text-cyan-400 mt-0.5 shrink-0" size={18} />
                   <div>
                     <div className="font-medium text-white">AI Intelligence Model</div>
-                    <div className="text-xs text-neutral-400">Gemini 2.5 Flash (Grounded Reasoning)</div>
+                    <div className="text-xs text-neutral-400">Gemini 3.6 Flash (Grounded Reasoning)</div>
                   </div>
                 </div>
                 <span className="text-xs text-cyan-400 flex items-center gap-1 bg-cyan-950/60 px-2 py-1 rounded-full border border-cyan-800/40">

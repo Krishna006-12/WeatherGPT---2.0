@@ -8,7 +8,7 @@
 import type { AIProvider, AICompletionOptions } from "./ai-provider";
 import { AppError } from "@/lib/errors";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 const DEFAULT_TIMEOUT_MS = 15000;
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -26,7 +26,14 @@ export class GeminiProvider implements AIProvider {
 
   constructor(config: GeminiProviderConfig = {}) {
     this.apiKey = config.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
-    this.defaultModel = config.defaultModel || process.env.GEMINI_MODEL || DEFAULT_MODEL;
+    const rawDefault = (config.defaultModel || process.env.GEMINI_MODEL || DEFAULT_MODEL)
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    const cleanDefault = rawDefault.startsWith("models/") ? rawDefault.replace(/^models\//, "") : rawDefault;
+    this.defaultModel =
+      cleanDefault === "gemini-2.5-flash" || cleanDefault === "gemini-2.0-flash" || cleanDefault.startsWith("gemini-1.5")
+        ? DEFAULT_MODEL
+        : cleanDefault || DEFAULT_MODEL;
     this.timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
   }
 
@@ -61,7 +68,11 @@ export class GeminiProvider implements AIProvider {
     const rawModel = (options.model || process.env.GEMINI_MODEL || this.defaultModel || DEFAULT_MODEL)
       .trim()
       .replace(/^["']|["']$/g, "");
-    const model = rawModel.startsWith("models/") ? rawModel.replace(/^models\//, "") : rawModel;
+    const cleanModel = rawModel.startsWith("models/") ? rawModel.replace(/^models\//, "") : rawModel;
+    const model =
+      cleanModel === "gemini-2.5-flash" || cleanModel === "gemini-2.0-flash" || cleanModel.startsWith("gemini-1.5")
+        ? DEFAULT_MODEL
+        : cleanModel || DEFAULT_MODEL;
     const timeout = options.timeoutMs || this.timeoutMs;
     const endpoint = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
 

@@ -46,7 +46,7 @@ export interface AIProvider {
 ```
 
 ### Implementations
-- **`GeminiProvider`**: Server-side REST adapter calling Google Gemini (`gemini-2.5-flash` / `gemini-1.5-flash`) with timeout controllers, JSON mode, and error status mapping.
+- **`GeminiProvider`**: Server-side REST adapter calling Google Gemini (`gemini-3.6-flash`) with timeout controllers, JSON mode, and error status mapping.
 - **`MockAIProvider`**: Deterministic mock provider used in automated test suites and offline environments.
 
 ---

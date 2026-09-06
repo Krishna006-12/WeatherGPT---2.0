@@ -56,7 +56,7 @@ describe("Sidebar Navigation Component", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/System Settings/i)).toBeInTheDocument();
     expect(screen.getByText(/AI Intelligence Model/i)).toBeInTheDocument();
-    expect(screen.getByText(/Gemini 2.5 Flash/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gemini 3.6 Flash/i)).toBeInTheDocument();
 
     // Close via close button
     const closeBtn = screen.getByRole("button", { name: /Close Settings/i });

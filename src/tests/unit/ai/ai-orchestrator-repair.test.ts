@@ -133,7 +133,7 @@ describe("GeminiProvider Configuration Sanitization", () => {
 
     const provider = new GeminiProvider({
       apiKey: '  "AIzaSyFakeKeyWithQuotes"  ',
-      defaultModel: " 'models/gemini-2.5-flash' ",
+      defaultModel: " 'models/gemini-3.6-flash' ",
     });
 
     expect(provider.hasValidKey()).toBe(true);
@@ -142,9 +142,32 @@ describe("GeminiProvider Configuration Sanitization", () => {
 
     expect(fetchSpy).toHaveBeenCalled();
     const requestUrl = (fetchSpy.mock.calls[0]?.[0] || "") as string;
-    expect(requestUrl).toContain("/models/gemini-2.5-flash:generateContent");
+    expect(requestUrl).toContain("/models/gemini-3.6-flash:generateContent");
     expect(requestUrl).not.toContain("models/models/");
     expect(requestUrl).toContain("key=AIzaSyFakeKeyWithQuotes");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("automatically migrates obsolete gemini-2.5-flash model override to gemini-3.6-flash", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({ answer: "Migrated test response" }) }] } }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const provider = new GeminiProvider({
+      apiKey: "test-key",
+      defaultModel: "gemini-2.5-flash",
+    });
+
+    await provider.generateCompletion("Test prompt");
+
+    expect(fetchSpy).toHaveBeenCalled();
+    const requestUrl = (fetchSpy.mock.calls[0]?.[0] || "") as string;
+    expect(requestUrl).toContain("/models/gemini-3.6-flash:generateContent");
 
     vi.unstubAllGlobals();
   });

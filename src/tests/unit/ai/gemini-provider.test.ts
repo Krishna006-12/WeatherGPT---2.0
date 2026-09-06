@@ -71,7 +71,7 @@ describe("GeminiProvider Adapter", () => {
   });
 
   it("Configures model dynamically from GEMINI_MODEL env variable", async () => {
-    vi.stubEnv("GEMINI_MODEL", "gemini-2.5-flash");
+    vi.stubEnv("GEMINI_MODEL", "gemini-3.6-flash");
     const provider = new GeminiProvider({ apiKey: "test-valid-key" });
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -86,6 +86,6 @@ describe("GeminiProvider Adapter", () => {
     await provider.generateCompletion("Test prompt");
     expect(fetchMock).toHaveBeenCalledOnce();
     const calledUrl = fetchMock.mock.calls[0]![0] as string;
-    expect(calledUrl).toContain("/models/gemini-2.5-flash:generateContent");
+    expect(calledUrl).toContain("/models/gemini-3.6-flash:generateContent");
   });
 });
