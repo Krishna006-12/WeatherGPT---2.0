@@ -22,6 +22,12 @@ export interface IntentClassification {
 }
 
 const TEMPORAL_WORDS = [
+  "right now",
+  "right-now",
+  "currently",
+  "this morning",
+  "this afternoon",
+  "this evening",
   "today",
   "tomorrow",
   "yesterday",
@@ -33,6 +39,8 @@ const TEMPORAL_WORDS = [
   "kal",
   "aaj",
   "parso",
+  "outside",
+  "right",
 ];
 
 const STOP_WORDS = [
@@ -48,11 +56,33 @@ const STOP_WORDS = [
   "it",
   "there",
   "here",
+  "current",
+  "live",
+  "latest",
   "kya",
   "hai",
   "hoga",
   "par",
   "aur",
+  "weather",
+  "temperature",
+  "temp",
+  "forecast",
+  "mausam",
+  "what",
+  "is",
+  "whats",
+  "what's",
+  "how",
+  "hows",
+  "how's",
+  "will",
+  "tell",
+  "show",
+  "give",
+  "check",
+  "get",
+  "over",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -64,12 +94,37 @@ function sanitizeExtractedLocation(raw?: string): string | undefined {
   }
 
   // Remove common punctuation
-  clean = clean.replace(/[?.,!]/g, "").trim();
+  clean = clean.replace(/[?.,!;:'"]/g, "").trim();
 
   // Strip excessive spaces
   clean = clean.replace(/\s+/g, " ").trim();
 
-  if (!clean || STOP_WORDS.includes(clean.toLowerCase()) || clean.length < 2) {
+  if (!clean || clean.length < 2) {
+    return undefined;
+  }
+
+  if (STOP_WORDS.includes(clean.toLowerCase())) {
+    return undefined;
+  }
+
+  // Check if every word in the candidate is a stop word
+  const words = clean.split(/\s+/);
+  if (words.every((w) => STOP_WORDS.includes(w.toLowerCase()))) {
+    return undefined;
+  }
+
+  // Strip leading stop words (e.g. "the London" -> "London", "over Nepal" -> "Nepal")
+  while (words.length > 0 && words[0] && STOP_WORDS.includes(words[0].toLowerCase())) {
+    words.shift();
+  }
+  // Strip trailing stop words
+  while (words.length > 0 && words[words.length - 1] && STOP_WORDS.includes(words[words.length - 1]!.toLowerCase())) {
+    words.pop();
+  }
+
+  clean = words.join(" ").trim();
+
+  if (!clean || clean.length < 2 || STOP_WORDS.includes(clean.toLowerCase())) {
     return undefined;
   }
 
@@ -191,8 +246,12 @@ export class IntentRouter {
       /\b(difference between|how are .* formed|how is .* formed|meaning of)\b/i,
     ];
 
-    // If it asks "What is the weather in Delhi", that's weather
-    if (/\b(weather in|temp in|temperature in|forecast|mausam|weather today|rainfall today)\b/i.test(text)) {
+    // If it asks about weather, conditions, or forecast, it's not a general knowledge query
+    if (
+      /\b(weather|temperature|temp|humidity|forecast|mausam|rainfall|rain today|rain tomorrow)\b/i.test(
+        text
+      )
+    ) {
       return false;
     }
 
@@ -248,10 +307,16 @@ export class IntentRouter {
    */
   extractLocation(text: string): string | undefined {
     const locationRegexes = [
-      /\b(?:in|for|at|around|near|across)\s+([a-zA-Z\s]+?)(?:\?|\.|\,| tomorrow| today| yesterday| next week| aur | and |$)/i,
-      /\b(?:weather in|temp in|forecast for|mausam in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|$)/i,
-      /\b([a-zA-Z]+)\s+mein\s+(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
-      /\b([a-zA-Z]+)\s+(?:weather|temperature|forecast|mausam)\b/i,
+      // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar"
+      /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
+      // "weather in London", "temp in New Delhi", "forecast for Delhi"
+      /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      // "weather London", "forecast Tokyo"
+      /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      // Hinglish: "Kanpur mein kal mausam"
+      /\b([a-zA-Z\s]+?)\s+mein\s+(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
+      // "London weather", "New Delhi forecast"
+      /\b([a-zA-Z\s]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];
 
     for (const regex of locationRegexes) {

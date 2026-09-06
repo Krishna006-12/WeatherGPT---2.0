@@ -28,6 +28,8 @@ export const aiCitationSchema = z.object({
 
 export const aiResponseMetadataSchema = z.object({
   locationName: z.string().optional(),
+  selectedLocationName: z.string().optional(),
+  queryLocationName: z.string().optional(),
   confidence: z.number().min(0).max(1).optional(),
   relevanceStatus: z.string().optional(),
   impactLevel: z.string().optional(),

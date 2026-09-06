@@ -22,7 +22,7 @@ import { AppError } from "@/lib/errors";
 import { aiResponseSchema } from "@/schemas/ai";
 import { generateDeterministicHash } from "@/lib/deduplicator";
 
-import { IntentRouter, globalIntentRouter } from "./intent-router";
+import { IntentRouter, globalIntentRouter, type IntentClassification } from "./intent-router";
 import { ContextBuilder, globalContextBuilder } from "./context-builder";
 import type { AIProvider } from "./ai-provider";
 import { GeminiProvider } from "./gemini-provider";
@@ -31,6 +31,14 @@ import { OpenMeteoProvider } from "@/services/weather/open-meteo-provider";
 import { LocationService } from "@/services/location/location-service";
 import { globalEventRepository } from "@/services/storage/in-memory-repositories";
 import { ImpactEngine, globalImpactEngine } from "@/services/impact/impact-engine";
+
+export interface ResolvedLocationState {
+  resolvedLocation: EventLocation | undefined;
+  selectedLocation: EventLocation | undefined;
+  queryLocationName?: string;
+  isExplicitQueryLocation: boolean;
+  locationNotFound: boolean;
+}
 
 export interface AIOrchestratorConfig {
   aiProvider?: AIProvider;
@@ -70,8 +78,9 @@ export class AIOrchestrator {
       const classification = this.intentRouter.classify(message);
       const intent: IntentCategory = classification.intent;
 
-      // 2. Resolve Target Location
-      const targetLocation = await this.resolveLocation(request, classification.extractedLocation);
+      // 2. Resolve Target Location (Deterministic Query Location Resolution)
+      const locationState = await this.resolveLocation(request, classification);
+      const targetLocation = locationState.resolvedLocation;
 
       // 3. Deterministic Data Retrieval based on Intent
       let weather: WeatherSnapshot | undefined;
@@ -159,6 +168,9 @@ export class AIOrchestrator {
             userQuery: message,
             intent,
             targetLocation,
+            selectedLocationName: locationState.selectedLocation?.name,
+            queryLocationName: locationState.queryLocationName,
+            locationNotFound: locationState.locationNotFound,
             weather,
             events,
             impactAssessment,
@@ -185,6 +197,8 @@ export class AIOrchestrator {
         uncertainty: uncertaintyNote,
         metadata: {
           locationName: targetLocation?.name,
+          selectedLocationName: locationState.selectedLocation?.name,
+          queryLocationName: locationState.queryLocationName,
           confidence: impactAssessment?.confidence,
           relevanceStatus: impactAssessment?.relevanceStatus,
           impactLevel: impactAssessment?.impactLevel,
@@ -218,36 +232,76 @@ export class AIOrchestrator {
   }
 
   /**
-   * Resolve location from request or query string.
+   * Deterministic Query Location Resolution.
+   *
+   * Preserves and distinguishes:
+   * - selectedLocation: dashboard selected location passed in request
+   * - queryLocationName: explicit location extracted from user query string
+   * - resolvedLocation: final geocoded target location for weather grounding
    */
   private async resolveLocation(
     request: ChatRequest,
-    extractedName?: string
-  ): Promise<EventLocation | undefined> {
-    // If request already provides coordinates
-    if (request.location?.lat !== undefined && request.location?.lon !== undefined) {
-      return {
-        name: request.location.name || request.location.city || "Target Location",
-        city: request.location.city,
-        region: request.location.region,
-        country: request.location.country || "Global",
-        timezone: request.location.timezone,
-        coordinates: {
-          latitude: request.location.lat,
-          longitude: request.location.lon,
-        },
-      };
+    classification?: IntentClassification | string
+  ): Promise<ResolvedLocationState> {
+    // 1. Construct selectedLocation from dashboard request
+    const selectedLocation: EventLocation | undefined = request.location
+      ? {
+          name: request.location.name || request.location.city || "Selected Location",
+          city: request.location.city,
+          region: request.location.region,
+          country: request.location.country || "Global",
+          timezone: request.location.timezone,
+          coordinates:
+            request.location.lat !== undefined && request.location.lon !== undefined
+              ? {
+                  latitude: request.location.lat,
+                  longitude: request.location.lon,
+                }
+              : undefined,
+        }
+      : undefined;
+
+    // 2. Determine if user query explicitly mentions a target location
+    let queryLocationName: string | undefined;
+    if (typeof classification === "string") {
+      queryLocationName = classification;
+    } else if (classification) {
+      queryLocationName =
+        classification.intent === "impact"
+          ? classification.targetImpactLocation || classification.extractedLocation
+          : classification.extractedLocation;
     }
 
-    // Try to geocode extracted location name
-    const queryName = request.location?.name || request.location?.city || extractedName;
-    if (queryName) {
+    // 3. If explicit location was mentioned in the user's query:
+    if (queryLocationName && queryLocationName.trim().length > 0) {
+      const trimmedQueryLoc = queryLocationName.trim();
+      const displayQueryLoc = trimmedQueryLoc
+        .split(/\s+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+
+      // If query explicitly mentions the exact same location name as selectedLocation,
+      // and selectedLocation already has valid coordinates, reuse them directly.
+      if (
+        selectedLocation?.coordinates &&
+        selectedLocation.name.toLowerCase() === trimmedQueryLoc.toLowerCase()
+      ) {
+        return {
+          resolvedLocation: selectedLocation,
+          selectedLocation,
+          queryLocationName: displayQueryLoc,
+          isExplicitQueryLocation: true,
+          locationNotFound: false,
+        };
+      }
+
+      // Geocode the explicit query location using existing LocationService (Open-Meteo)
       try {
-        const geoRes = await this.locationService.search(queryName);
+        const geoRes = await this.locationService.search(trimmedQueryLoc, 1);
         if (geoRes.success && geoRes.data.length > 0) {
           const top = geoRes.data[0];
           if (top) {
-            return {
+            const resolved: EventLocation = {
               name: top.name,
               city: top.name,
               region: top.region,
@@ -258,20 +312,96 @@ export class AIOrchestrator {
                 longitude: top.longitude,
               },
             };
+            return {
+              resolvedLocation: resolved,
+              selectedLocation,
+              queryLocationName: displayQueryLoc,
+              isExplicitQueryLocation: true,
+              locationNotFound: false,
+            };
           }
         }
-      } catch {
-        // Geocoding failure falls back to name-only location
+      } catch (err) {
+        console.warn(`[AIOrchestrator] Geocoding lookup failed for query location "${trimmedQueryLoc}":`, err);
       }
 
-      return {
-        name: queryName,
-        city: queryName,
+      // Geocoding yielded no results (e.g. unknown/fictional location):
+      // Clean insufficient evidence state with NO fabricated coordinates or weather
+      const unverifiedLoc: EventLocation = {
+        name: displayQueryLoc,
+        city: displayQueryLoc,
         country: "Global",
+        coordinates: undefined,
+      };
+
+      return {
+        resolvedLocation: unverifiedLoc,
+        selectedLocation,
+        queryLocationName: displayQueryLoc,
+        isExplicitQueryLocation: true,
+        locationNotFound: true,
       };
     }
 
-    return undefined;
+    // 4. If NO explicit query location was mentioned:
+    // Fall back to dashboard selectedLocation
+    if (selectedLocation) {
+      if (selectedLocation.coordinates) {
+        return {
+          resolvedLocation: selectedLocation,
+          selectedLocation,
+          queryLocationName: undefined,
+          isExplicitQueryLocation: false,
+          locationNotFound: false,
+        };
+      }
+
+      if (selectedLocation.name) {
+        try {
+          const geoRes = await this.locationService.search(selectedLocation.name, 1);
+          if (geoRes.success && geoRes.data.length > 0) {
+            const top = geoRes.data[0];
+            if (top) {
+              return {
+                resolvedLocation: {
+                  name: top.name,
+                  city: top.name,
+                  region: top.region,
+                  country: top.country,
+                  timezone: top.timezone,
+                  coordinates: {
+                    latitude: top.latitude,
+                    longitude: top.longitude,
+                  },
+                },
+                selectedLocation,
+                queryLocationName: undefined,
+                isExplicitQueryLocation: false,
+                locationNotFound: false,
+              };
+            }
+          }
+        } catch {
+          // Geocoding failure falls back to name-only
+        }
+      }
+
+      return {
+        resolvedLocation: selectedLocation,
+        selectedLocation,
+        queryLocationName: undefined,
+        isExplicitQueryLocation: false,
+        locationNotFound: false,
+      };
+    }
+
+    return {
+      resolvedLocation: undefined,
+      selectedLocation: undefined,
+      queryLocationName: undefined,
+      isExplicitQueryLocation: false,
+      locationNotFound: false,
+    };
   }
 
   /**
@@ -372,6 +502,9 @@ export class AIOrchestrator {
     userQuery: string;
     intent: IntentCategory;
     targetLocation?: EventLocation;
+    selectedLocationName?: string;
+    queryLocationName?: string;
+    locationNotFound?: boolean;
     weather?: WeatherSnapshot;
     events?: WeatherEvent[];
     impactAssessment?: ImpactAssessment;
@@ -393,6 +526,8 @@ export class AIOrchestrator {
       } else {
         answer = `Hello! I am WeatherGPT Copilot, your weather and disaster intelligence assistant. Ask me about current weather, 7-day forecasts, or regional disaster impact assessments.`;
       }
+    } else if (context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)) {
+      answer = `Unable to find verified geographic location or weather observations for "${locName}". Please verify the location name and try again.`;
     } else if (context.intent === "impact" && context.impactAssessment) {
       const imp = context.impactAssessment;
       answer = `Impact assessment for ${locName}: Relevance is ${imp.relevanceStatus.toUpperCase()} with ${imp.impactLevel.toUpperCase()} impact level. ${imp.reasons.join(" ")}`;
@@ -411,18 +546,25 @@ export class AIOrchestrator {
       answer = `Live AI intelligence service is currently operating in deterministic backup mode${reasonNote}. Please check the verified live observation cards on your dashboard or ask about weather for a specific city.`;
     }
 
+    const groundingStatus: GroundingStatus =
+      context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
+        ? "insufficient_evidence"
+        : context.initialGroundingStatus;
+
     return {
       success: true,
       data: {
         id,
         answer,
         intent: context.intent,
-        groundingStatus: context.initialGroundingStatus,
+        groundingStatus,
         citations: context.citations,
         generatedAt: context.generatedAt,
         model: "deterministic-fallback",
         metadata: {
           locationName: context.targetLocation?.name,
+          selectedLocationName: context.selectedLocationName,
+          queryLocationName: context.queryLocationName,
           confidence: context.impactAssessment?.confidence,
           relevanceStatus: context.impactAssessment?.relevanceStatus,
           impactLevel: context.impactAssessment?.impactLevel,

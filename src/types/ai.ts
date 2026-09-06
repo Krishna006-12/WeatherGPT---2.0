@@ -47,6 +47,8 @@ export interface AIResponse {
   uncertainty?: string;
   metadata?: {
     locationName?: string;
+    selectedLocationName?: string;
+    queryLocationName?: string;
     confidence?: number;
     relevanceStatus?: string;
     impactLevel?: string;

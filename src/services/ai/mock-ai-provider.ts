@@ -104,9 +104,23 @@ export class MockAIProvider implements AIProvider {
       });
     }
 
+    // If no verified weather data is present in prompt, return insufficient_evidence
+    if (!prompt.includes("<verified_weather_data")) {
+      return JSON.stringify({
+        answer: "No verified weather observations or geographic data could be retrieved for the specified location. Evidence is insufficient to provide live conditions.",
+        groundingStatus: "insufficient_evidence",
+        uncertainty: "Location coordinates or live observation feeds could not be verified.",
+        keyPoints: ["No verified observations available", "Insufficient evidence"],
+      });
+    }
+
+    // Extract location name if available
+    const locMatch = prompt.match(/<target_location>[\s\S]*?Name:\s*([^\n]+)/i);
+    const locName = locMatch && locMatch[1] ? locMatch[1].trim() : "the requested location";
+
     // Default current weather
     return JSON.stringify({
-      answer: "Current verified weather observations report active conditions for the requested location. Measurements include temperature, wind speed, and humidity.",
+      answer: `Current verified weather observations report active conditions for ${locName}. Measurements include temperature, wind speed, and humidity.`,
       groundingStatus: "grounded",
       uncertainty: null,
       keyPoints: ["Live observation data cited", "Observation timestamp verified"],
