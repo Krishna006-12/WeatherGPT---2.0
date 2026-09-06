@@ -1,9 +1,15 @@
 /**
- * AI Orchestrator.
+ * AI Orchestrator — WeatherGPT Copilot 2.0.
  *
- * Coordinates the end-to-end AI intelligence pipeline:
- * User query → Intent classification → Deterministic data retrieval → Impact evaluation
- * → Grounded context construction → LLM completion → Response validation.
+ * Coordinates the end-to-end AI weather intelligence pipeline:
+ * User Query → Intent Classification → Location Resolution → Temporal Resolution
+ * → Required Tool Selection → Deterministic Internal Tools → Grounded Context Construction
+ * → LLM Reasoning (Gemini) → Validated AIResponse + Citations + Confidence + Uncertainty.
+ *
+ * Follows strict grounding principles:
+ * The LLM is an interpretation and language generation layer.
+ * All factual data, coordinates, observations, forecasts, events, impacts, and risk
+ * assessments are generated deterministically by application services.
  */
 
 import type {
@@ -13,6 +19,7 @@ import type {
   IntentCategory,
   GroundingStatus,
   AICitation,
+  ConversationContext,
 } from "@/types/ai";
 import type { EventLocation, WeatherEvent } from "@/types/events";
 import type { WeatherSnapshot } from "@/types/weather";
@@ -31,6 +38,10 @@ import { OpenMeteoProvider } from "@/services/weather/open-meteo-provider";
 import { LocationService } from "@/services/location/location-service";
 import { globalEventRepository } from "@/services/storage/in-memory-repositories";
 import { ImpactEngine, globalImpactEngine } from "@/services/impact/impact-engine";
+import { TemporalResolver, globalTemporalResolver, type TemporalResolution } from "./temporal-resolver";
+import { WeatherToolRegistry } from "./tools/tool-registry";
+import type { NormalizedForecastData } from "./tools/get-forecast-tool";
+import type { WeatherRiskAssessment } from "./tools/get-weather-risk-tool";
 
 export interface ResolvedLocationState {
   resolvedLocation: EventLocation | undefined;
@@ -47,6 +58,8 @@ export interface AIOrchestratorConfig {
   weatherService?: WeatherService;
   locationService?: LocationService;
   impactEngine?: ImpactEngine;
+  temporalResolver?: TemporalResolver;
+  toolRegistry?: WeatherToolRegistry;
 }
 
 export class AIOrchestrator {
@@ -56,6 +69,12 @@ export class AIOrchestrator {
   private weatherService: WeatherService;
   private locationService: LocationService;
   private impactEngine: ImpactEngine;
+  private temporalResolver: TemporalResolver;
+  private toolRegistry: WeatherToolRegistry;
+
+  // Short-term in-memory conversation context (per instance & by sessionId)
+  private sessionContextMap: Map<string, ConversationContext> = new Map();
+  private lastSessionContext?: ConversationContext;
 
   constructor(config: AIOrchestratorConfig = {}) {
     this.aiProvider = config.aiProvider || new GeminiProvider();
@@ -64,6 +83,16 @@ export class AIOrchestrator {
     this.weatherService = config.weatherService || new WeatherService(new OpenMeteoProvider());
     this.locationService = config.locationService || new LocationService();
     this.impactEngine = config.impactEngine || globalImpactEngine;
+    this.temporalResolver = config.temporalResolver || globalTemporalResolver;
+
+    this.toolRegistry =
+      config.toolRegistry ||
+      new WeatherToolRegistry({
+        locationService: this.locationService,
+        weatherService: this.weatherService,
+        eventRepository: globalEventRepository,
+        impactEngine: this.impactEngine,
+      });
   }
 
   /**
@@ -74,54 +103,125 @@ export class AIOrchestrator {
       const generatedAt = new Date().toISOString();
       const message = request.message.trim();
 
+      // Retrieve incoming conversation context (from request payload, sessionId, or instance memory)
+      const currentContext: ConversationContext | undefined =
+        request.context ||
+        (request.sessionId ? this.sessionContextMap.get(request.sessionId) : undefined) ||
+        this.lastSessionContext;
+
       // 1. Intent Classification
       const classification = this.intentRouter.classify(message);
-      const intent: IntentCategory = classification.intent;
+      let intent: IntentCategory = classification.intent;
 
-      // 2. Resolve Target Location (Deterministic Query Location Resolution)
-      const locationState = await this.resolveLocation(request, classification);
+      // 2. Resolve Target Location (Explicit Query > Follow-up Context > Dashboard Selected)
+      const locationState = await this.resolveLocation(request, classification, currentContext);
       const targetLocation = locationState.resolvedLocation;
 
-      // 3. Deterministic Data Retrieval based on Intent
+      // 3. Temporal Resolution (using target location's timezone)
+      const targetTimezone = targetLocation?.timezone || request.location?.timezone || "UTC";
+      const temporalResolution = this.temporalResolver.resolve(message, targetTimezone);
+
+      // Adjust intent for future temporal targets or risk queries
+      if (temporalResolution.isFuture && intent === "weather") {
+        intent = "forecast";
+      }
+
+      // 4. Deterministic Tool Execution (Determine required data based on intent & query)
       let weather: WeatherSnapshot | undefined;
+      let forecastData: NormalizedForecastData | undefined;
+      let weatherRisk: WeatherRiskAssessment | undefined;
       let events: WeatherEvent[] = [];
       let impactAssessment: ImpactAssessment | undefined;
 
-      // Weather / Forecast retrieval (also retrieved for general queries when location coordinates are present to ground context)
-      if ((intent === "weather" || intent === "forecast" || intent === "impact" || intent === "general") && targetLocation?.coordinates) {
-        try {
-          const wRes = await this.weatherService.getWeather(
-            targetLocation.coordinates,
-            targetLocation.timezone
-          );
-          if (wRes.success) {
-            weather = wRes.data;
+      // If location is unknown, fail fast with insufficient evidence without executing weather tools
+      if (locationState.locationNotFound) {
+        return this.generateDeterministicFallback({
+          userQuery: message,
+          intent,
+          targetLocation,
+          selectedLocationName: locationState.selectedLocation?.name,
+          queryLocationName: locationState.queryLocationName,
+          locationNotFound: true,
+          temporalResolution,
+          citations: [],
+          initialGroundingStatus: "insufficient_evidence",
+          generatedAt,
+        });
+      }
+
+      // Execute Weather / Forecast Tools
+      if (
+        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "general") &&
+        targetLocation?.coordinates
+      ) {
+        // Fetch current observations via get_weather tool
+        const wRes = await this.toolRegistry.getWeatherTool.execute({
+          coordinates: targetLocation.coordinates,
+          timezone: targetLocation.timezone,
+        });
+        if (wRes.success) {
+          weather = wRes.data;
+        }
+
+        // Fetch forecast via get_forecast tool if forecast intent or future temporal window
+        if (intent === "forecast" || temporalResolution.isFuture) {
+          const fRes = await this.toolRegistry.getForecastTool.execute({
+            coordinates: targetLocation.coordinates,
+            timezone: targetLocation.timezone,
+            temporalTarget: temporalResolution.target,
+            targetDate: temporalResolution.targetDate,
+            targetHourStart: temporalResolution.hourStart,
+            targetHourEnd: temporalResolution.hourEnd,
+          });
+          if (fRes.success) {
+            forecastData = fRes.data;
           }
-        } catch {
-          // Weather fetch failure is non-fatal for general/event queries
+        }
+
+        // Evaluate Weather Risk via get_weather_risk tool if risk query or activity advisory
+        if (classification.isRiskQuery && weather) {
+          const rRes = await this.toolRegistry.getWeatherRiskTool.execute({
+            weather,
+            temporalTarget: temporalResolution.target,
+            targetDate: temporalResolution.targetDate,
+            activityType: classification.activityType || "outdoor_work",
+          });
+          if (rRes.success) {
+            weatherRisk = rRes.data;
+          }
         }
       }
 
-      // Event retrieval for weather_event and impact queries
+      // Event retrieval via get_live_events tool for weather_event and impact queries
       if (intent === "weather_event" || intent === "impact") {
-        events = await this.findRelevantEvents(
-          classification.extractedEventKeyword,
-          targetLocation?.name || classification.extractedLocation
-        );
+        const eRes = await this.toolRegistry.getLiveEventsTool.execute({
+          keyword: classification.extractedEventKeyword,
+          locationName: targetLocation?.name || classification.extractedLocation,
+        });
+        if (eRes.success) {
+          events = eRes.data;
+        }
       }
 
-      // Impact Engine evaluation
+      // Impact Engine evaluation via get_event_impact tool
       if (intent === "impact" && targetLocation) {
         const primaryEvent = events[0] || (await this.getLatestActiveEvent());
         if (primaryEvent) {
-          impactAssessment = this.impactEngine.assessImpact(primaryEvent, targetLocation, weather);
+          const iRes = await this.toolRegistry.getEventImpactTool.execute({
+            event: primaryEvent,
+            targetLocation,
+            weather,
+          });
+          if (iRes.success) {
+            impactAssessment = iRes.data;
+          }
           if (!events.includes(primaryEvent)) {
             events.push(primaryEvent);
           }
         }
       }
 
-      // 4. Grounded Context Construction
+      // 5. Grounded Context Construction with XML Boundaries
       const groundedContext: GroundedContext = {
         userQuery: message,
         intent,
@@ -129,6 +229,20 @@ export class AIOrchestrator {
         weather,
         events: events.length > 0 ? events : undefined,
         impactAssessment,
+        temporalResolution: {
+          target: temporalResolution.target,
+          label: temporalResolution.label,
+          targetDate: temporalResolution.targetDate,
+        },
+        weatherRisk: weatherRisk
+          ? {
+              riskLevel: weatherRisk.riskLevel,
+              confidence: weatherRisk.confidence,
+              primaryHazard: weatherRisk.primaryHazard,
+              recommendation: weatherRisk.recommendation,
+              advisory: weatherRisk.activitySuitability.advisory,
+            }
+          : undefined,
         untrustedSourceDelimiters: "XML_BOUNDED",
         builtAt: generatedAt,
       };
@@ -136,7 +250,7 @@ export class AIOrchestrator {
       const { systemInstruction, prompt, citations, initialGroundingStatus } =
         this.contextBuilder.buildPrompt(groundedContext);
 
-      // 5. LLM Completion Generation with Error Handlers
+      // 6. LLM Completion Generation with Error Handlers
       let rawAnswerText = "";
       let modelGroundingStatus = initialGroundingStatus;
       let uncertaintyNote: string | undefined;
@@ -172,8 +286,11 @@ export class AIOrchestrator {
             queryLocationName: locationState.queryLocationName,
             locationNotFound: locationState.locationNotFound,
             weather,
+            forecastData,
+            weatherRisk,
             events,
             impactAssessment,
+            temporalResolution,
             citations,
             initialGroundingStatus,
             generatedAt,
@@ -183,7 +300,20 @@ export class AIOrchestrator {
         throw providerError;
       }
 
-      // 6. Response Assembly & Zod Validation
+      // 7. Update Short-Term Conversation Context
+      const updatedContext: ConversationContext = {
+        lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
+        lastIntent: intent,
+        lastTemporalTarget: temporalResolution.target,
+        lastEventId: events[0]?.id,
+        lastEventTitle: events[0]?.title,
+      };
+      this.lastSessionContext = updatedContext;
+      if (request.sessionId) {
+        this.sessionContextMap.set(request.sessionId, updatedContext);
+      }
+
+      // 8. Response Assembly & Zod Validation
       const responseId = `air_${generateDeterministicHash(`${message}_${generatedAt}`)}`;
 
       const responsePayload: AIResponse = {
@@ -199,10 +329,13 @@ export class AIOrchestrator {
           locationName: targetLocation?.name,
           selectedLocationName: locationState.selectedLocation?.name,
           queryLocationName: locationState.queryLocationName,
+          temporalContext: temporalResolution.label,
           confidence: impactAssessment?.confidence,
-          relevanceStatus: impactAssessment?.relevanceStatus,
+          relevanceStatus:
+            impactAssessment?.relevanceStatus || (intent === "impact" ? "unknown" : undefined),
           impactLevel: impactAssessment?.impactLevel,
           isFallback: false,
+          conversationContext: updatedContext,
         },
       };
 
@@ -234,14 +367,16 @@ export class AIOrchestrator {
   /**
    * Deterministic Query Location Resolution.
    *
-   * Preserves and distinguishes:
-   * - selectedLocation: dashboard selected location passed in request
-   * - queryLocationName: explicit location extracted from user query string
-   * - resolvedLocation: final geocoded target location for weather grounding
+   * Priority:
+   * 1. Explicit query location wins.
+   * 2. If no explicit location and query is a follow-up, use context.lastResolvedLocation.
+   * 3. If no context location, use dashboard selectedLocation.
+   * 4. Unknown locations set locationNotFound: true (no fabricated coordinates or weather).
    */
   private async resolveLocation(
     request: ChatRequest,
-    classification?: IntentClassification | string
+    classification?: IntentClassification | string,
+    context?: ConversationContext
   ): Promise<ResolvedLocationState> {
     // 1. Construct selectedLocation from dashboard request
     const selectedLocation: EventLocation | undefined = request.location
@@ -263,6 +398,8 @@ export class AIOrchestrator {
 
     // 2. Determine if user query explicitly mentions a target location
     let queryLocationName: string | undefined;
+    let isFollowUp = false;
+
     if (typeof classification === "string") {
       queryLocationName = classification;
     } else if (classification) {
@@ -270,6 +407,7 @@ export class AIOrchestrator {
         classification.intent === "impact"
           ? classification.targetImpactLocation || classification.extractedLocation
           : classification.extractedLocation;
+      isFollowUp = !!classification.isFollowUp;
     }
 
     // 3. If explicit location was mentioned in the user's query:
@@ -280,8 +418,7 @@ export class AIOrchestrator {
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
         .join(" ");
 
-      // If query explicitly mentions the exact same location name as selectedLocation,
-      // and selectedLocation already has valid coordinates, reuse them directly.
+      // If query explicitly mentions the exact same location name as selectedLocation, reuse coordinates
       if (
         selectedLocation?.coordinates &&
         selectedLocation.name.toLowerCase() === trimmedQueryLoc.toLowerCase()
@@ -295,9 +432,13 @@ export class AIOrchestrator {
         };
       }
 
-      // Geocode the explicit query location using existing LocationService (Open-Meteo)
+      // Geocode the explicit query location using search_location tool
       try {
-        const geoRes = await this.locationService.search(trimmedQueryLoc, 1);
+        const geoRes = await this.toolRegistry.searchLocationTool.execute({
+          query: trimmedQueryLoc,
+          count: 1,
+        });
+
         if (geoRes.success && geoRes.data.length > 0) {
           const top = geoRes.data[0];
           if (top) {
@@ -344,7 +485,18 @@ export class AIOrchestrator {
     }
 
     // 4. If NO explicit query location was mentioned:
-    // Fall back to dashboard selectedLocation
+    // Check if conversation context clearly establishes a location for follow-up
+    if ((isFollowUp || !request.location) && context?.lastResolvedLocation?.coordinates) {
+      return {
+        resolvedLocation: context.lastResolvedLocation,
+        selectedLocation,
+        queryLocationName: undefined,
+        isExplicitQueryLocation: false,
+        locationNotFound: false,
+      };
+    }
+
+    // 5. Fall back to dashboard selectedLocation
     if (selectedLocation) {
       if (selectedLocation.coordinates) {
         return {
@@ -358,7 +510,10 @@ export class AIOrchestrator {
 
       if (selectedLocation.name) {
         try {
-          const geoRes = await this.locationService.search(selectedLocation.name, 1);
+          const geoRes = await this.toolRegistry.searchLocationTool.execute({
+            query: selectedLocation.name,
+            count: 1,
+          });
           if (geoRes.success && geoRes.data.length > 0) {
             const top = geoRes.data[0];
             if (top) {
@@ -395,6 +550,17 @@ export class AIOrchestrator {
       };
     }
 
+    // 6. If conversation context exists as ultimate fallback
+    if (context?.lastResolvedLocation?.coordinates) {
+      return {
+        resolvedLocation: context.lastResolvedLocation,
+        selectedLocation: undefined,
+        queryLocationName: undefined,
+        isExplicitQueryLocation: false,
+        locationNotFound: false,
+      };
+    }
+
     return {
       resolvedLocation: undefined,
       selectedLocation: undefined,
@@ -402,35 +568,6 @@ export class AIOrchestrator {
       isExplicitQueryLocation: false,
       locationNotFound: false,
     };
-  }
-
-  /**
-   * Search for relevant weather events in the local repository.
-   */
-  private async findRelevantEvents(
-    keyword?: string,
-    locationName?: string
-  ): Promise<WeatherEvent[]> {
-    try {
-      const allEvents = await globalEventRepository.findAll({ limit: 50 });
-      if (allEvents.length === 0) return [];
-
-      if (!keyword && !locationName) {
-        return allEvents.slice(0, 3);
-      }
-
-      const kwLower = keyword?.toLowerCase();
-      const locLower = locationName?.toLowerCase();
-
-      return allEvents.filter((ev) => {
-        const text = `${ev.title} ${ev.description} ${ev.location.name} ${ev.location.country}`.toLowerCase();
-        const matchesKw = kwLower ? text.includes(kwLower) : false;
-        const matchesLoc = locLower ? text.includes(locLower) : false;
-        return matchesKw || matchesLoc;
-      });
-    } catch {
-      return [];
-    }
   }
 
   private async getLatestActiveEvent(): Promise<WeatherEvent | undefined> {
@@ -458,22 +595,22 @@ export class AIOrchestrator {
       } else {
         const firstBrace = clean.indexOf("{");
         const lastBrace = clean.lastIndexOf("}");
-        if (firstBrace !== -1 && lastBrace > firstBrace) {
-          clean = clean.substring(firstBrace, lastBrace + 1);
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          clean = clean.slice(firstBrace, lastBrace + 1);
         }
       }
 
       const parsed = JSON.parse(clean);
       if (parsed.answer && typeof parsed.answer === "string") {
-        const validStatuses: GroundingStatus[] = [
-          "grounded",
-          "partially_grounded",
-          "general_knowledge",
-          "insufficient_evidence",
-        ];
-        const status = validStatuses.includes(parsed.groundingStatus)
-          ? (parsed.groundingStatus as GroundingStatus)
-          : undefined;
+        let status: GroundingStatus | undefined = undefined;
+        if (
+          parsed.groundingStatus === "grounded" ||
+          parsed.groundingStatus === "partially_grounded" ||
+          parsed.groundingStatus === "general_knowledge" ||
+          parsed.groundingStatus === "insufficient_evidence"
+        ) {
+          status = parsed.groundingStatus;
+        }
 
         return {
           answer: parsed.answer,
@@ -506,8 +643,11 @@ export class AIOrchestrator {
     queryLocationName?: string;
     locationNotFound?: boolean;
     weather?: WeatherSnapshot;
+    forecastData?: NormalizedForecastData;
+    weatherRisk?: WeatherRiskAssessment;
     events?: WeatherEvent[];
     impactAssessment?: ImpactAssessment;
+    temporalResolution?: TemporalResolution;
     citations: AICitation[];
     initialGroundingStatus: GroundingStatus;
     generatedAt: string;
@@ -517,7 +657,9 @@ export class AIOrchestrator {
     let answer = "";
     const locName = context.targetLocation?.name || "your location";
 
-    const isGreeting = /\b(hlo|hello|hi|hey|greetings|namaste|good morning|good afternoon|good evening)\b/i.test(context.userQuery.trim());
+    const isGreeting = /\b(hlo|hello|hi|hey|greetings|namaste|good morning|good afternoon|good evening)\b/i.test(
+      context.userQuery.trim()
+    );
 
     if (isGreeting) {
       if (context.weather) {
@@ -526,8 +668,19 @@ export class AIOrchestrator {
       } else {
         answer = `Hello! I am WeatherGPT Copilot, your weather and disaster intelligence assistant. Ask me about current weather, 7-day forecasts, or regional disaster impact assessments.`;
       }
-    } else if (context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)) {
+    } else if (
+      context.locationNotFound ||
+      (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
+    ) {
       answer = `Unable to find verified geographic location or weather observations for "${locName}". Please verify the location name and try again.`;
+    } else if (context.weatherRisk) {
+      const wr = context.weatherRisk;
+      answer = `Weather risk assessment for ${locName} (${context.temporalResolution?.label || "target period"}): Overall risk is ${wr.riskLevel.toUpperCase()} (${wr.confidence} confidence). ${wr.activitySuitability.advisory} ${wr.recommendation}`;
+    } else if (context.intent === "forecast" && context.forecastData) {
+      const f = context.forecastData;
+      const tempHigh = f.temperatureRange?.high !== undefined ? `${f.temperatureRange.high}°C` : "N/A";
+      const tempLow = f.temperatureRange?.low !== undefined ? `${f.temperatureRange.low}°C` : "N/A";
+      answer = `Forecast for ${locName} (${context.temporalResolution?.label || f.temporalTarget}): High ${tempHigh}, Low ${tempLow}, ${f.expectedCondition || "clear"}. Rain probability: ${f.maxPrecipitationProbability}%, total precipitation: ${f.totalPrecipitationSum} mm.`;
     } else if (context.intent === "impact" && context.impactAssessment) {
       const imp = context.impactAssessment;
       answer = `Impact assessment for ${locName}: Relevance is ${imp.relevanceStatus.toUpperCase()} with ${imp.impactLevel.toUpperCase()} impact level. ${imp.reasons.join(" ")}`;
@@ -547,7 +700,8 @@ export class AIOrchestrator {
     }
 
     const groundingStatus: GroundingStatus =
-      context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
+      context.locationNotFound ||
+      (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
         ? "insufficient_evidence"
         : context.initialGroundingStatus;
 
@@ -565,8 +719,10 @@ export class AIOrchestrator {
           locationName: context.targetLocation?.name,
           selectedLocationName: context.selectedLocationName,
           queryLocationName: context.queryLocationName,
+          temporalContext: context.temporalResolution?.label,
           confidence: context.impactAssessment?.confidence,
-          relevanceStatus: context.impactAssessment?.relevanceStatus,
+          relevanceStatus:
+            context.impactAssessment?.relevanceStatus || (context.intent === "impact" ? "unknown" : undefined),
           impactLevel: context.impactAssessment?.impactLevel,
           isFallback: true,
           fallbackReason: context.fallbackReason,

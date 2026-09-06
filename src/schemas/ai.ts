@@ -26,15 +26,39 @@ export const aiCitationSchema = z.object({
   publishedAt: z.string().optional(),
 });
 
+export const conversationContextSchema = z.object({
+  lastResolvedLocation: z
+    .object({
+      name: z.string(),
+      city: z.string().optional(),
+      region: z.string().optional(),
+      country: z.string().default("Global"),
+      timezone: z.string().optional(),
+      coordinates: z
+        .object({
+          latitude: z.number(),
+          longitude: z.number(),
+        })
+        .optional(),
+    })
+    .optional(),
+  lastIntent: intentCategorySchema.optional(),
+  lastTemporalTarget: z.string().optional(),
+  lastEventId: z.string().optional(),
+  lastEventTitle: z.string().optional(),
+});
+
 export const aiResponseMetadataSchema = z.object({
   locationName: z.string().optional(),
   selectedLocationName: z.string().optional(),
   queryLocationName: z.string().optional(),
+  temporalContext: z.string().optional(),
   confidence: z.number().min(0).max(1).optional(),
   relevanceStatus: z.string().optional(),
   impactLevel: z.string().optional(),
   isFallback: z.boolean().optional(),
   fallbackReason: z.string().optional(),
+  conversationContext: conversationContextSchema.optional(),
 });
 
 export const aiResponseSchema = z.object({
@@ -62,7 +86,10 @@ export const chatLocationSchema = z.object({
 export const chatRequestSchema = z.object({
   message: z.string().min(1, "Message cannot be empty").max(1000, "Message too long (max 1000 chars)"),
   location: chatLocationSchema.optional(),
+  context: conversationContextSchema.optional(),
+  sessionId: z.string().optional(),
 });
+
 
 export type AIResponseInput = z.input<typeof aiResponseSchema>;
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;

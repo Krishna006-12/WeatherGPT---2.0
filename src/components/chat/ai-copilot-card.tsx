@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, AlertCircle, FileText, CheckCircle2, Info, AlertTriangle, RotateCcw, Sparkles } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
-import type { AIResponse, GroundingStatus } from "@/types/ai";
+import type { AIResponse, GroundingStatus, ConversationContext } from "@/types/ai";
 
 interface ChatMessage {
   id: string;
@@ -27,6 +27,7 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [lastContext, setLastContext] = useState<ConversationContext | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +74,7 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
                 timezone: location.timezone,
               }
             : undefined,
+          context: lastContext,
         }),
       });
 
@@ -91,6 +93,9 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
         ]);
       } else {
         const aiData = data as AIResponse;
+        if (aiData.metadata?.conversationContext) {
+          setLastContext(aiData.metadata.conversationContext);
+        }
         setMessages((prev) => [
           ...prev,
           {
@@ -119,6 +124,7 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
     }
   };
 
+
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     handleSendQuery(query);
@@ -127,6 +133,7 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
   const clearSession = () => {
     setMessages([]);
     setQuery("");
+    setLastContext(undefined);
   };
 
   const locationLabel = location?.name || "your location";

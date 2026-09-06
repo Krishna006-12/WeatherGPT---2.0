@@ -32,6 +32,15 @@ export interface AICitation {
   publishedAt?: ISOTimestamp;
 }
 
+/** Structured short-term conversation context for follow-up reasoning. */
+export interface ConversationContext {
+  lastResolvedLocation?: EventLocation;
+  lastIntent?: IntentCategory;
+  lastTemporalTarget?: string;
+  lastEventId?: string;
+  lastEventTitle?: string;
+}
+
 /**
  * Validated AI response contract.
  * Every response returned to clients must adhere to this structure.
@@ -49,11 +58,13 @@ export interface AIResponse {
     locationName?: string;
     selectedLocationName?: string;
     queryLocationName?: string;
+    temporalContext?: string;
     confidence?: number;
     relevanceStatus?: string;
     impactLevel?: string;
     isFallback?: boolean;
     fallbackReason?: string;
+    conversationContext?: ConversationContext;
   };
 }
 
@@ -66,6 +77,18 @@ export interface GroundedContext {
   events?: WeatherEvent[];
   articles?: NewsArticle[];
   impactAssessment?: ImpactAssessment;
+  temporalResolution?: {
+    target: string;
+    label: string;
+    targetDate: string;
+  };
+  weatherRisk?: {
+    riskLevel: string;
+    confidence: string;
+    primaryHazard?: string;
+    recommendation: string;
+    advisory: string;
+  };
   untrustedSourceDelimiters: string;
   builtAt: ISOTimestamp;
 }
@@ -82,4 +105,6 @@ export interface ChatRequest {
     lon?: number;
     timezone?: string;
   };
+  context?: ConversationContext;
+  sessionId?: string;
 }

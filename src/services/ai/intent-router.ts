@@ -19,6 +19,9 @@ export interface IntentClassification {
   extractedEventKeyword?: string;
   targetImpactLocation?: string;
   isForecastQuery?: boolean;
+  isRiskQuery?: boolean;
+  activityType?: "outdoor_work" | "travel" | "general";
+  isFollowUp?: boolean;
 }
 
 const TEMPORAL_WORDS = [
@@ -28,6 +31,15 @@ const TEMPORAL_WORDS = [
   "this morning",
   "this afternoon",
   "this evening",
+  "tomorrow morning",
+  "tomorrow afternoon",
+  "tomorrow evening",
+  "tomorrow night",
+  "next 24 hours",
+  "next 48 hours",
+  "24 hours",
+  "48 hours",
+  "coming day",
   "today",
   "tomorrow",
   "yesterday",
@@ -83,6 +95,19 @@ const STOP_WORDS = [
   "check",
   "get",
   "over",
+  "about",
+  "good",
+  "for",
+  "safe",
+  "to",
+  "go",
+  "travel",
+  "should",
+  "outside",
+  "outdoor",
+  "work",
+  "fieldwork",
+  "construction",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -179,7 +204,44 @@ export class IntentRouter {
       };
     }
 
-    // 4. Check for Forecast queries
+    // 4. Check for Weather Risk / Activity Assessment Intent
+    // "Is tomorrow good for outdoor work?", "Is it safe to go outside?", "Should I travel tomorrow?"
+    if (this.isRiskQuery(clean)) {
+      const cleanForLoc = clean.replace(
+        /\b(?:is\s+it\s+)?(?:good\s+for|safe\s+to|safe\s+for|should\s+i)?\s*(?:outdoor\s+work|work\s+outside|outside|travel|drive|trip)\b/gi,
+        " "
+      );
+      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
+      const activityType: "outdoor_work" | "travel" | "general" =
+        /\b(travel|road|drive|trip|driving)\b/i.test(clean)
+          ? "travel"
+          : /\b(outdoor work|work outside|construction|fieldwork|outdoor)\b/i.test(clean)
+          ? "outdoor_work"
+          : "general";
+
+      return {
+        intent: isFuture ? "forecast" : "weather",
+        confidence: 0.9,
+        extractedLocation: location,
+        isForecastQuery: isFuture,
+        isRiskQuery: true,
+        activityType,
+      };
+    }
+
+    // 5. Check for pure follow-up queries (e.g. "Tomorrow?", "Will it rain?", "And the temperature?")
+    if (this.isFollowUpQuery(clean)) {
+      const isForecast = /\b(tomorrow|next week|rain|will it rain|weekend)\b/i.test(clean);
+      return {
+        intent: isForecast ? "forecast" : "weather",
+        confidence: 0.85,
+        isForecastQuery: isForecast,
+        isFollowUp: true,
+      };
+    }
+
+    // 6. Check for Forecast queries
     // "Will it rain tomorrow in Kanpur?", "7-day forecast for Delhi", "Forecast for next week"
     if (this.isForecastQuery(clean)) {
       const location = this.extractLocation(clean);
@@ -192,7 +254,7 @@ export class IntentRouter {
       };
     }
 
-    // 5. Check for Current Weather queries
+    // 7. Check for Current Weather queries
     // "What's the weather in Kanpur?", "Weather in Kanpur", "Current temperature in London"
     if (this.isWeatherQuery(clean)) {
       const location = this.extractLocation(clean);
@@ -220,6 +282,7 @@ export class IntentRouter {
     };
   }
 
+
   private isImpactQuery(text: string): boolean {
     const impactVerbs = [
       /\b(affect|effect|impacting|impacted|impacts|impact)\b/i,
@@ -230,9 +293,14 @@ export class IntentRouter {
     ];
 
     const hasImpactVerb = impactVerbs.some((pattern) => pattern.test(text));
-    const hasHazard = this.extractEventKeyword(text) !== undefined;
+    const hasHazard =
+      this.extractEventKeyword(text) !== undefined ||
+      /\b(disaster|event|crisis|emergency|storm|flood)\b/i.test(text);
 
-    return hasImpactVerb && (hasHazard || /\b(will|is|can|could|kya)\b/i.test(text));
+    return (
+      hasImpactVerb &&
+      (hasHazard || /\b(will|is|can|could|would|does|do|did|might|may|kya)\b/i.test(text))
+    );
   }
 
   private isGeneralKnowledgeQuery(text: string): boolean {
@@ -280,11 +348,30 @@ export class IntentRouter {
     return hasEventWord && !/\b(tomorrow|next week|forecast|weather in)\b/i.test(text);
   }
 
+  private isFollowUpQuery(text: string): boolean {
+    const followUpPatterns = [
+      /^(?:tomorrow|kal|tonight|next week|this weekend)\??$/i,
+      /^(?:will it rain|is it going to rain|rain expected|any rain|chances of rain)\??$/i,
+      /^(?:and the weather|what about the weather|and temperature|what's the temperature)\??$/i,
+      /^(?:how about tomorrow|what about tomorrow|and tomorrow)\??$/i,
+    ];
+    return followUpPatterns.some((pattern) => pattern.test(text.trim()));
+  }
+
+  private isRiskQuery(text: string): boolean {
+    const riskPatterns = [
+      /\b(safe to go outside|good for outdoor work|outdoor work|safe outside|should i travel|travel tomorrow|safe to travel|safe for travel)\b/i,
+      /\b(safe for outdoor|can i go out|is it safe outside|is it safe to travel|good for travel)\b/i,
+      /\b(travel safe|outdoor safe|work outside safe)\b/i,
+    ];
+    return riskPatterns.some((pattern) => pattern.test(text));
+  }
+
   private isForecastQuery(text: string): boolean {
     const forecastKeywords = [
-      /\b(tomorrow|kal|parso|next week|weekend|upcoming|days ahead)\b/i,
+      /\b(tomorrow|kal|parso|next week|weekend|upcoming|days ahead|next 24|next 48|48 hours|24 hours)\b/i,
       /\b(forecast|hourly|daily|extended forecast|outlook)\b/i,
-      /\b(will it rain|going to rain|chances of rain|probability of rain)\b/i,
+      /\b(will it rain|going to rain|chances of rain|probability of rain|rain today|rain tomorrow)\b/i,
       /\b(will it snow|will it storm|rain expected)\b/i,
     ];
 
@@ -307,7 +394,9 @@ export class IntentRouter {
    */
   extractLocation(text: string): string | undefined {
     const locationRegexes = [
-      // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar"
+      // "what about London", "how about Kanpur", "what about Nepal"
+      /\b(?:what\s+about|how\s+about|and\s+for|and\s+in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar", "near Delhi"
       /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
       // "weather in London", "temp in New Delhi", "forecast for Delhi"
       /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
@@ -318,6 +407,7 @@ export class IntentRouter {
       // "London weather", "New Delhi forecast"
       /\b([a-zA-Z\s]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];
+
 
     for (const regex of locationRegexes) {
       const match = text.match(regex);
@@ -376,6 +466,7 @@ export class IntentRouter {
       "heatwave",
       "cold wave",
       "drought",
+      "disaster",
     ];
 
     for (const hazard of hazards) {

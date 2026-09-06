@@ -187,7 +187,7 @@ export class ImpactEngine {
       assessedAt,
       methodology: METHODOLOGY_VERSION,
       provenance: [
-        ...event.provenance,
+        ...(event.provenance || []),
         ...(weather?.provenance || []),
       ],
     };

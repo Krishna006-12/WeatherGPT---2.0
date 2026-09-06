@@ -104,6 +104,34 @@ export class MockAIProvider implements AIProvider {
       });
     }
 
+    // Extract location name if available
+    const locMatch = prompt.match(/<target_location>[\s\S]*?Name:\s*([^\n]+)/i);
+    const locName = locMatch && locMatch[1] ? locMatch[1].trim() : "the requested location";
+
+    // Weather Risk Assessment prompt
+    if (prompt.includes("<verified_weather_risk")) {
+      const isUnfavorable = prompt.includes('riskLevel="high"') || prompt.includes('riskLevel="critical"');
+      const statusText = isUnfavorable ? "caution or postponement" : "favorable conditions";
+      return JSON.stringify({
+        answer: `Weather risk assessment for ${locName}: Verified meteorological indicators suggest ${statusText} for outdoor activities and travel based on current conditions and forecasts.`,
+        groundingStatus: "grounded",
+        uncertainty: null,
+        keyPoints: ["Deterministic risk criteria evaluated", "Activity advisory provided"],
+      });
+    }
+
+    // Forecast prompt
+    if (prompt.includes("<verified_forecast") || prompt.includes("Intent Detected: forecast")) {
+      const temporalMatch = prompt.match(/Target Period:\s*([^\n(]+)/i);
+      const period = temporalMatch && temporalMatch[1] ? temporalMatch[1].trim() : "upcoming period";
+      return JSON.stringify({
+        answer: `Weather forecast for ${locName} (${period}): Verified model data reports expected temperatures, precipitation probabilities, and sky conditions.`,
+        groundingStatus: "grounded",
+        uncertainty: null,
+        keyPoints: ["Verified forecast data cited", "Precipitation probability included"],
+      });
+    }
+
     // If no verified weather data is present in prompt, return insufficient_evidence
     if (!prompt.includes("<verified_weather_data")) {
       return JSON.stringify({
@@ -113,10 +141,6 @@ export class MockAIProvider implements AIProvider {
         keyPoints: ["No verified observations available", "Insufficient evidence"],
       });
     }
-
-    // Extract location name if available
-    const locMatch = prompt.match(/<target_location>[\s\S]*?Name:\s*([^\n]+)/i);
-    const locName = locMatch && locMatch[1] ? locMatch[1].trim() : "the requested location";
 
     // Default current weather
     return JSON.stringify({

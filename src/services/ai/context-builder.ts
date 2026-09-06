@@ -118,7 +118,22 @@ export class ContextBuilder {
       );
     }
 
-    // --- 5. Untrusted Source Materials (Sanitized with Strict Delimiters) ---
+    // --- 5. Verified Temporal Window ---
+    if (context.temporalResolution) {
+      contextSections.push(
+        `<verified_temporal_window target="${context.temporalResolution.target}" label="${context.temporalResolution.label}" targetDate="${context.temporalResolution.targetDate}">\nTarget Period: ${context.temporalResolution.label} (Date: ${context.temporalResolution.targetDate})\nTimezone Context: ${context.targetLocation?.timezone || "UTC"}\n</verified_temporal_window>`
+      );
+    }
+
+    // --- 6. Verified Weather Risk Assessment ---
+    if (context.weatherRisk) {
+      const wr = context.weatherRisk;
+      contextSections.push(
+        `<verified_weather_risk riskLevel="${wr.riskLevel}" confidence="${wr.confidence}">\nOverall Risk Level: ${wr.riskLevel.toUpperCase()}\nConfidence: ${wr.confidence}\nPrimary Hazard: ${wr.primaryHazard || "None"}\nActivity Advisory: ${wr.advisory}\nRecommendation: ${wr.recommendation}\n</verified_weather_risk>`
+      );
+    }
+
+    // --- 7. Untrusted Source Materials (Sanitized with Strict Delimiters) ---
     if (context.articles && context.articles.length > 0) {
       const articleSnippets = context.articles.slice(0, 3).map((art) => {
         // Strict prompt-injection sanitation
@@ -144,9 +159,10 @@ export class ContextBuilder {
       context.impactAssessment.evidence.some((e) => e.type === "downstream_unestablished" || e.type === "no_evidence_available")
     ) {
       initialGroundingStatus = "insufficient_evidence";
-    } else if (!context.weather && (!context.events || context.events.length === 0)) {
+    } else if (!context.weather && (!context.events || context.events.length === 0) && !context.weatherRisk) {
       initialGroundingStatus = "insufficient_evidence";
     }
+
 
     // Deduplicate citations by source + title
     const uniqueCitations = citations.filter(
