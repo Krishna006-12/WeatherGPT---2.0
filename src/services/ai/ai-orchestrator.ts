@@ -146,6 +146,7 @@ export class AIOrchestrator {
           citations: [],
           initialGroundingStatus: "insufficient_evidence",
           generatedAt,
+          conversationContext: currentContext,
         });
       }
 
@@ -250,7 +251,20 @@ export class AIOrchestrator {
       const { systemInstruction, prompt, citations, initialGroundingStatus } =
         this.contextBuilder.buildPrompt(groundedContext);
 
-      // 6. LLM Completion Generation with Error Handlers
+      // 6. Compute Short-Term Conversation Context
+      const updatedContext: ConversationContext = {
+        lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
+        lastIntent: intent,
+        lastTemporalTarget: temporalResolution.target,
+        lastEventId: events[0]?.id,
+        lastEventTitle: events[0]?.title,
+      };
+      this.lastSessionContext = updatedContext;
+      if (request.sessionId) {
+        this.sessionContextMap.set(request.sessionId, updatedContext);
+      }
+
+      // 7. LLM Completion Generation with Resilient Fallback Handlers
       let rawAnswerText = "";
       let modelGroundingStatus = initialGroundingStatus;
       let uncertaintyNote: string | undefined;
@@ -295,22 +309,10 @@ export class AIOrchestrator {
             initialGroundingStatus,
             generatedAt,
             fallbackReason: providerError.message,
+            conversationContext: updatedContext,
           });
         }
         throw providerError;
-      }
-
-      // 7. Update Short-Term Conversation Context
-      const updatedContext: ConversationContext = {
-        lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
-        lastIntent: intent,
-        lastTemporalTarget: temporalResolution.target,
-        lastEventId: events[0]?.id,
-        lastEventTitle: events[0]?.title,
-      };
-      this.lastSessionContext = updatedContext;
-      if (request.sessionId) {
-        this.sessionContextMap.set(request.sessionId, updatedContext);
       }
 
       // 8. Response Assembly & Zod Validation
@@ -652,6 +654,7 @@ export class AIOrchestrator {
     initialGroundingStatus: GroundingStatus;
     generatedAt: string;
     fallbackReason?: string;
+    conversationContext?: ConversationContext;
   }): Result<AIResponse> {
     const id = `air_fallback_${generateDeterministicHash(`${context.userQuery}_${context.generatedAt}`)}`;
     let answer = "";
@@ -726,6 +729,7 @@ export class AIOrchestrator {
           impactLevel: context.impactAssessment?.impactLevel,
           isFallback: true,
           fallbackReason: context.fallbackReason,
+          conversationContext: context.conversationContext,
         },
       },
     };

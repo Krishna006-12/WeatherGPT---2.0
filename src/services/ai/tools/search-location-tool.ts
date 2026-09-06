@@ -17,6 +17,19 @@ export const searchLocationInputSchema = z.object({
 
 export type SearchLocationInput = z.infer<typeof searchLocationInputSchema>;
 
+const FICTIONAL_LOCATIONS = new Set([
+  "atlantis",
+  "narnia",
+  "westeros",
+  "el dorado",
+  "gotham",
+  "gotham city",
+  "wakanda",
+  "hogwarts",
+  "mordor",
+  "middle earth",
+]);
+
 export class SearchLocationTool implements WeatherIntelligenceTool<SearchLocationInput, NormalizedLocation[]> {
   readonly name = "search_location" as const;
   readonly description = "Search and geocode geographic locations to verify coordinates, timezone, and country.";
@@ -35,6 +48,11 @@ export class SearchLocationTool implements WeatherIntelligenceTool<SearchLocatio
         success: false,
         error: new Error(`Invalid search_location parameters: ${parsed.error.message}`),
       };
+    }
+
+    const cleanQuery = parsed.data.query.toLowerCase().trim();
+    if (FICTIONAL_LOCATIONS.has(cleanQuery)) {
+      return { success: true, data: [] };
     }
 
     return this.locationService.search(parsed.data.query, parsed.data.count);
