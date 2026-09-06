@@ -78,8 +78,8 @@ export class AIOrchestrator {
       let events: WeatherEvent[] = [];
       let impactAssessment: ImpactAssessment | undefined;
 
-      // Weather / Forecast retrieval
-      if ((intent === "weather" || intent === "forecast" || intent === "impact") && targetLocation?.coordinates) {
+      // Weather / Forecast retrieval (also retrieved for general queries when location coordinates are present to ground context)
+      if ((intent === "weather" || intent === "forecast" || intent === "impact" || intent === "general") && targetLocation?.coordinates) {
         try {
           const wRes = await this.weatherService.getWeather(
             targetLocation.coordinates,
@@ -146,10 +146,14 @@ export class AIOrchestrator {
         }
         uncertaintyNote = parsed.uncertainty || undefined;
       } catch (providerError: unknown) {
-        // Fallback: If AI provider is unavailable or missing key, generate clean deterministic response
+        console.error("[AIOrchestrator] Provider error during completion:", providerError);
+
+        // Fallback: If AI provider is unavailable, rate limited, or returned invalid response, generate clean deterministic response
         if (
           providerError instanceof AppError &&
-          (providerError.code === "AI_PROVIDER_UNAVAILABLE" || providerError.code === "AI_RATE_LIMITED")
+          (providerError.code === "AI_PROVIDER_UNAVAILABLE" ||
+            providerError.code === "AI_RATE_LIMITED" ||
+            providerError.code === "AI_RESPONSE_INVALID")
         ) {
           return this.generateDeterministicFallback({
             userQuery: message,
@@ -161,6 +165,7 @@ export class AIOrchestrator {
             citations,
             initialGroundingStatus,
             generatedAt,
+            fallbackReason: providerError.message,
           });
         }
         throw providerError;
@@ -316,20 +321,34 @@ export class AIOrchestrator {
     uncertainty?: string | null;
   } {
     try {
-      // Clean possible markdown code fence wrappers
       let clean = raw.trim();
-      if (clean.startsWith("```json")) {
-        clean = clean.replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
-      } else if (clean.startsWith("```")) {
-        clean = clean.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      const jsonBlockMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (jsonBlockMatch && jsonBlockMatch[1]) {
+        clean = jsonBlockMatch[1].trim();
+      } else {
+        const firstBrace = clean.indexOf("{");
+        const lastBrace = clean.lastIndexOf("}");
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          clean = clean.substring(firstBrace, lastBrace + 1);
+        }
       }
 
       const parsed = JSON.parse(clean);
       if (parsed.answer && typeof parsed.answer === "string") {
+        const validStatuses: GroundingStatus[] = [
+          "grounded",
+          "partially_grounded",
+          "general_knowledge",
+          "insufficient_evidence",
+        ];
+        const status = validStatuses.includes(parsed.groundingStatus)
+          ? (parsed.groundingStatus as GroundingStatus)
+          : undefined;
+
         return {
           answer: parsed.answer,
-          groundingStatus: parsed.groundingStatus,
-          uncertainty: parsed.uncertainty,
+          groundingStatus: status,
+          uncertainty: parsed.uncertainty || null,
         };
       }
     } catch {
@@ -359,12 +378,22 @@ export class AIOrchestrator {
     citations: AICitation[];
     initialGroundingStatus: GroundingStatus;
     generatedAt: string;
+    fallbackReason?: string;
   }): Result<AIResponse> {
     const id = `air_fallback_${generateDeterministicHash(`${context.userQuery}_${context.generatedAt}`)}`;
     let answer = "";
     const locName = context.targetLocation?.name || "your location";
 
-    if (context.intent === "impact" && context.impactAssessment) {
+    const isGreeting = /\b(hlo|hello|hi|hey|greetings|namaste|good morning|good afternoon|good evening)\b/i.test(context.userQuery.trim());
+
+    if (isGreeting) {
+      if (context.weather) {
+        const c = context.weather.current;
+        answer = `Hello! I am WeatherGPT Copilot. Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h. How can I assist your weather intelligence planning today?`;
+      } else {
+        answer = `Hello! I am WeatherGPT Copilot, your weather and disaster intelligence assistant. Ask me about current weather, 7-day forecasts, or regional disaster impact assessments.`;
+      }
+    } else if (context.intent === "impact" && context.impactAssessment) {
       const imp = context.impactAssessment;
       answer = `Impact assessment for ${locName}: Relevance is ${imp.relevanceStatus.toUpperCase()} with ${imp.impactLevel.toUpperCase()} impact level. ${imp.reasons.join(" ")}`;
       if (context.weather) {
@@ -378,7 +407,8 @@ export class AIOrchestrator {
       const c = context.weather.current;
       answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h, Precipitation: ${c.precipitation} mm/h.`;
     } else {
-      answer = `Information for "${context.userQuery}" could not be generated by the AI service at this time. Please check verified live observations.`;
+      const reasonNote = context.fallbackReason ? ` (${context.fallbackReason})` : "";
+      answer = `Live AI intelligence service is currently operating in deterministic backup mode${reasonNote}. Please check the verified live observation cards on your dashboard or ask about weather for a specific city.`;
     }
 
     return {
@@ -397,6 +427,7 @@ export class AIOrchestrator {
           relevanceStatus: context.impactAssessment?.relevanceStatus,
           impactLevel: context.impactAssessment?.impactLevel,
           isFallback: true,
+          fallbackReason: context.fallbackReason,
         },
       },
     };

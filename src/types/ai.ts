@@ -51,6 +51,7 @@ export interface AIResponse {
     relevanceStatus?: string;
     impactLevel?: string;
     isFallback?: boolean;
+    fallbackReason?: string;
   };
 }
 

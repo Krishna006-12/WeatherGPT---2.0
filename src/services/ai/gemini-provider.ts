@@ -34,8 +34,9 @@ export class GeminiProvider implements AIProvider {
    * Check if the provider has an active API key configured.
    */
   hasValidKey(): boolean {
-    const key = this.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
-    return typeof key === "string" && key.trim().length > 0;
+    const rawKey = this.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+    const key = rawKey?.trim().replace(/^["']|["']$/g, "");
+    return typeof key === "string" && key.length > 0;
   }
 
   /**
@@ -46,9 +47,10 @@ export class GeminiProvider implements AIProvider {
     systemInstruction?: string,
     options: AICompletionOptions = {}
   ): Promise<string> {
-    const key = this.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+    const rawKey = this.apiKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+    const key = rawKey?.trim().replace(/^["']|["']$/g, "");
 
-    if (!key || key.trim().length === 0) {
+    if (!key || key.length === 0) {
       throw new AppError(
         "AI_PROVIDER_UNAVAILABLE",
         "Gemini API key is not configured. Please set GEMINI_API_KEY in environment.",
@@ -56,7 +58,10 @@ export class GeminiProvider implements AIProvider {
       );
     }
 
-    const model = options.model || process.env.GEMINI_MODEL || this.defaultModel;
+    const rawModel = (options.model || process.env.GEMINI_MODEL || this.defaultModel || DEFAULT_MODEL)
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    const model = rawModel.startsWith("models/") ? rawModel.replace(/^models\//, "") : rawModel;
     const timeout = options.timeoutMs || this.timeoutMs;
     const endpoint = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
 
@@ -101,6 +106,7 @@ export class GeminiProvider implements AIProvider {
         }
 
         const errorText = await response.text().catch(() => "Unknown error");
+        console.error(`[GeminiProvider] API request to ${model} failed (status ${response.status}):`, errorText);
         throw new AppError(
           "AI_PROVIDER_UNAVAILABLE",
           `Gemini API returned status ${response.status}: ${errorText.slice(0, 200)}`,
@@ -112,9 +118,11 @@ export class GeminiProvider implements AIProvider {
       const candidate = data.candidates?.[0];
 
       if (!candidate || !candidate.content?.parts?.[0]?.text) {
+        const finishReason = candidate?.finishReason || "NO_CANDIDATES";
+        console.warn(`[GeminiProvider] Candidate missing text. Finish reason: ${finishReason}`);
         throw new AppError(
           "AI_RESPONSE_INVALID",
-          "Gemini response did not contain valid text candidates",
+          `Gemini response did not contain valid text candidates (finishReason: ${finishReason})`,
           422
         );
       }

@@ -47,35 +47,31 @@ export default function HomePage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-min">
+        <div id="section-dashboard" className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-min">
           {/* 1. Current Weather */}
-          <div className="lg:col-span-8 order-1">
+          <div id="section-weather" className="lg:col-span-8 order-1 scroll-mt-6">
             <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
           </div>
           
           {/* 2. Critical Live Intelligence */}
-          <div className="lg:col-span-4 order-2 lg:col-start-9 lg:row-start-1">
+          <div id="section-impact" className="lg:col-span-4 order-2 lg:col-start-9 lg:row-start-1 scroll-mt-6 space-y-6">
             <LiveEventCard />
-          </div>
-
-          {/* 3. Impact Intelligence */}
-          <div className="lg:col-span-4 order-3 lg:col-start-9 lg:row-start-2">
             <ImpactCard location={selectedLocation} />
           </div>
 
-          {/* 4. Hourly Forecast & Sunrise */}
-          <div className="lg:col-span-8 order-4 lg:col-start-1 lg:row-start-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 3. Hourly Forecast & Sunrise */}
+          <div id="section-forecast" className="lg:col-span-8 order-4 lg:col-start-1 lg:row-start-2 grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-6">
             <HourlyForecastCard weather={weather} isLoading={isWeatherLoading} />
             <SunriseCard weather={weather} isLoading={isWeatherLoading} />
           </div>
 
-          {/* 5. 7-Day Forecast */}
-          <div className="lg:col-span-8 order-5 lg:col-start-1 lg:row-start-3">
+          {/* 4. 7-Day Forecast */}
+          <div className="lg:col-span-8 order-5 lg:col-start-1 lg:row-start-3 scroll-mt-6">
             <SevenDayForecastCard weather={weather} isLoading={isWeatherLoading} />
           </div>
 
-          {/* 6. AI Copilot */}
-          <div className="lg:col-span-4 order-6 lg:col-start-9 lg:row-start-3">
+          {/* 5. AI Copilot */}
+          <div id="section-copilot" className="lg:col-span-4 order-6 lg:col-start-9 lg:row-start-3 scroll-mt-6">
             <AICopilotCard location={selectedLocation} />
           </div>
         </div>

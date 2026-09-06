@@ -32,6 +32,7 @@ export const aiResponseMetadataSchema = z.object({
   relevanceStatus: z.string().optional(),
   impactLevel: z.string().optional(),
   isFallback: z.boolean().optional(),
+  fallbackReason: z.string().optional(),
 });
 
 export const aiResponseSchema = z.object({
