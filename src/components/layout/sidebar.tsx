@@ -22,7 +22,7 @@ export function Sidebar() {
 
 function NavItem({ icon, active }: { icon: React.ReactNode; active?: boolean }) {
   return (
-    <Link href="#" className={`p-3 rounded-xl transition-colors ${active ? "bg-cyan-900/40 text-cyan-400" : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800"}`}>
+    <Link href="/" className={`p-3 rounded-xl transition-colors ${active ? "bg-cyan-900/40 text-cyan-400" : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800"}`}>
       {icon}
     </Link>
   );

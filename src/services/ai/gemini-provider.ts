@@ -56,7 +56,7 @@ export class GeminiProvider implements AIProvider {
       );
     }
 
-    const model = options.model || this.defaultModel;
+    const model = options.model || process.env.GEMINI_MODEL || this.defaultModel;
     const timeout = options.timeoutMs || this.timeoutMs;
     const endpoint = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
 
