@@ -11,6 +11,7 @@
  */
 
 import type { IntentCategory } from "@/types/ai";
+import type { CropType } from "@/types/agriculture";
 
 export interface IntentClassification {
   intent: IntentCategory;
@@ -18,6 +19,7 @@ export interface IntentClassification {
   extractedLocation?: string;
   extractedEventKeyword?: string;
   targetImpactLocation?: string;
+  extractedCrop?: CropType;
   isForecastQuery?: boolean;
   isRiskQuery?: boolean;
   activityType?: "outdoor_work" | "travel" | "general";
@@ -204,7 +206,28 @@ export class IntentRouter {
       };
     }
 
-    // 4. Check for Weather Risk / Activity Assessment Intent
+    // 4. Check for Agriculture Intent
+    // "Is tomorrow safe to spray wheat in Kanpur?", "Can I irrigate my rice field?", "Weather impact on potato in Agra"
+    if (this.isAgricultureQuery(clean)) {
+      const extractedCrop = this.extractCrop(clean);
+      const cleanForLoc = clean.replace(
+        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|fasal|kheti|irrigation|spraying|spray|harvesting|harvest)\b/gi,
+        " "
+      );
+      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
+
+      return {
+        intent: "agriculture",
+        confidence: 0.9,
+        extractedLocation: location,
+        extractedCrop: extractedCrop || "wheat",
+        isForecastQuery: isFuture,
+        isRiskQuery: true,
+      };
+    }
+
+    // 5. Check for Weather Risk / Activity Assessment Intent
     // "Is tomorrow good for outdoor work?", "Is it safe to go outside?", "Should I travel tomorrow?"
     if (this.isRiskQuery(clean)) {
       const cleanForLoc = clean.replace(
@@ -475,6 +498,32 @@ export class IntentRouter {
       }
     }
 
+    return undefined;
+  }
+
+  /**
+   * Check if query contains agricultural/crop keywords.
+   */
+  private isAgricultureQuery(text: string): boolean {
+    const agriTerms = [
+      /\b(crop|crops|farming|farm|agriculture|agricultural|fasal|kheti)\b/i,
+      /\b(irrigation|irrigate|watering|sinchai)\b/i,
+      /\b(spraying|spray|pesticide|fungicide|foliar)\b/i,
+      /\b(harvest|harvesting|sowing|planting|cutting)\b/i,
+      /\b(wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson)\b/i,
+    ];
+    return agriTerms.some((pattern) => pattern.test(text));
+  }
+
+  /**
+   * Extract target crop from user text.
+   */
+  private extractCrop(text: string): CropType | undefined {
+    if (/\b(wheat|gehun)\b/i.test(text)) return "wheat";
+    if (/\b(rice|paddy|dhan)\b/i.test(text)) return "rice";
+    if (/\b(maize|corn|makka)\b/i.test(text)) return "maize";
+    if (/\b(potato|potatoes|aloo)\b/i.test(text)) return "potato";
+    if (/\b(mustard|sarson)\b/i.test(text)) return "mustard";
     return undefined;
   }
 }

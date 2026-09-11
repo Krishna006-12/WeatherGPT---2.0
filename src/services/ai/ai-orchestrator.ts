@@ -24,6 +24,7 @@ import type {
 import type { EventLocation, WeatherEvent } from "@/types/events";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { ImpactAssessment } from "@/types/impact";
+import type { AgricultureAssessment } from "@/types/agriculture";
 import type { Result } from "@/types/common";
 import { AppError } from "@/lib/errors";
 import { aiResponseSchema } from "@/schemas/ai";
@@ -132,6 +133,7 @@ export class AIOrchestrator {
       let weatherRisk: WeatherRiskAssessment | undefined;
       let events: WeatherEvent[] = [];
       let impactAssessment: ImpactAssessment | undefined;
+      let agricultureAssessment: AgricultureAssessment | undefined;
 
       // If location is unknown, fail fast with insufficient evidence without executing weather tools
       if (locationState.locationNotFound) {
@@ -152,7 +154,7 @@ export class AIOrchestrator {
 
       // Execute Weather / Forecast Tools
       if (
-        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "general") &&
+        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "agriculture" || intent === "general") &&
         targetLocation?.coordinates
       ) {
         // Fetch current observations via get_weather tool
@@ -222,6 +224,19 @@ export class AIOrchestrator {
         }
       }
 
+      // Agriculture Engine evaluation via get_agriculture_risk tool
+      if (intent === "agriculture" && targetLocation?.coordinates) {
+        const crop = classification.extractedCrop || "wheat";
+        const aRes = await this.toolRegistry.getAgricultureRiskTool.execute({
+          coordinates: targetLocation.coordinates,
+          crop,
+          timezone: targetLocation.timezone,
+        });
+        if (aRes.success) {
+          agricultureAssessment = aRes.data;
+        }
+      }
+
       // 5. Grounded Context Construction with XML Boundaries
       const groundedContext: GroundedContext = {
         userQuery: message,
@@ -230,6 +245,7 @@ export class AIOrchestrator {
         weather,
         events: events.length > 0 ? events : undefined,
         impactAssessment,
+        agricultureAssessment,
         temporalResolution: {
           target: temporalResolution.target,
           label: temporalResolution.label,
@@ -304,6 +320,7 @@ export class AIOrchestrator {
             weatherRisk,
             events,
             impactAssessment,
+            agricultureAssessment,
             temporalResolution,
             citations,
             initialGroundingStatus,
@@ -649,6 +666,7 @@ export class AIOrchestrator {
     weatherRisk?: WeatherRiskAssessment;
     events?: WeatherEvent[];
     impactAssessment?: ImpactAssessment;
+    agricultureAssessment?: AgricultureAssessment;
     temporalResolution?: TemporalResolution;
     citations: AICitation[];
     initialGroundingStatus: GroundingStatus;
@@ -676,6 +694,9 @@ export class AIOrchestrator {
       (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
     ) {
       answer = `Unable to find verified geographic location or weather observations for "${locName}". Please verify the location name and try again.`;
+    } else if (context.intent === "agriculture" && context.agricultureAssessment) {
+      const agr = context.agricultureAssessment;
+      answer = `Agricultural weather risk for ${agr.cropDisplayName} in ${locName}: Overall risk is ${agr.overallRiskLevel.toUpperCase()}. Irrigation: ${agr.activities.irrigation.advisory} Spraying: ${agr.activities.spraying.advisory} Field operations: ${agr.activities.fieldOperations.advisory}`;
     } else if (context.weatherRisk) {
       const wr = context.weatherRisk;
       answer = `Weather risk assessment for ${locName} (${context.temporalResolution?.label || "target period"}): Overall risk is ${wr.riskLevel.toUpperCase()} (${wr.confidence} confidence). ${wr.activitySuitability.advisory} ${wr.recommendation}`;

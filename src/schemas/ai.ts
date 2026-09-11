@@ -9,6 +9,7 @@ export const intentCategorySchema = z.enum([
   "forecast",
   "weather_event",
   "impact",
+  "agriculture",
   "general",
 ]);
 

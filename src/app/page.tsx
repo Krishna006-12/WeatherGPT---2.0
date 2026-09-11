@@ -11,6 +11,7 @@ import { SunriseCard } from "@/components/weather/sunrise-card";
 import { SevenDayForecastCard } from "@/components/weather/seven-day-forecast-card";
 import { LiveEventCard } from "@/components/events/live-event-card";
 import { ImpactCard } from "@/components/impact/impact-card";
+import { AgricultureCard } from "@/components/agriculture/agriculture-card";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 
 const DEFAULT_LOCATION: NormalizedLocation = {
@@ -53,10 +54,11 @@ export default function HomePage() {
             <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
           </div>
           
-          {/* 2. Critical Live Intelligence */}
+          {/* 2. Critical Live Intelligence & Agriculture */}
           <div id="section-impact" className="lg:col-span-4 order-2 lg:col-start-9 lg:row-start-1 scroll-mt-6 space-y-6">
             <LiveEventCard />
             <ImpactCard location={selectedLocation} />
+            <AgricultureCard location={selectedLocation} />
           </div>
 
           {/* 3. Hourly Forecast & Sunrise */}

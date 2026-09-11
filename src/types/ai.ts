@@ -7,6 +7,7 @@ import type { ISOTimestamp } from "./common";
 import type { EventLocation, WeatherEvent } from "./events";
 import type { WeatherSnapshot } from "./weather";
 import type { ImpactAssessment } from "./impact";
+import type { AgricultureAssessment } from "./agriculture";
 import type { NewsArticle } from "./news";
 
 /** Supported high-level user intents. */
@@ -15,6 +16,7 @@ export type IntentCategory =
   | "forecast"
   | "weather_event"
   | "impact"
+  | "agriculture"
   | "general";
 
 /** Grounding verification status of an AI answer. */
@@ -77,6 +79,7 @@ export interface GroundedContext {
   events?: WeatherEvent[];
   articles?: NewsArticle[];
   impactAssessment?: ImpactAssessment;
+  agricultureAssessment?: AgricultureAssessment;
   temporalResolution?: {
     target: string;
     label: string;

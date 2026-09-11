@@ -21,12 +21,15 @@ import { GetForecastTool } from "./get-forecast-tool";
 import { GetLiveEventsTool } from "./get-live-events-tool";
 import { GetEventImpactTool } from "./get-event-impact-tool";
 import { GetWeatherRiskTool } from "./get-weather-risk-tool";
+import { GetAgricultureRiskTool } from "./get-agriculture-risk-tool";
+import type { AgricultureService } from "@/services/agriculture/agriculture-service";
 
 export interface WeatherToolRegistryServices {
   locationService: LocationService;
   weatherService: WeatherService;
   eventRepository: EventRepository;
   impactEngine: ImpactEngine;
+  agricultureService?: AgricultureService;
 }
 
 export class WeatherToolRegistry {
@@ -36,6 +39,7 @@ export class WeatherToolRegistry {
   readonly getLiveEventsTool: GetLiveEventsTool;
   readonly getEventImpactTool: GetEventImpactTool;
   readonly getWeatherRiskTool: GetWeatherRiskTool;
+  readonly getAgricultureRiskTool: GetAgricultureRiskTool;
 
   constructor(services: WeatherToolRegistryServices) {
     this.searchLocationTool = new SearchLocationTool(services.locationService);
@@ -44,5 +48,6 @@ export class WeatherToolRegistry {
     this.getLiveEventsTool = new GetLiveEventsTool(services.eventRepository);
     this.getEventImpactTool = new GetEventImpactTool(services.impactEngine);
     this.getWeatherRiskTool = new GetWeatherRiskTool();
+    this.getAgricultureRiskTool = new GetAgricultureRiskTool(services.agricultureService);
   }
 }
