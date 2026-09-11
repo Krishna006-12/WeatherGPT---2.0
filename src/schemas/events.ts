@@ -101,7 +101,7 @@ export const eventTimelineEntrySchema = z.object({
 
 export const eventSourceSchema = z.object({
   name: z.string().min(1),
-  url: z.string().url().optional(),
+  url: z.string().url().optional().or(z.literal("")),
   publishedAt: z.string().min(1),
   category: newsSourceCategorySchema,
   tier: sourceTierSchema,

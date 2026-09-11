@@ -22,7 +22,7 @@ export const newsSourceCategorySchema = z.enum([
 
 export const newsSourceSchema = z.object({
   name: z.string().min(1),
-  url: z.string().url().optional(),
+  url: z.string().url().optional().or(z.literal("")),
   category: newsSourceCategorySchema,
   tier: sourceTierSchema,
 });
@@ -30,7 +30,7 @@ export const newsSourceSchema = z.object({
 export const newsArticleSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
-  url: z.string().url(),
+  url: z.string().url().or(z.string().min(1)),
   source: newsSourceSchema,
   publishedAt: z.string().min(1),
   fetchedAt: z.string().min(1),
@@ -39,7 +39,7 @@ export const newsArticleSchema = z.object({
   language: z.string().optional(),
   sourceTier: sourceTierSchema,
   provenance: dataProvenanceSchema,
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export const rawFeedItemSchema = z.object({

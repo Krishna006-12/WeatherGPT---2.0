@@ -267,6 +267,13 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
         description: `Corroborated by ${sources.length} independent source reports.`,
       });
     }
+    if (status !== "active") {
+      timeline.push({
+        timestamp: lastUpdatedAt,
+        type: "status_changed",
+        description: `Event lifecycle status transitioned to ${status}.`,
+      });
+    }
 
     const eventPrototype: WeatherEvent = {
       id,
@@ -287,14 +294,12 @@ export function clusterArticlesIntoEvents(articles: NewsArticle[]): WeatherEvent
       sourceArticleIds: cluster.map((a) => a.id),
       sources,
       impacts: [],
-      provenance: [
-        {
-          provider: leadArticle.source.name,
-          retrievedAt: leadArticle.fetchedAt,
-          observedAt: leadArticle.publishedAt,
-          dataType: "observation",
-        },
-      ],
+      provenance: cluster.map((a) => ({
+        provider: a.source.name,
+        retrievedAt: a.fetchedAt,
+        observedAt: a.publishedAt,
+        dataType: "observation" as const,
+      })),
       freshness,
       timeline,
       sourceComparison,

@@ -7,6 +7,7 @@ import type {
   ArticleFilter,
 } from "./repository-interfaces";
 import { calculateHaversineDistanceKm } from "@/lib/geo-distance";
+import { globalFreshnessEngine } from "@/services/news/freshness-engine";
 
 export class InMemoryEventRepository implements EventRepository {
   private events = new Map<string, WeatherEvent>();
@@ -57,7 +58,10 @@ export class InMemoryEventRepository implements EventRepository {
         );
       }
       if (filter.freshness) {
-        result = result.filter((e) => e.freshness?.level === filter.freshness);
+        result = result.filter((e) => {
+          const level = e.freshness?.level || (e.lastUpdatedAt ? globalFreshnessEngine.assessFreshness(e.lastUpdatedAt).level : undefined);
+          return level === filter.freshness;
+        });
       }
       if (filter.coordinates) {
         const targetCoords = {
@@ -66,12 +70,22 @@ export class InMemoryEventRepository implements EventRepository {
         };
         const maxDist = filter.coordinates.radiusKm;
         result = result.filter((e) => {
-          if (!e.location.coordinates) return false;
-          const dist = calculateHaversineDistanceKm(
-            targetCoords,
-            e.location.coordinates
-          );
-          return dist <= maxDist;
+          if (e.location.coordinates) {
+            const dist = calculateHaversineDistanceKm(
+              targetCoords,
+              e.location.coordinates
+            );
+            if (dist <= maxDist) return true;
+          }
+          if (e.locations && e.locations.length > 0) {
+            for (const loc of e.locations) {
+              if (loc.coordinates) {
+                const dist = calculateHaversineDistanceKm(targetCoords, loc.coordinates);
+                if (dist <= maxDist) return true;
+              }
+            }
+          }
+          return false;
         });
       }
       if (filter.country) {

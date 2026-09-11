@@ -21,10 +21,11 @@ import {
   globalArticleRepository,
 } from "@/services/storage/in-memory-repositories";
 import type { NewsProvider } from "./news-provider";
-import { FeedRegistry } from "./feed-registry";
-import { RssFeedProvider } from "./rss-feed-provider";
+import { FeedRegistry, globalFeedRegistry } from "./feed-registry";
 import { LiveIntelligenceSyncService } from "./live-intelligence-sync-service";
 import { globalFreshnessEngine } from "./freshness-engine";
+import { globalLifecycleEngine } from "./lifecycle-engine";
+import { globalImpactEngine } from "@/services/impact/impact-engine";
 import { AppError } from "@/lib/errors";
 
 export interface SyncResult {
@@ -50,19 +51,20 @@ export class LiveIntelligenceService {
   constructor(config: LiveIntelligenceServiceConfig = {}) {
     this.eventRepo = config.eventRepository || globalEventRepository;
     this.articleRepo = config.articleRepository || globalArticleRepository;
-    this.providers = config.providers || [
-      new RssFeedProvider({
-        name: "GDACS Disaster Alerts",
-        feedUrl: "https://www.gdacs.org/xml/rss.xml",
-      }),
-    ];
+    this.providers = config.providers || [];
     this.syncService =
       config.syncService ||
-      new LiveIntelligenceSyncService({
-        eventRepository: this.eventRepo,
-        articleRepository: this.articleRepo,
-        feedRegistry: new FeedRegistry(this.providers),
-      });
+      (config.providers
+        ? new LiveIntelligenceSyncService({
+            eventRepository: this.eventRepo,
+            articleRepository: this.articleRepo,
+            feedRegistry: new FeedRegistry(config.providers),
+          })
+        : new LiveIntelligenceSyncService({
+            eventRepository: this.eventRepo,
+            articleRepository: this.articleRepo,
+            feedRegistry: globalFeedRegistry,
+          }));
   }
 
   /**
@@ -92,7 +94,7 @@ export class LiveIntelligenceService {
   }
 
   /**
-   * Get filtered weather events with dynamic real-time freshness.
+   * Get filtered weather events with dynamic real-time freshness, lifecycle, and India impact.
    */
   async getEvents(filter?: EventFilter): Promise<Result<WeatherEvent[]>> {
     try {
@@ -100,6 +102,15 @@ export class LiveIntelligenceService {
       for (const ev of events) {
         if (ev.lastUpdatedAt) {
           ev.freshness = globalFreshnessEngine.calculateFreshness(ev.lastUpdatedAt);
+          ev.status = globalLifecycleEngine.determineLifecycle(
+            ev.firstSeenAt,
+            ev.lastUpdatedAt,
+            new Date(),
+            ev.category
+          );
+        }
+        if (!ev.indiaImpact) {
+          ev.indiaImpact = globalImpactEngine.assessIndiaImpact(ev);
         }
       }
       return { success: true, data: events };
@@ -132,6 +143,15 @@ export class LiveIntelligenceService {
 
       if (event.lastUpdatedAt) {
         event.freshness = globalFreshnessEngine.calculateFreshness(event.lastUpdatedAt);
+        event.status = globalLifecycleEngine.determineLifecycle(
+          event.firstSeenAt,
+          event.lastUpdatedAt,
+          new Date(),
+          event.category
+        );
+      }
+      if (!event.indiaImpact) {
+        event.indiaImpact = globalImpactEngine.assessIndiaImpact(event);
       }
 
       const articles = await this.articleRepo.findByIds(event.sourceArticleIds);

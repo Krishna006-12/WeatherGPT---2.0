@@ -10,6 +10,7 @@ import type { NewsArticle } from "@/types/news";
 import type { NewsProvider, NewsQuery } from "./news-provider";
 import { GdacsProvider } from "./gdacs-provider";
 import { UsgsProvider } from "./usgs-provider";
+import { OfficialWeatherProvider } from "./official-weather-provider";
 
 export interface FeedFetchSummary {
   articles: NewsArticle[];
@@ -27,9 +28,10 @@ export class FeedRegistry {
         this.providers.set(p.name, p);
       }
     } else {
-      // Default production feed provider suite
+      // Default production feed provider suite (Tier 1 authoritative official feeds)
       this.registerProvider(new GdacsProvider());
       this.registerProvider(new UsgsProvider());
+      this.registerProvider(new OfficialWeatherProvider());
     }
   }
 
