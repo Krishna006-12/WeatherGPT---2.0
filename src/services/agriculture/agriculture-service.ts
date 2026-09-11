@@ -65,7 +65,7 @@ export class AgricultureService {
       return {
         success: false,
         error: new AppError(
-          "AGRICULTURE_EVALUATION_ERROR",
+          "UNKNOWN_ERROR",
           err instanceof Error ? err.message : "Failed to evaluate agricultural risk",
           500
         ),

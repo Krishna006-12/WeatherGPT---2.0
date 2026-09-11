@@ -96,6 +96,30 @@ describe("AgricultureService", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.message).toContain("Failed to connect");
+      expect((result.error as AppError).code).toBe("WEATHER_PROVIDER_UNAVAILABLE");
+    }
+  });
+
+  it("handles unexpected evaluation error gracefully", async () => {
+    const corruptedSnapshot = { ...mockSnapshot, current: null as unknown as WeatherSnapshot["current"] };
+    const mockWeatherService = {
+      getWeather: vi.fn().mockResolvedValue({
+        success: true,
+        data: corruptedSnapshot,
+      }),
+    } as unknown as WeatherService;
+
+    const service = new AgricultureService({ weatherService: mockWeatherService });
+    const result = await service.assessCropRisk(
+      { latitude: 26.46, longitude: 80.34 },
+      "wheat"
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeInstanceOf(AppError);
+      expect((result.error as AppError).code).toBe("UNKNOWN_ERROR");
+      expect((result.error as AppError).statusCode).toBe(500);
     }
   });
 });

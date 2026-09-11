@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ImpactCard } from "@/components/impact/impact-card";
 
@@ -74,7 +74,7 @@ describe("ImpactCard", () => {
     });
 
     render(<ImpactCard location={mockLocation} />);
-    expect(screen.getByText("Regional Impact")).toBeInTheDocument();
+    expect(screen.getByText("Selected Location Impact")).toBeInTheDocument();
     expect(screen.getByText("Grounded")).toBeInTheDocument();
     expect(screen.getByText("Kanpur")).toBeInTheDocument();
     expect(screen.getByText("confirmed")).toBeInTheDocument();

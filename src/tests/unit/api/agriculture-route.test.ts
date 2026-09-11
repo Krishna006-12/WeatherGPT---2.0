@@ -10,6 +10,7 @@ describe("GET /api/agriculture Route", () => {
     expect(response.status).toBe(400);
     const json = await response.json();
     expect(json.error).toBeDefined();
+    expect(json.error.code).toBe("INVALID_REQUEST");
   });
 
   it("returns 400 when crop parameter is invalid", async () => {
@@ -18,6 +19,7 @@ describe("GET /api/agriculture Route", () => {
     expect(response.status).toBe(400);
     const json = await response.json();
     expect(json.error).toBeDefined();
+    expect(json.error.code).toBe("INVALID_REQUEST");
   });
 
   it("returns 400 when latitude is out of range", async () => {

@@ -14,7 +14,6 @@ import type { WeatherSnapshot } from "@/types/weather";
 import type {
   CropType,
   RiskLevel,
-  ActivityStatus,
   AgricultureActivity,
   AgricultureHazard,
   AgricultureEvidence,
@@ -61,7 +60,7 @@ export function calculateForecastWindows(weather: WeatherSnapshot): WindowCalcul
   }
 
   // Fallback to daily[0] if hourly is sparse
-  if (next24Hourly.length === 0 && daily.length > 0) {
+  if (next24Hourly.length < 24 && daily.length > 0) {
     const firstDay = daily[0];
     if (firstDay) {
       next24hPrecip = firstDay.precipitationSum || 0;
@@ -75,7 +74,7 @@ export function calculateForecastWindows(weather: WeatherSnapshot): WindowCalcul
   for (const h of next48Hourly) {
     next48hPrecip += h.precipitation || 0;
   }
-  if (next48Hourly.length === 0 && daily.length >= 2) {
+  if (next48Hourly.length < 48 && daily.length >= 2) {
     const day1 = daily[0];
     const day2 = daily[1];
     next48hPrecip = (day1?.precipitationSum || 0) + (day2?.precipitationSum || 0);

@@ -1,9 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { clusterArticlesIntoEvents, shouldClusterArticles } from "@/lib/clusterer";
 import sampleArticles from "@/tests/fixtures/sample-articles.json";
 import type { NewsArticle } from "@/types/news";
 
 describe("Event Clusterer Engine", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-31T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   it("determines whether two articles should be clustered together", () => {
     const art1 = sampleArticles[0] as NewsArticle; // Nepal flood
     const art2 = sampleArticles[1] as NewsArticle; // Nepal flood

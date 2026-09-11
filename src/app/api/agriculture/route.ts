@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
   if (!validation.success) {
     const error = new AppError(
-      "INVALID_INPUT",
+      "INVALID_REQUEST",
       validation.error.issues[0]?.message || "Invalid agricultural query parameters",
       400
     );
