@@ -145,7 +145,7 @@ export function evaluateIrrigationActivity(
   if (windows.next24hPrecipMm >= moderateRainThreshold || (windows.next24hPrecipMm >= 10 && windows.max24hPrecipProbPct >= 70)) {
     return {
       status: "unfavorable",
-      advisory: "Postpone planned irrigation.",
+      advisory: "Rainfall is expected, which may affect field moisture and irrigation needs. Check local field conditions before proceeding.",
       reason: `Rainfall (${windows.next24hPrecipMm} mm) is forecast in the next 24h with ${windows.max24hPrecipProbPct}% probability; natural precipitation is expected to supply moisture.`,
     };
   }
@@ -154,15 +154,15 @@ export function evaluateIrrigationActivity(
   if (windows.next24hPrecipMm >= 4 || windows.next48hPrecipMm >= moderateRainThreshold || windows.max24hPrecipProbPct >= 50) {
     return {
       status: "caution",
-      advisory: "Monitor rain progress before watering.",
-      reason: `Moderate rain probability (${windows.max24hPrecipProbPct}%, ~${windows.next24hPrecipMm} mm in 24h) is forecast; irrigate lightly only if fields are visually dry.`,
+      advisory: "Rainfall is possible, which may affect field moisture conditions. Check local field conditions before proceeding.",
+      reason: `Moderate rain probability (${windows.max24hPrecipProbPct}%, ~${windows.next24hPrecipMm} mm in 24h) is forecast; field moisture may vary.`,
     };
   }
 
   // 3. Favorable: Dry weather ahead
   return {
     status: "favorable",
-    advisory: "Normal irrigation can proceed as scheduled.",
+    advisory: "Weather conditions are dry with minimal rainfall expected.",
     reason: `Little to no precipitation (${windows.next24hPrecipMm} mm) is forecast over the next 24-48 hours.`,
   };
 }
@@ -181,7 +181,7 @@ export function evaluateSprayingActivity(
   if (currentPrecipRate > 0 || next24hPrecipMm >= 5.0) {
     return {
       status: "unfavorable",
-      advisory: "Avoid foliar spraying.",
+      advisory: "Rainfall is forecast, which may cause wash-off and affect outdoor spraying conditions. Check local field conditions before proceeding.",
       reason: `Active or forecast rainfall (${next24hPrecipMm} mm in 24h) causes chemical wash-off and diminishes spray efficacy.`,
     };
   }
@@ -189,7 +189,7 @@ export function evaluateSprayingActivity(
   if (currentWindKmh > sprayingWindLimitKmh || max24hWindKmh > sprayingWindLimitKmh + 5.0) {
     return {
       status: "unfavorable",
-      advisory: "Delay spraying due to wind drift.",
+      advisory: "Elevated wind speeds pose a risk of drift during spraying operations. Check local wind conditions before proceeding.",
       reason: `Wind speeds (${currentWindKmh} km/h current, up to ${max24hWindKmh} km/h forecast) exceed the safe spraying threshold (${sprayingWindLimitKmh} km/h), posing high drift risk.`,
     };
   }
@@ -198,7 +198,7 @@ export function evaluateSprayingActivity(
   if (currentWindKmh >= sprayingWindLimitKmh - 3.0 || max24hWindKmh >= sprayingWindLimitKmh) {
     return {
       status: "caution",
-      advisory: "Spray with caution during early morning or calm periods.",
+      advisory: "Wind speeds are near typical drift thresholds. Calmer periods may offer better spraying conditions. Check local conditions before proceeding.",
       reason: `Wind speeds (${currentWindKmh} km/h) are near the safe drift limit (${sprayingWindLimitKmh} km/h); choose low-pressure nozzles and calm morning hours.`,
     };
   }
@@ -206,7 +206,7 @@ export function evaluateSprayingActivity(
   // 3. Favorable: Dry foliage, calm winds
   return {
     status: "favorable",
-    advisory: "Weather conditions are favorable for spraying.",
+    advisory: "Weather conditions are calm and dry with low risk of wind drift or wash-off.",
     reason: `Calm wind (${currentWindKmh} km/h) and dry weather (< 5 mm rain in 24h) provide optimal spraying conditions with minimal drift or wash-off risk.`,
   };
 }
@@ -224,7 +224,7 @@ export function evaluateFieldOperationsActivity(
   if (next24hPrecipMm >= heavyRainThreshold || next48hPrecipMm >= heavyRainThreshold * 1.5) {
     return {
       status: "unfavorable",
-      advisory: "Suspend outdoor harvesting and heavy machinery operations.",
+      advisory: "Substantial rainfall is forecast, so field operations and harvesting may be affected. Check local field conditions before proceeding.",
       reason: `Substantial rainfall (${next24hPrecipMm} mm in 24h) is forecast, which may make field operations difficult and risk post-harvest produce dampness.`,
     };
   }
@@ -233,7 +233,7 @@ export function evaluateFieldOperationsActivity(
   if (next24hPrecipMm >= 8.0 || maxWindSpeedKmh >= 35.0) {
     return {
       status: "caution",
-      advisory: "Proceed with field operations cautiously.",
+      advisory: "Light rainfall or gusty winds are expected; field operations may be affected. Check local field conditions before proceeding.",
       reason: `Moderate rain (${next24hPrecipMm} mm) or gusty winds (${maxWindSpeedKmh} km/h) may cause minor delays or slippery field tracks.`,
     };
   }
@@ -241,7 +241,7 @@ export function evaluateFieldOperationsActivity(
   // 3. Favorable: Dry and workable conditions
   return {
     status: "favorable",
-    advisory: "Conditions are suitable for routine field operations and harvesting.",
+    advisory: "Weather conditions are dry and suitable for routine field operations.",
     reason: `Dry weather (${next24hPrecipMm} mm expected in 24h) and moderate wind (${maxWindSpeedKmh} km/h max) favor smooth field traffic and harvest logistics.`,
   };
 }

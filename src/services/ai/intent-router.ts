@@ -55,6 +55,15 @@ const TEMPORAL_WORDS = [
   "parso",
   "outside",
   "right",
+  "hourly",
+  "daily",
+  "weekly",
+  "7-day",
+  "7 day",
+  "5-day",
+  "5 day",
+  "day",
+  "days",
 ];
 
 const STOP_WORDS = [
@@ -110,6 +119,11 @@ const STOP_WORDS = [
   "work",
   "fieldwork",
   "construction",
+  "hourly",
+  "daily",
+  "weekly",
+  "day",
+  "days",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -393,12 +407,25 @@ export class IntentRouter {
   private isForecastQuery(text: string): boolean {
     const forecastKeywords = [
       /\b(tomorrow|kal|parso|next week|weekend|upcoming|days ahead|next 24|next 48|48 hours|24 hours)\b/i,
-      /\b(forecast|hourly|daily|extended forecast|outlook)\b/i,
+      /\b(forecast|extended forecast|outlook)\b/i,
       /\b(will it rain|going to rain|chances of rain|probability of rain|rain today|rain tomorrow)\b/i,
       /\b(will it snow|will it storm|rain expected)\b/i,
     ];
 
-    return forecastKeywords.some((pattern) => pattern.test(text));
+    if (forecastKeywords.some((pattern) => pattern.test(text))) {
+      return true;
+    }
+
+    // "hourly" or "daily" without explicit "weather", "temperature", or "mausam" is treated as forecast progression
+    // e.g. "Hourly forecast", "Hourly for Kanpur", "Hourly outlook"
+    // whereas "Hourly weather in Kanpur" explicitly asks for weather conditions
+    if (/\b(hourly|daily)\b/i.test(text)) {
+      if (!/\b(weather|temperature|temp|mausam)\b/i.test(text)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private isWeatherQuery(text: string): boolean {

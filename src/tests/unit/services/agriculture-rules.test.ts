@@ -225,7 +225,7 @@ describe("Agriculture Rules Engine", () => {
       };
       const activity = evaluateIrrigationActivity(windows, 15.0);
       expect(activity.status).toBe("unfavorable");
-      expect(activity.advisory).toContain("Postpone");
+      expect(activity.advisory).toContain("Rainfall is expected");
     });
 
     it("evaluates spraying as unfavorable under strong wind", () => {
@@ -237,7 +237,7 @@ describe("Agriculture Rules Engine", () => {
     it("evaluates field operations as unfavorable under heavy rain", () => {
       const activity = evaluateFieldOperationsActivity(35.0, 50.0, 15.0, 30.0);
       expect(activity.status).toBe("unfavorable");
-      expect(activity.advisory).toContain("Suspend outdoor harvesting");
+      expect(activity.advisory).toContain("Substantial rainfall is forecast");
     });
   });
 

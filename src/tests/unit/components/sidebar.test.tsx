@@ -1,78 +1,107 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { Sidebar } from "@/components/layout/sidebar";
+import { usePathname } from "next/navigation";
+
+vi.mock("next/navigation", () => ({
+  usePathname: vi.fn(),
+}));
 
 describe("Sidebar Navigation Component", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    class MockIntersectionObserver {
-      observe = vi.fn();
-      unobserve = vi.fn();
-      disconnect = vi.fn();
-    }
-    window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+    vi.mocked(usePathname).mockReturnValue("/dashboard");
   });
 
-  it("renders all navigation buttons with accessible labels and titles", () => {
+  it("renders all navigation links with real routes and accessible labels", () => {
     render(<Sidebar />);
 
-    expect(screen.getByRole("button", { name: /WeatherGPT Home/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Dashboard Overview/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Location & Current Conditions/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Live Intelligence & Impact Alerts/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Forecast & Meteorological Timeline/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /WeatherGPT AI Copilot/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /System Intelligence Settings/i })).toBeInTheDocument();
+    const homeLink = screen.getByRole("link", { name: /WeatherGPT Home/i });
+    expect(homeLink).toHaveAttribute("href", "/dashboard");
+
+    const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
+    expect(dashboardLink).toHaveAttribute("href", "/dashboard");
+
+    const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
+    expect(weatherLink).toHaveAttribute("href", "/weather");
+
+    const intelligenceLink = screen.getByRole("link", { name: /Live Disaster Intelligence/i });
+    expect(intelligenceLink).toHaveAttribute("href", "/intelligence");
+
+    const impactLink = screen.getByRole("link", { name: /Regional Risk & Impact/i });
+    expect(impactLink).toHaveAttribute("href", "/impact");
+
+    const chatLink = screen.getByRole("link", { name: /WeatherGPT AI Copilot/i });
+    expect(chatLink).toHaveAttribute("href", "/chat");
+
+    const historyLink = screen.getByRole("link", { name: /Forecast & Meteorological Timeline/i });
+    expect(historyLink).toHaveAttribute("href", "/history");
+
+    const settingsLink = screen.getByRole("link", { name: /System Intelligence Settings/i });
+    expect(settingsLink).toHaveAttribute("href", "/settings");
   });
 
-  it("scrolls smoothly to the target section when a navigation button is clicked", () => {
-    const scrollIntoViewMock = vi.fn();
-    const mockElement = document.createElement("div");
-    mockElement.id = "section-forecast";
-    mockElement.scrollIntoView = scrollIntoViewMock;
-    document.body.appendChild(mockElement);
-
+  it("applies active styling dynamically to Dashboard when pathname is /dashboard", () => {
+    vi.mocked(usePathname).mockReturnValue("/dashboard");
     render(<Sidebar />);
 
-    const forecastBtn = screen.getByRole("button", { name: /Forecast & Meteorological Timeline/i });
-    fireEvent.click(forecastBtn);
+    const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
+    expect(dashboardLink.className).toContain("text-cyan-400");
+    expect(dashboardLink.className).toContain("bg-cyan-950/80");
 
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
-
-    document.body.removeChild(mockElement);
+    const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
+    expect(weatherLink.className).toContain("text-neutral-400");
   });
 
-  it("opens and closes the system settings popover dialog", () => {
+  it("applies active styling dynamically to Weather when pathname is /weather", () => {
+    vi.mocked(usePathname).mockReturnValue("/weather");
     render(<Sidebar />);
 
-    // Dialog is not open initially
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
+    expect(weatherLink.className).toContain("text-cyan-400");
+    expect(weatherLink.className).toContain("bg-cyan-950/80");
 
-    // Click settings button
-    const settingsBtn = screen.getByRole("button", { name: /System Intelligence Settings/i });
-    fireEvent.click(settingsBtn);
-
-    // Dialog is visible
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/System Settings/i)).toBeInTheDocument();
-    expect(screen.getByText(/AI Intelligence Model/i)).toBeInTheDocument();
-    expect(screen.getByText(/Gemini 3.6 Flash/i)).toBeInTheDocument();
-
-    // Close via close button
-    const closeBtn = screen.getByRole("button", { name: /Close Settings/i });
-    fireEvent.click(closeBtn);
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
+    expect(dashboardLink.className).toContain("text-neutral-400");
   });
 
-  it("closes settings popover when Escape key is pressed", () => {
+  it("applies active styling dynamically to Intelligence when pathname is /intelligence", () => {
+    vi.mocked(usePathname).mockReturnValue("/intelligence");
     render(<Sidebar />);
 
-    const settingsBtn = screen.getByRole("button", { name: /System Intelligence Settings/i });
-    fireEvent.click(settingsBtn);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    const intelLink = screen.getByRole("link", { name: /Live Disaster Intelligence/i });
+    expect(intelLink.className).toContain("text-cyan-400");
+  });
 
-    fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  it("applies active styling dynamically to Impact when pathname is /impact", () => {
+    vi.mocked(usePathname).mockReturnValue("/impact");
+    render(<Sidebar />);
+
+    const impactLink = screen.getByRole("link", { name: /Regional Risk & Impact/i });
+    expect(impactLink.className).toContain("text-cyan-400");
+  });
+
+  it("applies active styling dynamically to Chat when pathname is /chat", () => {
+    vi.mocked(usePathname).mockReturnValue("/chat");
+    render(<Sidebar />);
+
+    const chatLink = screen.getByRole("link", { name: /WeatherGPT AI Copilot/i });
+    expect(chatLink.className).toContain("text-cyan-400");
+  });
+
+  it("applies active styling dynamically to History when pathname is /history", () => {
+    vi.mocked(usePathname).mockReturnValue("/history");
+    render(<Sidebar />);
+
+    const historyLink = screen.getByRole("link", { name: /Forecast & Meteorological Timeline/i });
+    expect(historyLink.className).toContain("text-cyan-400");
+  });
+
+  it("applies active styling dynamically to Settings when pathname is /settings", () => {
+    vi.mocked(usePathname).mockReturnValue("/settings");
+    render(<Sidebar />);
+
+    const settingsLink = screen.getByRole("link", { name: /System Intelligence Settings/i });
+    expect(settingsLink.className).toContain("text-cyan-400");
   });
 });

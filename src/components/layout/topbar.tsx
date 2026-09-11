@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, Settings } from "lucide-react";
 import { LocationSearch } from "@/components/weather/location-search";
 import type { NormalizedLocation } from "@/services/location/location-service";
@@ -18,12 +19,16 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
         <div className="hidden md:flex items-center text-lg font-bold tracking-tight text-white mr-4">
           WeatherGPT 2.0
         </div>
-        <button className="text-neutral-400 hover:text-white transition-colors">
+        <button aria-label="Notifications" className="text-neutral-400 hover:text-white transition-colors">
           <Bell size={20} />
         </button>
-        <button className="text-neutral-400 hover:text-white transition-colors">
+        <Link
+          href="/settings"
+          aria-label="System Settings"
+          className="text-neutral-400 hover:text-white transition-colors"
+        >
           <Settings size={20} />
-        </button>
+        </Link>
         <div className="h-8 w-8 rounded-full bg-cyan-900/50 overflow-hidden ml-2 border border-cyan-800 flex items-center justify-center">
           <span className="text-xs font-bold text-cyan-400">WG</span>
         </div>

@@ -429,4 +429,44 @@ describe("Deterministic Query Location Resolution", () => {
     expect(res.data.metadata?.queryLocationName).toBe("India");
     expect(res.data.groundingStatus).toBe("insufficient_evidence");
   });
+
+  // Test Case L: "Hourly forecast" with selected location Kanpur preserves Kanpur
+  it("Scenario L: 'Hourly forecast' with selected location preserves Kanpur and does not search for 'Hourly'", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Hourly forecast",
+      location: KANPUR_DASHBOARD_LOCATION,
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("forecast");
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+    expect(res.data.metadata?.queryLocationName).toBeUndefined();
+    expect(res.data.groundingStatus).toBe("grounded");
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
+
+  // Test Case M: "7-day forecast" with selected location Kanpur preserves Kanpur and does not search for "Dayton"
+  it("Scenario M: '7-day forecast' with selected location preserves Kanpur and does not resolve Dayton", async () => {
+    const res = await orchestrator.processQuery({
+      message: "7-day forecast",
+      location: KANPUR_DASHBOARD_LOCATION,
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("forecast");
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+    expect(res.data.metadata?.queryLocationName).toBeUndefined();
+    expect(res.data.groundingStatus).toBe("grounded");
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
 });

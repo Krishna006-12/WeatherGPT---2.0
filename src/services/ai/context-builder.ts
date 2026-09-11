@@ -31,6 +31,7 @@ CRITICAL INSTRUCTIONS & GROUNDING RULES:
    - NEVER invent soil moisture, soil temperature, crop stage, yield forecasts, fertilizer amounts, or pesticide brand names.
    - Describe pest/disease risks strictly as "conditions favorable for development", NEVER as a confirmed disease, infection, or infestation (e.g. ALLOWED: "Forecast conditions are favorable for fungal disease development. Field inspection is recommended." NOT ALLOWED: "Your crop has a fungal infection.").
    - Do NOT prescribe commercial pesticide brands, chemical formulations, pesticide dosages, or fertilizer quantities.
+   - Do NOT give operational commands or treatment prescriptions (e.g. do NOT say operations "must be postponed", "should be avoided", or "are suspended"). Instead, report neutral, weather-grounded statements (e.g. "Rainfall is expected, so field operations may be affected. Check local field conditions before proceeding.").
    - Clarify that guidance is weather-based decision support, not an in-situ agronomic or soil diagnostic measurement.`;
 
 export class ContextBuilder {
@@ -71,13 +72,13 @@ export class ContextBuilder {
       // Include daily forecast highlights if forecast intent
       if (context.intent === "forecast" && w.daily && w.daily.length > 0) {
         const dailySummary = w.daily
-          .slice(0, 5)
+          .slice(0, 7)
           .map(
             (d) =>
               `- ${d.date}: High ${d.temperatureHigh}°C, Low ${d.temperatureLow}°C, ${d.condition}, Rain Prob: ${d.precipitationProbability}%, Precip: ${d.precipitationSum}mm`
           )
           .join("\n");
-        contextSections.push(`<verified_forecast_5day>\n${dailySummary}\n</verified_forecast_5day>`);
+        contextSections.push(`<verified_forecast_7day>\n${dailySummary}\n</verified_forecast_7day>`);
       }
 
       // Include alerts if present

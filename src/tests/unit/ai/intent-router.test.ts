@@ -84,4 +84,24 @@ describe("Deterministic IntentRouter", () => {
     expect(res.intent).toBe("impact");
     expect(res.targetImpactLocation).toBe("up");
   });
+
+  it("Scenario 9: Does not extract 'hourly' as location name for hourly forecast queries", () => {
+    const res = router.classify("Hourly forecast");
+    expect(res.intent).toBe("forecast");
+    expect(res.extractedLocation).toBeUndefined();
+
+    const res2 = router.classify("Hourly weather in Kanpur");
+    expect(res2.intent).toBe("weather");
+    expect(res2.extractedLocation?.toLowerCase()).toBe("kanpur");
+  });
+
+  it("Scenario 10: Does not extract 'day' as location name for 7-day forecast queries", () => {
+    const res = router.classify("7-day forecast");
+    expect(res.intent).toBe("forecast");
+    expect(res.extractedLocation).toBeUndefined();
+
+    const res2 = router.classify("7-day forecast for Kanpur");
+    expect(res2.intent).toBe("forecast");
+    expect(res2.extractedLocation?.toLowerCase()).toBe("kanpur");
+  });
 });

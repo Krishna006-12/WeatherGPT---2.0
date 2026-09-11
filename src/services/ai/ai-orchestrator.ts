@@ -437,10 +437,16 @@ export class AIOrchestrator {
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
         .join(" ");
 
-      // If query explicitly mentions the exact same location name as selectedLocation, reuse coordinates
+      // If query explicitly mentions the exact same location name or city as selectedLocation, reuse coordinates
+      const selName = selectedLocation?.name.toLowerCase() || "";
+      const selCity = selectedLocation?.city?.toLowerCase() || "";
+      const qLoc = trimmedQueryLoc.toLowerCase();
       if (
         selectedLocation?.coordinates &&
-        selectedLocation.name.toLowerCase() === trimmedQueryLoc.toLowerCase()
+        (selName === qLoc ||
+          selCity === qLoc ||
+          selName.startsWith(qLoc) ||
+          (selCity && qLoc.startsWith(selCity)))
       ) {
         return {
           resolvedLocation: selectedLocation,

@@ -22,8 +22,18 @@ function getCurrentTimestamp(): string {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function AICopilotCard({ location }: { location?: NormalizedLocation | null }) {
-  const [expanded, setExpanded] = useState(false);
+export function AICopilotCard({
+  location,
+  initialExpanded = false,
+  fullHeight = false,
+  hideCollapse = false,
+}: {
+  location?: NormalizedLocation | null;
+  initialExpanded?: boolean;
+  fullHeight?: boolean;
+  hideCollapse?: boolean;
+}) {
+  const [expanded, setExpanded] = useState(initialExpanded);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -140,7 +150,11 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
 
   if (expanded) {
     return (
-      <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-cyan-500/30 relative flex flex-col h-[520px] shadow-2xl shadow-cyan-900/20">
+      <div
+        className={`rounded-3xl bg-[#1C1C1E] p-6 border border-cyan-500/30 relative flex flex-col shadow-2xl shadow-cyan-900/20 ${
+          fullHeight ? "h-[calc(100vh-10rem)] min-h-[560px]" : "h-[520px]"
+        }`}
+      >
         {/* Header */}
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
           <div className="flex items-center gap-2.5">
@@ -168,13 +182,15 @@ export function AICopilotCard({ location }: { location?: NormalizedLocation | nu
                 <RotateCcw size={14} />
               </button>
             )}
-            <button
-              onClick={() => setExpanded(false)}
-              aria-label="Collapse Copilot"
-              className="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              <X size={18} />
-            </button>
+            {!hideCollapse && (
+              <button
+                onClick={() => setExpanded(false)}
+                aria-label="Collapse Copilot"
+                className="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
 
