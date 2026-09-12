@@ -59,12 +59,18 @@ export function calculateForecastWindows(weather: WeatherSnapshot): WindowCalcul
     if (h.precipitationProbability > max24hPrecipProb) max24hPrecipProb = h.precipitationProbability;
   }
 
-  // Fallback to daily[0] if hourly is sparse
-  if (next24Hourly.length < 24 && daily.length > 0) {
+  // Fallback to daily[0] if hourly is sparse or empty
+  if (next24Hourly.length === 0 && daily.length > 0) {
     const firstDay = daily[0];
     if (firstDay) {
       next24hPrecip = firstDay.precipitationSum || 0;
       max24hPrecipProb = firstDay.precipitationProbability || 0;
+    }
+  } else if (daily.length > 0) {
+    const firstDay = daily[0];
+    if (firstDay) {
+      next24hPrecip = Math.max(next24hPrecip, firstDay.precipitationSum || 0);
+      max24hPrecipProb = Math.max(max24hPrecipProb, firstDay.precipitationProbability || 0);
     }
   }
 
@@ -77,7 +83,10 @@ export function calculateForecastWindows(weather: WeatherSnapshot): WindowCalcul
   if (next48Hourly.length < 48 && daily.length >= 2) {
     const day1 = daily[0];
     const day2 = daily[1];
-    next48hPrecip = (day1?.precipitationSum || 0) + (day2?.precipitationSum || 0);
+    next48hPrecip = Math.max(
+      next48hPrecip,
+      (day1?.precipitationSum || 0) + (day2?.precipitationSum || 0)
+    );
   }
 
   // --- 7-Day Window Metrics ---
@@ -142,7 +151,7 @@ export function evaluateIrrigationActivity(
   moderateRainThreshold: number
 ): AgricultureActivity {
   // 1. Unfavorable: Heavy or significant rain forecast soon
-  if (windows.next24hPrecipMm >= moderateRainThreshold || (windows.next24hPrecipMm >= 10 && windows.max24hPrecipProbPct >= 70)) {
+  if (windows.next24hPrecipMm >= moderateRainThreshold || (windows.next24hPrecipMm >= 5 && windows.max24hPrecipProbPct >= 70) || windows.max24hPrecipProbPct >= 85) {
     return {
       status: "unfavorable",
       advisory: "Rainfall is expected, which may affect field moisture and irrigation needs. Check local field conditions before proceeding.",
@@ -162,8 +171,8 @@ export function evaluateIrrigationActivity(
   // 3. Favorable: Dry weather ahead
   return {
     status: "favorable",
-    advisory: "Weather conditions are dry with minimal rainfall expected.",
-    reason: `Little to no precipitation (${windows.next24hPrecipMm} mm) is forecast over the next 24-48 hours.`,
+    advisory: "Dry weather conditions are optimal for scheduled irrigation.",
+    reason: `Dry conditions with little to no precipitation (${windows.next24hPrecipMm} mm) forecast over the next 24-48 hours ensure irrigation is fully effective.`,
   };
 }
 
@@ -261,7 +270,7 @@ export function evaluateHarvestingActivity(
   }
 
   // 2. Unfavorable: High rain probability or significant rainfall
-  if (next24hPrecipMm >= 5.0 || max24hPrecipProbPct >= 60) {
+  if (next24hPrecipMm >= 4.0 || max24hPrecipProbPct >= 60) {
     return {
       status: "unfavorable",
       advisory: "Rainfall is forecast; harvesting operations are unfavorable due to moisture damage and mold risk. Check local conditions before proceeding.",
@@ -707,7 +716,7 @@ export function evaluateAgricultureRisk(
     : undefined;
 
   const cropDisplayName = isGenericOrMissing
-    ? "General Agriculture"
+    ? "Not specified / Generic"
     : profile.displayName;
 
   const forecastSummary: AgricultureForecastSummary = {

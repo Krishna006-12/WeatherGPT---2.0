@@ -136,7 +136,7 @@ export class AIOrchestrator {
       let agricultureAssessment: AgricultureAssessment | undefined;
 
       // If location is unknown, fail fast with insufficient evidence without executing weather tools
-      if (locationState.locationNotFound) {
+      if (locationState.locationNotFound || (intent === "agriculture" && !targetLocation?.coordinates)) {
         return this.generateDeterministicFallback({
           userQuery: message,
           intent,
@@ -239,6 +239,8 @@ export class AIOrchestrator {
         });
         if (aRes.success) {
           agricultureAssessment = aRes.data;
+        } else {
+          console.warn("[AIOrchestrator] Agriculture tool execution failed:", aRes.error);
         }
       }
 
@@ -435,7 +437,8 @@ export class AIOrchestrator {
     }
 
     // 3. Defensive guard: ignore temporal/stop words erroneously passed as locations
-    const TEMPORAL_LOCATION_GUARD = /^(?:hourly|daily|weekly|today|tomorrow|current|live|forecast|weather)$/i;
+    const TEMPORAL_LOCATION_GUARD =
+      /^(?:hourly|daily|weekly|today|tomorrow|current|live|forecast|weather|irrigation|spraying|harvesting|sowing|fieldwork|wheat|rice|maize|potato|mustard|crops|crop|farming|pesticide|pesticides|fungicide|insecticide|fertilizer|agriculture|agricultural|plant|planting|seed|seeding|outdoor|your location|my location|current location|the location|this location|location)$/i;
     if (queryLocationName && TEMPORAL_LOCATION_GUARD.test(queryLocationName.trim())) {
       queryLocationName = undefined;
     }
@@ -693,7 +696,7 @@ export class AIOrchestrator {
   }): Result<AIResponse> {
     const id = `air_fallback_${generateDeterministicHash(`${context.userQuery}_${context.generatedAt}`)}`;
     let answer = "";
-    const locName = context.targetLocation?.name || "your location";
+    const locName = context.targetLocation?.name || context.queryLocationName || "your location";
 
     const isGreeting = /\b(hlo|hello|hi|hey|greetings|namaste|good morning|good afternoon|good evening)\b/i.test(
       context.userQuery.trim()

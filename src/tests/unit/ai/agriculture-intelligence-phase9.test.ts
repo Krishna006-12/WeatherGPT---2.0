@@ -29,7 +29,9 @@ import { ContextBuilder } from "@/services/ai/context-builder";
 import { LocationService } from "@/services/location/location-service";
 import { WeatherService } from "@/services/weather/weather-service";
 import type { WeatherProvider } from "@/services/weather/weather-provider";
-import type { WeatherSnapshot } from "@/types/weather";
+import type { WeatherSnapshot, WeatherCondition } from "@/types/weather";
+import type { NormalizedLocation } from "@/services/location/location-service";
+import type { Result } from "@/types/common";
 import { GetAgricultureRiskTool } from "@/services/ai/tools/GetAgricultureRiskTool";
 import { WeatherToolRegistry } from "@/services/ai/tools/tool-registry";
 import { globalEventRepository } from "@/services/storage/in-memory-repositories";
@@ -43,7 +45,7 @@ function createMockWeatherSnapshot(
     temp?: number;
     windSpeed?: number;
     precipitation?: number;
-    condition?: string;
+    condition?: WeatherCondition;
     description?: string;
     rainProb?: number;
     rainSum?: number;
@@ -53,7 +55,7 @@ function createMockWeatherSnapshot(
   const temp = overrides.temp ?? 28;
   const windSpeed = overrides.windSpeed ?? 10;
   const precipitation = overrides.precipitation ?? 0;
-  const condition = overrides.condition ?? (overrides.isThunderstorm ? "thunderstorm" : "clear");
+  const condition: WeatherCondition = overrides.condition ?? (overrides.isThunderstorm ? "thunderstorm" : "clear");
   const description = overrides.description ?? (overrides.isThunderstorm ? "Thunderstorm with heavy rain" : "Clear sky");
   const rainProb = overrides.rainProb ?? (overrides.isThunderstorm ? 85 : 10);
   const rainSum = overrides.rainSum ?? (overrides.isThunderstorm ? 25.0 : 0);
@@ -132,7 +134,7 @@ function createMockWeatherSnapshot(
             description: "Convective thunderstorm with squally winds and lightning.",
             severity: "severe",
             source: "IMD",
-            issuedAt: "2026-09-12T10:00:00Z",
+            effectiveAt: "2026-09-12T10:00:00Z",
             expiresAt: "2026-09-13T18:00:00Z",
           },
         ]
@@ -167,38 +169,46 @@ describe("Phase 9 — Agriculture Intelligence MVP", () => {
     mockLocationService = new LocationService();
 
     // Mock location search
-    vi.spyOn(mockLocationService, "search").mockImplementation(async (query: string) => {
-      const clean = query.trim().toLowerCase();
-      if (clean.includes("kanpur")) {
-        return {
-          success: true,
-          data: [
-            {
-              displayName: "Kanpur, Uttar Pradesh, India",
-              country: "India",
-              latitude: 26.4499,
-              longitude: 80.3319,
-              timezone: "Asia/Kolkata",
-            },
-          ],
-        };
+    vi.spyOn(mockLocationService, "search").mockImplementation(
+      async (query: string, _count?: number): Promise<Result<NormalizedLocation[]>> => {
+        const clean = query.trim().toLowerCase();
+        if (clean.includes("kanpur")) {
+          return {
+            success: true,
+            data: [
+              {
+                id: 1,
+                name: "Kanpur",
+                displayName: "Kanpur, Uttar Pradesh, India",
+                country: "India",
+                region: "Uttar Pradesh",
+                latitude: 26.4499,
+                longitude: 80.3319,
+                timezone: "Asia/Kolkata",
+              },
+            ],
+          };
+        }
+        if (clean.includes("delhi")) {
+          return {
+            success: true,
+            data: [
+              {
+                id: 2,
+                name: "Delhi",
+                displayName: "New Delhi, Delhi, India",
+                country: "India",
+                region: "Delhi",
+                latitude: 28.6139,
+                longitude: 77.209,
+                timezone: "Asia/Kolkata",
+              },
+            ],
+          };
+        }
+        return { success: true, data: [] };
       }
-      if (clean.includes("delhi")) {
-        return {
-          success: true,
-          data: [
-            {
-              displayName: "New Delhi, Delhi, India",
-              country: "India",
-              latitude: 28.6139,
-              longitude: 77.209,
-              timezone: "Asia/Kolkata",
-            },
-          ],
-        };
-      }
-      return { success: true, data: [] };
-    });
+    );
 
     mockWeatherProvider = {
       name: "Open-Meteo",
@@ -266,9 +276,16 @@ describe("Phase 9 — Agriculture Intelligence MVP", () => {
   // 2. Wheat + Kanpur
   describe("2. Wheat + Kanpur", () => {
     it("resolves Kanpur and wheat, executes agriculture tool, and returns structured grounded output", async () => {
+      const toolSpy = vi.spyOn(toolRegistry.getAgricultureRiskTool, "execute");
       const res = await orchestrator.processQuery({
         message: "Wheat ke liye kal Kanpur mein kya karna chahiye?",
       });
+
+      expect(toolSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          crop: "wheat",
+        })
+      );
 
       expect(res.success).toBe(true);
       if (res.success) {
@@ -286,9 +303,16 @@ describe("Phase 9 — Agriculture Intelligence MVP", () => {
   // 3. Rice + Delhi
   describe("3. Rice + Delhi", () => {
     it("resolves Delhi and rice, providing evidence-based crop intelligence", async () => {
+      const toolSpy = vi.spyOn(toolRegistry.getAgricultureRiskTool, "execute");
       const res = await orchestrator.processQuery({
         message: "Should I spray pesticides for rice tomorrow in Delhi?",
       });
+
+      expect(toolSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          crop: "rice",
+        })
+      );
 
       expect(res.success).toBe(true);
       if (res.success) {
@@ -319,7 +343,7 @@ describe("Phase 9 — Agriculture Intelligence MVP", () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.activitySuitability.irrigation.status).toBe("favorable");
-        expect(result.data.activitySuitability.irrigation.reason).toContain("dry");
+        expect(result.data.activitySuitability.irrigation.reason.toLowerCase()).toContain("dry");
       }
     });
 

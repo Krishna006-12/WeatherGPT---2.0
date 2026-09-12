@@ -71,8 +71,36 @@ export class WeatherService {
     }
 
     try {
-      const rawData = await this.provider.getWeather(coordinates, timezone);
-      const parsed = weatherSnapshotSchema.safeParse(rawData);
+      const rawResult = await this.provider.getWeather(coordinates, timezone);
+
+      // Provider may return WeatherSnapshot directly or wrapped in a Result ({ success: true, data: snapshot })
+      let candidate: unknown = rawResult;
+      if (rawResult && typeof rawResult === "object" && "success" in rawResult) {
+        const res = rawResult as Result<unknown>;
+        if (!res.success) {
+          return {
+            success: false,
+            error:
+              res.error instanceof AppError
+                ? res.error
+                : new AppError(
+                    "WEATHER_PROVIDER_UNAVAILABLE",
+                    res.error instanceof Error ? res.error.message : "Weather provider error",
+                    502
+                  ),
+          };
+        }
+        candidate = res.data;
+      } else if (
+        rawResult &&
+        typeof rawResult === "object" &&
+        "data" in rawResult &&
+        !("current" in rawResult)
+      ) {
+        candidate = (rawResult as { data: unknown }).data;
+      }
+
+      const parsed = weatherSnapshotSchema.safeParse(candidate);
 
       if (!parsed.success) {
         return {

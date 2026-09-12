@@ -88,6 +88,13 @@ const STOP_WORDS = [
   "hoga",
   "par",
   "aur",
+  "ke",
+  "liye",
+  "ka",
+  "ki",
+  "ko",
+  "se",
+  "mein",
   "weather",
   "temperature",
   "temp",
@@ -126,6 +133,61 @@ const STOP_WORDS = [
   "weekly",
   "day",
   "days",
+  "crop",
+  "crops",
+  "farming",
+  "farm",
+  "agriculture",
+  "agricultural",
+  "fasal",
+  "kheti",
+  "irrigation",
+  "irrigate",
+  "sinchai",
+  "paani",
+  "spraying",
+  "spray",
+  "pesticide",
+  "pesticides",
+  "fungicide",
+  "foliar",
+  "insecticide",
+  "chhidkav",
+  "dawai",
+  "harvesting",
+  "harvest",
+  "cutting",
+  "reaping",
+  "katai",
+  "sowing",
+  "sow",
+  "planting",
+  "plant",
+  "seeding",
+  "bone",
+  "buvai",
+  "wheat",
+  "gehun",
+  "rice",
+  "paddy",
+  "dhan",
+  "maize",
+  "corn",
+  "makka",
+  "potato",
+  "potatoes",
+  "aloo",
+  "mustard",
+  "sarson",
+  "precautions",
+  "precaution",
+  "your location",
+  "my location",
+  "current location",
+  "the location",
+  "this location",
+  "location",
+  "locations",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -146,7 +208,10 @@ function sanitizeExtractedLocation(raw?: string): string | undefined {
     return undefined;
   }
 
-  if (STOP_WORDS.includes(clean.toLowerCase())) {
+  if (
+    STOP_WORDS.includes(clean.toLowerCase()) ||
+    /^(?:your|my|current|the|this)\s+location$/i.test(clean)
+  ) {
     return undefined;
   }
 
@@ -167,7 +232,12 @@ function sanitizeExtractedLocation(raw?: string): string | undefined {
 
   clean = words.join(" ").trim();
 
-  if (!clean || clean.length < 2 || STOP_WORDS.includes(clean.toLowerCase())) {
+  if (
+    !clean ||
+    clean.length < 2 ||
+    STOP_WORDS.includes(clean.toLowerCase()) ||
+    /^(?:your|my|current|the|this)\s+location$/i.test(clean)
+  ) {
     return undefined;
   }
 
@@ -181,7 +251,30 @@ export class IntentRouter {
   classify(query: string): IntentClassification {
     const clean = query.trim().toLowerCase();
 
-    // 1. Check for Impact Intent
+    // 1. Check for Agriculture Intent
+    // "Is tomorrow safe to spray wheat in Kanpur?", "Can I irrigate my rice field?", "Will rain affect wheat harvesting?"
+    if (this.isAgricultureQuery(clean)) {
+      const extractedCrop = this.extractCrop(clean);
+      const extractedActivity = this.extractActivity(clean);
+      const cleanForLoc = clean.replace(
+        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|farm|agriculture|agricultural|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|insecticide|fertilizer|harvesting|harvest|sowing|sow|planting|plant|seed|seeding|outdoor|precautions|precaution|weather|mausam|affect|impact)\b/gi,
+        " "
+      );
+      const location = this.extractLocation(cleanForLoc);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
+
+      return {
+        intent: "agriculture",
+        confidence: 0.9,
+        extractedLocation: location,
+        extractedCrop, // Never assume a crop if the user did not provide one
+        extractedActivity,
+        isForecastQuery: isFuture,
+        isRiskQuery: true,
+      };
+    }
+
+    // 2. Check for Impact Intent
     // "Will Nepal floods affect UP?", "Is Patna impacted by the flood?", "Nepal flood ka effect UP par kya hai..."
     if (this.isImpactQuery(clean)) {
       const impactTarget = this.extractImpactTargetLocation(clean);
@@ -199,7 +292,7 @@ export class IntentRouter {
       };
     }
 
-    // 2. Check for General/Educational Queries (e.g. "What causes flash floods?", "How do cyclones form?")
+    // 3. Check for General/Educational Queries (e.g. "What causes flash floods?", "How do cyclones form?")
     if (this.isGeneralKnowledgeQuery(clean)) {
       return {
         intent: "general",
@@ -208,7 +301,7 @@ export class IntentRouter {
       };
     }
 
-    // 3. Check for Live Weather Event queries
+    // 4. Check for Live Weather Event queries
     // "What's happening with the Nepal flood?", "Active cyclones in Bay of Bengal", "Latest flood updates"
     if (this.isWeatherEventQuery(clean)) {
       const location = this.extractLocation(clean);
@@ -219,29 +312,6 @@ export class IntentRouter {
         confidence: 0.85,
         extractedLocation: location,
         extractedEventKeyword: eventKeyword,
-      };
-    }
-
-    // 4. Check for Agriculture Intent
-    // "Is tomorrow safe to spray wheat in Kanpur?", "Can I irrigate my rice field?", "Weather impact on potato in Agra"
-    if (this.isAgricultureQuery(clean)) {
-      const extractedCrop = this.extractCrop(clean);
-      const extractedActivity = this.extractActivity(clean);
-      const cleanForLoc = clean.replace(
-        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|harvesting|harvest|sowing|sow|planting|outdoor|precautions|precaution|weather|mausam)\b/gi,
-        " "
-      );
-      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
-      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
-
-      return {
-        intent: "agriculture",
-        confidence: 0.9,
-        extractedLocation: location,
-        extractedCrop, // Never assume a crop if the user did not provide one
-        extractedActivity,
-        isForecastQuery: isFuture,
-        isRiskQuery: true,
       };
     }
 
@@ -449,17 +519,17 @@ export class IntentRouter {
   extractLocation(text: string): string | undefined {
     const locationRegexes = [
       // "what about London", "how about Kanpur", "what about Nepal"
-      /\b(?:what\s+about|how\s+about|and\s+for|and\s+in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      /\b(?:what\s+about|how\s+about|and\s+for|and\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar", "near Delhi"
-      /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
+      /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
       // "weather in London", "temp in New Delhi", "forecast for Delhi"
-      /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // "weather London", "forecast Tokyo"
-      /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
-      // Hinglish: "Kanpur mein kal mausam"
-      /\b([a-zA-Z\s]+?)\s+mein\s+(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
+      /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      // Hinglish: "Kanpur mein kal mausam", "Kanpur mein: Ignore..."
+      /\b([a-zA-Z0-9\s\-_]+?)\s+mein(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
       // "London weather", "New Delhi forecast" (excluding temporal/stop words)
-      /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z\s]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
+      /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z0-9\s\-_]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];
 
 
@@ -481,12 +551,12 @@ export class IntentRouter {
    */
   private extractImpactTargetLocation(text: string): string | undefined {
     const targetPatterns = [
-      /\b(?:is|will|can|could)\s+([a-zA-Z\s]+?)\s+(?:impacted|affected|hit|threatened|facing|flooded|submerged)\b/i,
-      /\b(?:affect|impacting|impact|hit|hitting|reach|threatening|threaten|damage)\s+([a-zA-Z\s]+?)(?:\s+(?:today|tomorrow|now|soon)|\?|\.|$)/i,
-      /\b(?:effect on|impact on|asar on|effect in|impact in|asar in)\s+([a-zA-Z\s]+?)(?:\s+(?:par|aur|mein)|\?|\.|$)/i,
-      /\b(?:effect|asar)\s+([a-zA-Z\s]+?)\s+par\b/i,
-      /\b([a-zA-Z\s]+?)\s+par\s+(?:effect|asar|kya asar|kya effect)\b/i,
-      /\b([a-zA-Z\s]+?)\s+(?:par effect|par asar|ko affect)\b/i,
+      /\b(?:is|will|can|could)\s+([a-zA-Z0-9\s\-_]+?)\s+(?:impacted|affected|hit|threatened|facing|flooded|submerged)\b/i,
+      /\b(?:affect|impacting|impact|hit|hitting|reach|threatening|threaten|damage)\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:today|tomorrow|now|soon)|\?|\.|$)/i,
+      /\b(?:effect on|impact on|asar on|effect in|impact in|asar in)\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:par|aur|mein)|\?|\.|$)/i,
+      /\b(?:effect|asar)\s+([a-zA-Z0-9\s\-_]+?)\s+par\b/i,
+      /\b([a-zA-Z0-9\s\-_]+?)\s+par\s+(?:effect|asar|kya asar|kya effect)\b/i,
+      /\b([a-zA-Z0-9\s\-_]+?)\s+(?:par effect|par asar|ko affect)\b/i,
     ];
 
     for (const pattern of targetPatterns) {
@@ -539,10 +609,10 @@ export class IntentRouter {
     const agriTerms = [
       /\b(crop|crops|farming|farm|agriculture|agricultural|fasal|kheti)\b/i,
       /\b(irrigation|irrigate|watering|sinchai|paani)\b/i,
-      /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai)\b/i,
-      /\b(harvest|harvesting|sowing|sow|planting|cutting|katai|buvai|bone)\b/i,
+      /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai|fertilizer|fertilizers)\b/i,
+      /\b(harvest|harvesting|sowing|sow|planting|plant|cutting|katai|buvai|bone|seed|seeding)\b/i,
       /\b(wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson)\b/i,
-      /\b(field work|outdoor field work|fieldwork|khet ka kaam)\b/i,
+      /\b(field work|outdoor field work|fieldwork|khet ka kaam|outdoor work)\b/i,
       /\b(precautions for wheat|precautions for rice|precautions for crop|precautions for farming)\b/i,
     ];
     return agriTerms.some((pattern) => pattern.test(text));

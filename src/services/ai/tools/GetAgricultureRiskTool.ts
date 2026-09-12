@@ -26,7 +26,6 @@ import type {
   AgricultureActivity,
   RiskLevel,
   AgricultureHazard,
-  AgricultureEvidence,
   AgricultureForecastSummary,
   AgricultureAssessment,
 } from "@/types/agriculture";
@@ -79,7 +78,10 @@ export const getAgricultureRiskInputSchema = z.object({
   crop: cropTypeSchema.optional().nullable(),
   activity: agricultureActivityTypeSchema.optional().nullable(),
   temporalTarget: z.string().optional().default("today"),
-  targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  targetDate: z
+    .string()
+    .optional()
+    .transform((val) => (val && /^\d{4}-\d{2}-\d{2}$/.test(val) ? val : undefined)),
   timezone: z.string().optional(),
   weather: z.custom<WeatherSnapshot>((val) => typeof val === "object" && val !== null).optional(),
 });
@@ -255,16 +257,33 @@ export class GetAgricultureRiskTool
     let targetDay = weather.daily && weather.daily.length > 0 ? weather.daily[0] : undefined;
     if (targetDate && weather.daily) {
       const matched = weather.daily.find((d) => d.date === targetDate);
-      if (matched) targetDay = matched;
-    } else if (temporalTarget === "tomorrow" || temporalTarget === "kal") {
-      if (weather.daily && weather.daily.length > 1) {
+      if (matched) {
+        targetDay = matched;
+      } else if (
+        (temporalTarget === "tomorrow" ||
+          temporalTarget === "kal" ||
+          temporalTarget.startsWith("tomorrow_")) &&
+        weather.daily.length > 1
+      ) {
         targetDay = weather.daily[1];
       }
+    } else if (
+      (temporalTarget === "tomorrow" ||
+        temporalTarget === "kal" ||
+        temporalTarget.startsWith("tomorrow_")) &&
+      weather.daily &&
+      weather.daily.length > 1
+    ) {
+      targetDay = weather.daily[1];
     }
 
-    // Factors
-    const precipProb = targetDay ? targetDay.precipitationProbability : windows.max24hPrecipProbPct;
-    const rainfall = targetDay ? targetDay.precipitationSum : windows.next24hPrecipMm;
+    // Factors: for comprehensive 24h risk evaluation, consider both the target day and the 24h forecast window
+    const precipProb = targetDay
+      ? Math.max(targetDay.precipitationProbability, windows.max24hPrecipProbPct)
+      : windows.max24hPrecipProbPct;
+    const rainfall = targetDay
+      ? Math.max(targetDay.precipitationSum, windows.next24hPrecipMm)
+      : windows.next24hPrecipMm;
     const maxTemp = targetDay ? targetDay.temperatureHigh : windows.maxTemperatureC;
     const minTemp = targetDay ? targetDay.temperatureLow : windows.minTemperatureC;
     const maxWind = windows.maxWindSpeedKmh;
@@ -368,16 +387,17 @@ export class GetAgricultureRiskTool
     const citations: AICitation[] = [];
     if (weather.provenance && weather.provenance.length > 0) {
       for (const prov of weather.provenance) {
+        const displayProv = !prov.provider || prov.provider.toLowerCase() === "open-meteo" ? "Open-Meteo" : prov.provider;
         citations.push({
           title: `Verified Atmospheric Observation & Forecast for ${weather.location.name}`,
-          source: prov.provider === "open-meteo" ? "Open-Meteo Weather API" : prov.provider,
+          source: displayProv,
           publishedAt: prov.retrievedAt || weather.observedAt,
         });
       }
     } else {
       citations.push({
         title: `Verified Meteorological Forecast for ${weather.location.name}`,
-        source: "Open-Meteo Weather API",
+        source: "Open-Meteo",
         publishedAt: weather.observedAt,
       });
     }
@@ -430,8 +450,6 @@ export class GetAgricultureRiskTool
         cropEvidenceNote,
         disclaimer: DISCLAIMER_TEXT,
         provenance,
-        temporalTarget,
-        targetDate: targetDay?.date || targetDate,
         factors,
         relevantWeatherRisk: {
           riskLevel: overallRiskLevel,

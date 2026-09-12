@@ -92,9 +92,11 @@ export class ContextBuilder {
       );
 
       // Extract citation
+      const rawProv = w.provenance[0]?.provider;
+      const displayProv = !rawProv || rawProv.toLowerCase() === "open-meteo" ? "Open-Meteo" : rawProv;
       citations.push({
         title: `Live Weather Observation for ${w.location.name}`,
-        source: w.provenance[0]?.provider || "Open-Meteo",
+        source: displayProv,
         publishedAt: w.observedAt,
       });
 
@@ -199,16 +201,17 @@ export class ContextBuilder {
 
       if (agr.provenance && agr.provenance.length > 0) {
         for (const prov of agr.provenance) {
+          const displayProv = !prov.provider || prov.provider.toLowerCase() === "open-meteo" ? "Open-Meteo" : prov.provider;
           citations.push({
             title: `Verified Atmospheric Observation & Forecast for ${agr.location.name}`,
-            source: prov.provider === "open-meteo" ? "Open-Meteo Weather API" : prov.provider,
+            source: displayProv,
             publishedAt: prov.retrievedAt || agr.assessedAt,
           });
         }
       } else {
         citations.push({
           title: `Verified Atmospheric Observation & Forecast for ${agr.location.name}`,
-          source: "Open-Meteo Weather API",
+          source: "Open-Meteo",
           publishedAt: agr.assessedAt,
         });
       }

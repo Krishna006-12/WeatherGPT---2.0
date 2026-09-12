@@ -140,10 +140,6 @@ export class MockAIProvider implements AIProvider {
       });
     }
 
-    // Extract location name if available
-    const locMatch = prompt.match(/<target_location>[\s\S]*?Name:\s*([^\n]+)/i);
-    const locName = locMatch && locMatch[1] ? locMatch[1].trim() : "the requested location";
-
     // Weather Risk Assessment prompt
     if (prompt.includes("<verified_weather_risk")) {
       const isUnfavorable = prompt.includes('riskLevel="high"') || prompt.includes('riskLevel="critical"');
