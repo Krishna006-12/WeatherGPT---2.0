@@ -33,9 +33,13 @@ describe("SevenDayForecastCard", () => {
       daily: mockWeather.daily.slice(0, 3)
     } as unknown as WeatherSnapshot;
     
-    const { container } = render(<SevenDayForecastCard weather={shortWeather} isLoading={false} />);
-    // Should render without crashing and have 3 elements
-    expect(container.querySelectorAll(".border-b, .last\\:border-0")).toHaveLength(3);
+    render(<SevenDayForecastCard weather={shortWeather} isLoading={false} />);
+    // Should render without crashing and have 3 day labels
+    expect(screen.getByText("Today")).toBeInTheDocument();
+    // We expect 3 rows total (Today + 2 more day names)
+    const highTemps = screen.getAllByText(/°/);
+    // Each row has 2 temp values (high + low), so 3 rows = 6 elements
+    expect(highTemps.length).toBe(6);
   });
 
   it("handles empty state", () => {

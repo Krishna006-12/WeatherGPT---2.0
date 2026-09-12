@@ -1,7 +1,7 @@
 import { useEvents } from "@/hooks/use-events";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { WeatherEvent } from "@/types/events";
 import { globalImpactEngine } from "@/services/impact/impact-engine";
+import { Activity, ShieldCheck, MapPin } from "lucide-react";
 
 export function getEventIndiaRelevance(event: WeatherEvent): { label: string; badgeClass: string } {
   const assessment = globalImpactEngine.assessIndiaImpact(event);
@@ -10,26 +10,26 @@ export function getEventIndiaRelevance(event: WeatherEvent): { label: string; ba
       const isHigh = event.severity === "extreme" || event.severity === "high" || event.severity === "critical";
       return {
         label: isHigh ? "High" : "Direct",
-        badgeClass: "bg-red-500/20 text-red-400 border border-red-500/30",
+        badgeClass: "bg-red-500/15 text-red-300 border border-red-500/30",
       };
     }
     case "REGIONAL":
     case "POSSIBLE":
       return {
         label: "Monitoring",
-        badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+        badgeClass: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
       };
     case "LOW":
     case "NONE":
       return {
         label: "Low (Distant)",
-        badgeClass: "bg-white/10 text-neutral-400 border border-white/10",
+        badgeClass: "bg-white/5 text-neutral-400 border border-white/10",
       };
     case "INSUFFICIENT_EVIDENCE":
     default:
       return {
         label: "Unknown",
-        badgeClass: "bg-white/5 text-neutral-500 border border-white/5",
+        badgeClass: "bg-white/5 text-neutral-500 border border-white/10",
       };
   }
 }
@@ -37,11 +37,15 @@ export function getEventIndiaRelevance(event: WeatherEvent): { label: string; ba
 export function LiveEventCard() {
   const { data, isLoading, isError } = useEvents({ limit: 1 });
 
-  if (isLoading) return <Skeleton className="h-48 rounded-3xl bg-[#1E1E1E]" />;
+  if (isLoading) return <div className="wg-skeleton h-56 w-full" />;
   if (isError || !data || data.events.length === 0) {
     return (
-      <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5 flex items-center justify-center min-h-[192px]">
-        <p className="text-sm text-neutral-500">No active live events.</p>
+      <div className="wg-surface-intelligence flex flex-col justify-center items-center min-h-[180px] p-6 text-center">
+        <Activity size={22} className="text-[var(--text-tertiary)] mb-2 opacity-50" />
+        <p className="text-sm font-medium text-[var(--text-secondary)]">No active live events</p>
+        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+          Global meteorological monitoring active. Subcontinent clear.
+        </p>
       </div>
     );
   }
@@ -49,42 +53,101 @@ export function LiveEventCard() {
   const event = data.events[0];
   if (!event) return null;
 
-  const locationText = event.locations && event.locations[0] ? `${event.locations[0].name}` : "Multiple locations";
+  const locationText = event.locations && event.locations[0] ? `${event.locations[0].name}` : "Multiple regions";
   const indiaRelevance = getEventIndiaRelevance(event);
-  const freshnessLabel = event.freshness?.label || (event.freshness?.level ? event.freshness.level.toLowerCase() : "recent");
+  const isHighSeverity = event.severity === "extreme" || event.severity === "high" || event.severity === "critical";
 
   return (
-    <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5 relative overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-        <h3 className="font-semibold text-white truncate pr-4">{event.title}</h3>
+    <section
+      aria-label="Live Weather Disaster Intelligence"
+      className={`wg-surface-intelligence flex flex-col justify-between h-full p-5 sm:p-6 wg-animate-in wg-stagger-2 transition-all duration-200 ${
+        isHighSeverity
+          ? "border-red-500/30 bg-[radial-gradient(ellipse_at_top_right,rgba(239,68,68,0.12),transparent_70%)]"
+          : ""
+      }`}
+    >
+      <div>
+        {/* Header: Intelligence Beacon & Severity Posture */}
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-[var(--border-subtle)]">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              {isHighSeverity && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  isHighSeverity ? "bg-red-500" : "bg-amber-400"
+                }`}
+              />
+            </span>
+            <h3
+              className="text-xs uppercase font-bold tracking-wider"
+              style={{ color: isHighSeverity ? "var(--status-danger)" : "var(--text-primary)" }}
+            >
+              Live Intelligence Bulletin
+            </h3>
+          </div>
+
+          <span
+            className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+              isHighSeverity
+                ? "bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm shadow-red-950"
+                : "bg-white/5 text-neutral-300 border border-white/10"
+            }`}
+          >
+            {event.severity}
+          </span>
+        </div>
+
+        {/* 1. WHAT IS HAPPENING: Readable Headline & Scope */}
+        <div className="mb-3.5">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)] block mb-1">
+            Hazard Condition
+          </span>
+          <h4 className="text-base sm:text-lg font-semibold leading-snug text-white">
+            {event.title}
+          </h4>
+          <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] mt-1.5">
+            <MapPin size={13} className="text-[var(--text-tertiary)] shrink-0" />
+            <span className="font-medium">{locationText}</span>
+          </div>
+        </div>
+
+        {/* 2. EVIDENCE: Verified Agency / Sensor Sources */}
+        <div className="p-3 rounded-xl bg-black/30 border border-[var(--border-subtle)] mb-3 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={14} className="text-[var(--accent)] shrink-0" />
+            <span className="text-[var(--text-secondary)] font-medium">
+              {event.sources ? event.sources.length : 0} Verified Agency Source
+              {(event.sources ? event.sources.length : 0) !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-[var(--text-tertiary)]">
+            ID: {event.id ? event.id.slice(0, 8) : "ACT-01"}
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-3 mt-4">
-        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-          <span className="text-neutral-400">Severity</span>
-          <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/20 text-xs font-medium capitalize">{event.severity}</span>
+      {/* 3. WHY IT MATTERS: India Regional Impact Relevance */}
+      <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)]">
+            Subcontinent Assessment
+          </span>
+          <span className="text-xs font-semibold text-[var(--text-secondary)] mt-0.5">
+            Regional Threat Rating
+          </span>
         </div>
-        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-          <span className="text-neutral-400">Freshness</span>
-          <span className="bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded border border-white/10 text-xs font-medium">{freshnessLabel}</span>
-        </div>
-        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-          <span className="text-neutral-400">Affected</span>
-          <span className="text-neutral-200 truncate max-w-[150px]">{locationText}</span>
-        </div>
-        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-          <span className="text-neutral-400">Sources</span>
-          <span className="text-neutral-200 font-medium">{event.sources ? event.sources.length : 0}</span>
-        </div>
-        <div className="flex justify-between items-center text-sm">
-          <span className="text-neutral-400">India Relevance</span>
-          <span className={`${indiaRelevance.badgeClass} px-2 py-0.5 rounded text-xs font-medium capitalize`}>
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-[var(--text-tertiary)] hidden sm:inline">Relevance:</span>
+          <span
+            className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${indiaRelevance.badgeClass}`}
+          >
             {indiaRelevance.label}
           </span>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
-

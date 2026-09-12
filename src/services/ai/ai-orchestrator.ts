@@ -226,11 +226,16 @@ export class AIOrchestrator {
 
       // Agriculture Engine evaluation via get_agriculture_risk tool
       if (intent === "agriculture" && targetLocation?.coordinates) {
-        const crop = classification.extractedCrop || "wheat";
+        const crop = classification.extractedCrop; // Never default to wheat if not provided
         const aRes = await this.toolRegistry.getAgricultureRiskTool.execute({
+          location: targetLocation,
           coordinates: targetLocation.coordinates,
           crop,
+          activity: classification.extractedActivity,
+          temporalTarget: temporalResolution.target,
+          targetDate: temporalResolution.targetDate,
           timezone: targetLocation.timezone,
+          weather,
         });
         if (aRes.success) {
           agricultureAssessment = aRes.data;
@@ -253,12 +258,12 @@ export class AIOrchestrator {
         },
         weatherRisk: weatherRisk
           ? {
-              riskLevel: weatherRisk.riskLevel,
-              confidence: weatherRisk.confidence,
-              primaryHazard: weatherRisk.primaryHazard,
-              recommendation: weatherRisk.recommendation,
-              advisory: weatherRisk.activitySuitability.advisory,
-            }
+            riskLevel: weatherRisk.riskLevel,
+            confidence: weatherRisk.confidence,
+            primaryHazard: weatherRisk.primaryHazard,
+            recommendation: weatherRisk.recommendation,
+            advisory: weatherRisk.activitySuitability.advisory,
+          }
           : undefined,
         untrustedSourceDelimiters: "XML_BOUNDED",
         builtAt: generatedAt,
@@ -400,19 +405,19 @@ export class AIOrchestrator {
     // 1. Construct selectedLocation from dashboard request
     const selectedLocation: EventLocation | undefined = request.location
       ? {
-          name: request.location.name || request.location.city || "Selected Location",
-          city: request.location.city,
-          region: request.location.region,
-          country: request.location.country || "Global",
-          timezone: request.location.timezone,
-          coordinates:
-            request.location.lat !== undefined && request.location.lon !== undefined
-              ? {
-                  latitude: request.location.lat,
-                  longitude: request.location.lon,
-                }
-              : undefined,
-        }
+        name: request.location.name || request.location.city || "Selected Location",
+        city: request.location.city,
+        region: request.location.region,
+        country: request.location.country || "Global",
+        timezone: request.location.timezone,
+        coordinates:
+          request.location.lat !== undefined && request.location.lon !== undefined
+            ? {
+              latitude: request.location.lat,
+              longitude: request.location.lon,
+            }
+            : undefined,
+      }
       : undefined;
 
     // 2. Determine if user query explicitly mentions a target location
@@ -429,7 +434,13 @@ export class AIOrchestrator {
       isFollowUp = !!classification.isFollowUp;
     }
 
-    // 3. If explicit location was mentioned in the user's query:
+    // 3. Defensive guard: ignore temporal/stop words erroneously passed as locations
+    const TEMPORAL_LOCATION_GUARD = /^(?:hourly|daily|weekly|today|tomorrow|current|live|forecast|weather)$/i;
+    if (queryLocationName && TEMPORAL_LOCATION_GUARD.test(queryLocationName.trim())) {
+      queryLocationName = undefined;
+    }
+
+    // If explicit location was mentioned in the user's query:
     if (queryLocationName && queryLocationName.trim().length > 0) {
       const trimmedQueryLoc = queryLocationName.trim();
       const displayQueryLoc = trimmedQueryLoc
@@ -511,7 +522,7 @@ export class AIOrchestrator {
 
     // 4. If NO explicit query location was mentioned:
     // Check if conversation context clearly establishes a location for follow-up
-    if ((isFollowUp || !request.location) && context?.lastResolvedLocation?.coordinates) {
+    if (isFollowUp && context?.lastResolvedLocation?.coordinates) {
       return {
         resolvedLocation: context.lastResolvedLocation,
         selectedLocation,
@@ -702,7 +713,16 @@ export class AIOrchestrator {
       answer = `Unable to find verified geographic location or weather observations for "${locName}". Please verify the location name and try again.`;
     } else if (context.intent === "agriculture" && context.agricultureAssessment) {
       const agr = context.agricultureAssessment;
-      answer = `Agricultural weather risk for ${agr.cropDisplayName} in ${locName}: Overall risk is ${agr.overallRiskLevel.toUpperCase()}. Irrigation: ${agr.activities.irrigation.advisory} Spraying: ${agr.activities.spraying.advisory} Field operations: ${agr.activities.fieldOperations.advisory}`;
+      const cropText = agr.cropDisplayName || "Not specified / Generic";
+      const periodText = context.temporalResolution?.label || "Target period";
+      const weatherSummary = `Precipitation: ${agr.forecastSummary.next24hPrecipMm} mm (48h: ${agr.forecastSummary.next48hPrecipMm} mm), Max Temp: ${agr.forecastSummary.maxTemperatureC}°C, Min Temp: ${agr.forecastSummary.minTemperatureC}°C, Wind: up to ${agr.forecastSummary.maxWindSpeedKmh} km/h, Humidity: ${agr.forecastSummary.averageHumidityPct}%`;
+      const riskText = agr.overallRiskLevel.charAt(0).toUpperCase() + agr.overallRiskLevel.slice(1);
+      const recommendationText = (agr as unknown as { recommendation?: string }).recommendation || agr.activities.spraying.advisory || agr.activities.irrigation.advisory;
+      const reasonText = (agr as unknown as { reason?: string }).reason || agr.activities.spraying.reason || agr.activities.irrigation.reason;
+      const confidenceText = (agr as unknown as { confidence?: string }).confidence ? (((agr as unknown as { confidence: string }).confidence.charAt(0).toUpperCase() + (agr as unknown as { confidence: string }).confidence.slice(1))) : "High";
+      const noteLine = agr.cropEvidenceNote ? `\n\n${agr.cropEvidenceNote}` : "";
+
+      answer = `🌾 Agriculture Intelligence\n\nCrop:\n${cropText}\n\nLocation:\n${locName}\n\nPeriod:\n${periodText}\n\nWeather:\n${weatherSummary}\n\nRisk:\n${riskText}\n\nRecommendation:\n${recommendationText}\n\nReason:\n${reasonText}\n\nConfidence:\n${confidenceText}${noteLine}`;
     } else if (context.weatherRisk) {
       const wr = context.weatherRisk;
       answer = `Weather risk assessment for ${locName} (${context.temporalResolution?.label || "target period"}): Overall risk is ${wr.riskLevel.toUpperCase()} (${wr.confidence} confidence). ${wr.activitySuitability.advisory} ${wr.recommendation}`;
@@ -731,7 +751,7 @@ export class AIOrchestrator {
 
     const groundingStatus: GroundingStatus =
       context.locationNotFound ||
-      (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
+        (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
         ? "insufficient_evidence"
         : context.initialGroundingStatus;
 

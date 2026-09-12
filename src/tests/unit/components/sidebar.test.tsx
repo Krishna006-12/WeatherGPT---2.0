@@ -46,11 +46,11 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
-    expect(dashboardLink.className).toContain("text-cyan-400");
-    expect(dashboardLink.className).toContain("bg-cyan-950/80");
+    expect(dashboardLink.style.color).toBe("var(--accent)");
+    expect(dashboardLink.style.background).toBe("var(--accent-surface)");
 
     const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
-    expect(weatherLink.className).toContain("text-neutral-400");
+    expect(weatherLink.style.color).toBe("var(--text-tertiary)");
   });
 
   it("applies active styling dynamically to Weather when pathname is /weather", () => {
@@ -58,11 +58,11 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
-    expect(weatherLink.className).toContain("text-cyan-400");
-    expect(weatherLink.className).toContain("bg-cyan-950/80");
+    expect(weatherLink.style.color).toBe("var(--accent)");
+    expect(weatherLink.style.background).toBe("var(--accent-surface)");
 
     const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
-    expect(dashboardLink.className).toContain("text-neutral-400");
+    expect(dashboardLink.style.color).toBe("var(--text-tertiary)");
   });
 
   it("applies active styling dynamically to Intelligence when pathname is /intelligence", () => {
@@ -70,7 +70,7 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const intelLink = screen.getByRole("link", { name: /Live Disaster Intelligence/i });
-    expect(intelLink.className).toContain("text-cyan-400");
+    expect(intelLink.style.color).toBe("var(--accent)");
   });
 
   it("applies active styling dynamically to Impact when pathname is /impact", () => {
@@ -78,7 +78,7 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const impactLink = screen.getByRole("link", { name: /Regional Risk & Impact/i });
-    expect(impactLink.className).toContain("text-cyan-400");
+    expect(impactLink.style.color).toBe("var(--accent)");
   });
 
   it("applies active styling dynamically to Chat when pathname is /chat", () => {
@@ -86,7 +86,7 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const chatLink = screen.getByRole("link", { name: /WeatherGPT AI Copilot/i });
-    expect(chatLink.className).toContain("text-cyan-400");
+    expect(chatLink.style.color).toBe("var(--accent)");
   });
 
   it("applies active styling dynamically to History when pathname is /history", () => {
@@ -94,7 +94,7 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const historyLink = screen.getByRole("link", { name: /Forecast & Meteorological Timeline/i });
-    expect(historyLink.className).toContain("text-cyan-400");
+    expect(historyLink.style.color).toBe("var(--accent)");
   });
 
   it("applies active styling dynamically to Settings when pathname is /settings", () => {
@@ -102,6 +102,6 @@ describe("Sidebar Navigation Component", () => {
     render(<Sidebar />);
 
     const settingsLink = screen.getByRole("link", { name: /System Intelligence Settings/i });
-    expect(settingsLink.className).toContain("text-cyan-400");
+    expect(settingsLink.style.color).toBe("var(--accent)");
   });
 });

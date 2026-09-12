@@ -104,4 +104,17 @@ describe("Deterministic IntentRouter", () => {
     expect(res2.intent).toBe("forecast");
     expect(res2.extractedLocation?.toLowerCase()).toBe("kanpur");
   });
+
+  it("Scenario 11: Temporal-before-weather queries do not extract temporal words as locations", () => {
+    // Temporal queries should have NO extracted location
+    expect(router.classify("Hourly weather").extractedLocation).toBeUndefined();
+    expect(router.classify("Hourly forecast").extractedLocation).toBeUndefined();
+    expect(router.classify("Daily weather").extractedLocation).toBeUndefined();
+    expect(router.classify("Current weather").extractedLocation).toBeUndefined();
+
+    // Queries with explicit locations must extract the correct location
+    expect(router.classify("Hourly weather in Kanpur").extractedLocation?.toLowerCase()).toBe("kanpur");
+    expect(router.classify("London weather").extractedLocation?.toLowerCase()).toBe("london");
+    expect(router.classify("New Delhi weather").extractedLocation?.toLowerCase()).toBe("new delhi");
+  });
 });

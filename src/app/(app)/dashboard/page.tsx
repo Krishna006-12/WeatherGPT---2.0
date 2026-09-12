@@ -27,42 +27,74 @@ export default function DashboardPage() {
   if (!selectedLocation) {
     return (
       <div className="flex h-full min-h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2 text-white">Welcome to WeatherGPT 2.0</h2>
-          <p className="text-neutral-400">Search for a city above to begin your weather intelligence experience.</p>
+        <div className="text-center wg-animate-in">
+          <h2
+            className="text-2xl font-semibold mb-2"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Welcome to WeatherGPT 2.0
+          </h2>
+          <p style={{ color: "var(--text-tertiary)" }}>
+            Search for a city above to begin your weather intelligence experience.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-min">
-      {/* 1. Current Weather */}
-      <div className="lg:col-span-8 order-1">
-        <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
+    <div className="flex flex-col gap-6 lg:gap-7 pb-12">
+      {/* 1. PRIMARY: Dominant Weather Hero Centerpiece */}
+      <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
+
+      {/* 2. SECONDARY: Immediate Horizon & Live Intelligence */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Immediate Horizon & Intelligence
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
+          <div className="lg:col-span-8 flex flex-col">
+            <HourlyForecastCard weather={weather} isLoading={isWeatherLoading} />
+          </div>
+          <div className="lg:col-span-4 flex flex-col">
+            <LiveEventCard />
+          </div>
+        </div>
       </div>
 
-      {/* 2. Critical Live Intelligence & Agriculture */}
-      <div className="lg:col-span-4 order-2 lg:col-start-9 lg:row-start-1 space-y-6">
-        <LiveEventCard />
-        <ImpactCard location={selectedLocation} />
-        <AgricultureCard location={selectedLocation} />
+      {/* 3. TERTIARY: Specialized Meteorological Analysis */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Environmental & Regional Analysis
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
+          <div className="lg:col-span-4 flex flex-col">
+            <SevenDayForecastCard weather={weather} isLoading={isWeatherLoading} />
+          </div>
+          <div className="lg:col-span-4 flex flex-col gap-5 lg:gap-6">
+            <SunriseCard weather={weather} isLoading={isWeatherLoading} />
+            <ImpactCard location={selectedLocation} />
+          </div>
+          <div className="md:col-span-2 lg:col-span-4 flex flex-col">
+            <AgricultureCard location={selectedLocation} />
+          </div>
+        </div>
       </div>
 
-      {/* 3. Hourly Forecast & Sunrise */}
-      <div className="lg:col-span-8 order-4 lg:col-start-1 lg:row-start-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <HourlyForecastCard weather={weather} isLoading={isWeatherLoading} />
-        <SunriseCard weather={weather} isLoading={isWeatherLoading} />
-      </div>
-
-      {/* 4. 7-Day Forecast */}
-      <div className="lg:col-span-8 order-5 lg:col-start-1 lg:row-start-3">
-        <SevenDayForecastCard weather={weather} isLoading={isWeatherLoading} />
-      </div>
-
-      {/* 5. AI Copilot */}
-      <div className="lg:col-span-4 order-6 lg:col-start-9 lg:row-start-3">
-        <AICopilotCard location={selectedLocation} />
+      {/* 4. UTILITY: Meteorological AI Layer */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            AI Meteorological Copilot
+          </h2>
+        </div>
+        <div className="w-full">
+          <AICopilotCard location={selectedLocation} />
+        </div>
       </div>
     </div>
   );

@@ -23,15 +23,18 @@ export function DashboardLayout({
   const handleSelectLocation = onSelectLocation || locationContext.setSelectedLocation;
 
   return (
-    <div className="flex h-screen w-full bg-[#111111] text-white overflow-hidden selection:bg-cyan-500/30">
+    <div
+      className="flex h-screen w-full overflow-hidden selection:bg-cyan-500/30"
+      style={{ background: "var(--surface-base)", color: "var(--text-primary)" }}
+    >
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0">
         <Topbar
           onSelectLocation={handleSelectLocation}
           selectedLocation={activeSelectedLocation}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8">
+          <div className="mx-auto max-w-[1400px] w-full">{children}</div>
         </main>
       </div>
     </div>

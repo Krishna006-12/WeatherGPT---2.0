@@ -32,7 +32,7 @@ export class AgricultureService {
    */
   async assessCropRisk(
     coordinates: Coordinates,
-    crop: CropType,
+    crop?: CropType,
     timezone?: string
   ): Promise<Result<AgricultureAssessment>> {
     // 1. Fetch verified weather snapshot from existing WeatherService

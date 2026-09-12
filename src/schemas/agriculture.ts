@@ -12,6 +12,15 @@ export const cropTypeSchema = z.enum([
   "maize",
   "potato",
   "mustard",
+  "generic",
+]);
+
+export const agricultureActivityTypeSchema = z.enum([
+  "irrigation",
+  "spraying",
+  "sowing",
+  "harvesting",
+  "outdoor_field_work",
 ]);
 
 export const riskLevelSchema = z.enum([
@@ -72,7 +81,7 @@ export const agricultureForecastSummarySchema = z.object({
 
 export const agricultureAssessmentSchema = z.object({
   id: z.string().min(1),
-  crop: cropTypeSchema,
+  crop: cropTypeSchema.optional(),
   cropDisplayName: z.string().min(1),
   location: z.object({
     name: z.string().min(1),
@@ -85,10 +94,14 @@ export const agricultureAssessmentSchema = z.object({
     irrigation: agricultureActivitySchema,
     spraying: agricultureActivitySchema,
     fieldOperations: agricultureActivitySchema,
+    sowing: agricultureActivitySchema.optional(),
+    harvesting: agricultureActivitySchema.optional(),
+    outdoorFieldWork: agricultureActivitySchema.optional(),
   }),
   hazards: z.array(agricultureHazardSchema),
   forecastSummary: agricultureForecastSummarySchema,
   evidence: z.array(agricultureEvidenceSchema),
+  cropEvidenceNote: z.string().optional(),
   disclaimer: z.string().min(1),
   provenance: z.array(dataProvenanceSchema),
 });

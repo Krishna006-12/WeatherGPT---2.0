@@ -41,12 +41,9 @@ describe("ImpactCard", () => {
     });
 
     render(<ImpactCard location={mockLocation} />);
-    expect(screen.getByText("Regional Impact")).toBeInTheDocument();
-    expect(screen.getByText("Unassessed")).toBeInTheDocument();
+    expect(screen.getByText("No active events")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /No verified event impact assessment is currently available for this location/i
-      )
+      screen.getByText("Regional impact assessment is clear.")
     ).toBeInTheDocument();
   });
 
@@ -74,7 +71,7 @@ describe("ImpactCard", () => {
     });
 
     render(<ImpactCard location={mockLocation} />);
-    expect(screen.getByText("Selected Location Impact")).toBeInTheDocument();
+    expect(screen.getByText("Location Impact")).toBeInTheDocument();
     expect(screen.getByText("Grounded")).toBeInTheDocument();
     expect(screen.getByText("Kanpur")).toBeInTheDocument();
     expect(screen.getByText("confirmed")).toBeInTheDocument();

@@ -151,66 +151,93 @@ export function AICopilotCard({
   if (expanded) {
     return (
       <div
-        className={`rounded-3xl bg-[#1C1C1E] p-6 border border-cyan-500/30 relative flex flex-col shadow-2xl shadow-cyan-900/20 ${
-          fullHeight ? "h-[calc(100vh-10rem)] min-h-[560px]" : "h-[520px]"
-        }`}
+        className="flex flex-col relative rounded-[32px] overflow-hidden"
+        style={{
+          background: "var(--surface-1)",
+          border: "1px solid var(--accent-border)",
+          height: fullHeight ? "calc(100vh - 10rem)" : "520px",
+          minHeight: fullHeight ? "560px" : undefined,
+          boxShadow: "0 24px 64px -12px hsla(192, 85%, 56%, 0.1)",
+        }}
       >
         {/* Header */}
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-cyan-950 flex items-center justify-center text-cyan-400">
+        <div
+          className="flex justify-between items-center px-6 py-5 z-10"
+          style={{ background: "hsla(var(--surface-1-hsl), 0.8)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border-subtle)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: "var(--accent-surface)", color: "var(--accent)" }}
+            >
               <MessageSquare size={16} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-cyan-400 flex items-center gap-1.5">
-                WeatherGPT Copilot
-                <span className="text-[10px] bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-800/40 text-cyan-300 font-normal">
+              <h3 className="font-bold text-[15px] flex items-center gap-2 tracking-tight" style={{ color: "var(--accent)" }}>
+                Copilot
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider"
+                  style={{
+                    background: "var(--accent-surface)",
+                    color: "var(--accent)",
+                  }}
+                >
                   Live
                 </span>
               </h3>
-              <p className="text-[11px] text-neutral-400">Grounded intelligence for {locationLabel}</p>
+              <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+                Intelligence for {locationLabel}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {messages.length > 0 && (
               <button
                 onClick={clearSession}
                 title="Clear conversation"
                 aria-label="Clear conversation"
-                className="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors text-xs flex items-center gap-1"
+                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5"
+                style={{ color: "var(--text-tertiary)", transition: "all var(--transition-fast)" }}
               >
-                <RotateCcw size={14} />
+                <RotateCcw size={15} />
               </button>
             )}
             {!hideCollapse && (
               <button
                 onClick={() => setExpanded(false)}
                 aria-label="Collapse Copilot"
-                className="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5"
+                style={{ color: "var(--text-tertiary)", transition: "all var(--transition-fast)" }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             )}
           </div>
         </div>
 
         {/* Message Thread */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 text-sm">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 wg-hide-scroll">
           {messages.length === 0 && !loading && (
-            <div className="space-y-4 pt-2">
-              <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-900/30 space-y-2">
-                <div className="flex items-center gap-2 text-cyan-400 text-xs font-semibold">
-                  <Sparkles size={14} />
+            <div className="space-y-6">
+              <div
+                className="p-5 rounded-[24px] space-y-2.5"
+                style={{
+                  background: "var(--accent-surface)",
+                  border: "1px solid var(--accent-border)",
+                }}
+              >
+                <div className="flex items-center gap-2 text-[13px] font-bold tracking-tight" style={{ color: "var(--accent)" }}>
+                  <Sparkles size={16} />
                   <span>AI Meteorological Copilot</span>
                 </div>
-                <p className="text-xs text-neutral-300 leading-relaxed">
-                  How can I help you understand the weather and regional intelligence for <span className="text-white font-medium">{locationLabel}</span>?
+                <p className="text-[13px] leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>
+                  How can I help you understand the weather and regional intelligence for <span style={{ color: "var(--text-primary)" }}>{locationLabel}</span>?
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">Suggested Inquiries</span>
-                <div className="flex flex-col gap-2">
+              <div className="space-y-3">
+                <span className="text-[11px] font-semibold uppercase tracking-wider px-1" style={{ color: "var(--text-quaternary)" }}>Suggested Inquiries</span>
+                <div className="flex flex-col gap-2.5">
                   {[
                     `What is the weather in ${locationLabel} right now?`,
                     "Will it rain today?",
@@ -220,10 +247,16 @@ export function AICopilotCard({
                     <button
                       key={p}
                       onClick={() => handleSendQuery(p)}
-                      className="text-left text-xs bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-neutral-300 hover:text-white transition-colors border border-white/5 flex items-center justify-between group"
+                      className="text-left text-[13px] p-3.5 rounded-[16px] flex items-center justify-between group"
+                      style={{
+                        background: "var(--surface-2)",
+                        color: "var(--text-secondary)",
+                        border: "1px solid var(--border-subtle)",
+                        transition: "all var(--transition-fast)",
+                      }}
                     >
-                      <span>{p}</span>
-                      <Send size={12} className="opacity-0 group-hover:opacity-60 transition-opacity shrink-0 ml-2" />
+                      <span className="font-medium">{p}</span>
+                      <Send size={14} className="opacity-0 group-hover:opacity-100 shrink-0 ml-2" style={{ color: "var(--accent)", transition: "opacity var(--transition-fast)" }} />
                     </button>
                   ))}
                 </div>
@@ -234,33 +267,62 @@ export function AICopilotCard({
           {messages.map((m) => (
             <div key={m.id} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
               {m.role === "user" ? (
-                <div className="max-w-[85%] bg-cyan-600/20 border border-cyan-500/30 rounded-2xl rounded-tr-sm px-4 py-2.5 text-white">
-                  <p className="text-sm whitespace-pre-wrap">{m.content}</p>
-                  <span className="text-[10px] text-cyan-300/60 mt-1 block text-right">{m.timestamp}</span>
+                <div
+                  className="max-w-[85%] rounded-[20px] rounded-tr-[4px] px-5 py-3.5"
+                  style={{
+                    background: "var(--accent-surface)",
+                    border: "1px solid var(--accent-border)",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <p className="text-[14px] whitespace-pre-wrap font-medium">{m.content}</p>
                 </div>
               ) : (
                 <div className="max-w-[92%] space-y-3">
                   {m.error ? (
-                    <div className="flex gap-3 text-red-400 text-xs p-3.5 bg-red-950/20 rounded-2xl border border-red-900/40">
-                      <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <div className="font-semibold text-red-300">Service Notice</div>
-                        <p>{m.content}</p>
-                        <p className="text-[10px] text-neutral-400 mt-1">
+                    <div
+                      className="flex gap-3 text-[13px] p-4 rounded-[20px]"
+                      style={{
+                        background: "hsla(0, 80%, 60%, 0.08)",
+                        border: "1px solid hsla(0, 80%, 60%, 0.2)",
+                        color: "var(--status-danger)",
+                      }}
+                    >
+                      <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                      <div className="space-y-1.5">
+                        <div className="font-bold">Service Notice</div>
+                        <p className="font-medium leading-relaxed opacity-90">{m.content}</p>
+                        <p className="text-[11px] opacity-70">
                           You can still view verified live weather cards and hourly forecasts directly on the dashboard.
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm p-4 space-y-3">
-                      <p className="text-sm text-neutral-200 whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                    <div
+                      className="rounded-[20px] rounded-tl-[4px] p-5 space-y-4"
+                      style={{
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border-subtle)",
+                      }}
+                    >
+                      <p className="text-[14px] whitespace-pre-wrap leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>{m.content}</p>
 
                       {/* Status Badges */}
                       {m.response && (
-                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
+                        <div
+                          className="flex flex-wrap items-center gap-2 pt-3"
+                          style={{ borderTop: "1px solid var(--border-subtle)" }}
+                        >
                           <GroundingBadge status={m.response.groundingStatus} />
                           {m.response.metadata?.isFallback && (
-                            <span className="text-[10px] bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded-full border border-neutral-700">
+                            <span
+                              className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
+                              style={{
+                                background: "var(--surface-3)",
+                                color: "var(--text-tertiary)",
+                                border: "1px solid var(--border-default)",
+                              }}
+                            >
                               Deterministic observation backup
                             </span>
                           )}
@@ -269,37 +331,52 @@ export function AICopilotCard({
 
                       {/* Insufficient Evidence Notice */}
                       {m.response?.groundingStatus === "insufficient_evidence" && (
-                        <div className="flex gap-2 items-start text-xs text-amber-400 bg-amber-950/20 p-3 rounded-xl border border-amber-900/30">
-                          <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                        <div
+                          className="flex gap-2 items-start text-xs font-medium p-3 rounded-xl mt-3"
+                          style={{
+                            background: "hsla(45, 90%, 55%, 0.08)",
+                            border: "1px solid hsla(45, 90%, 55%, 0.2)",
+                            color: "var(--status-warning)",
+                          }}
+                        >
+                          <AlertCircle size={16} className="shrink-0 mt-0.5" />
                           <p>Insufficient evidence to provide a fully verified answer.</p>
                         </div>
                       )}
 
                       {/* Uncertainty Note */}
                       {m.response?.uncertainty && (
-                        <div className="flex gap-2 items-start text-xs text-neutral-400 bg-neutral-900/60 p-2.5 rounded-xl border border-neutral-800">
-                          <AlertTriangle size={14} className="shrink-0 text-amber-400 mt-0.5" />
+                        <div
+                          className="flex gap-2 items-start text-xs font-medium p-3 rounded-xl mt-3"
+                          style={{
+                            background: "var(--surface-base)",
+                            border: "1px solid var(--border-subtle)",
+                            color: "var(--text-tertiary)",
+                          }}
+                        >
+                          <AlertTriangle size={16} className="shrink-0 mt-0.5" style={{ color: "var(--status-warning)" }} />
                           <p>{m.response.uncertainty}</p>
                         </div>
                       )}
 
                       {/* Citations */}
                       {m.response?.citations && m.response.citations.length > 0 && (
-                        <div className="space-y-1.5 pt-1">
-                          <h4 className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider flex items-center gap-1.5">
+                        <div className="space-y-2 pt-3">
+                          <h4 className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: "var(--text-quaternary)" }}>
                             <FileText size={12} /> Sources
                           </h4>
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1.5">
                             {m.response.citations.map((c, i) => (
-                              <div key={i} className="text-xs text-neutral-400 flex items-baseline gap-1.5">
-                                <span className="text-cyan-500">&bull;</span>
-                                <span className="font-medium text-neutral-300">{c.source}:</span>
+                              <div key={i} className="text-[12px] flex items-baseline gap-2" style={{ color: "var(--text-tertiary)" }}>
+                                <span style={{ color: "var(--accent)" }}>&bull;</span>
+                                <span className="font-semibold" style={{ color: "var(--text-secondary)" }}>{c.source}:</span>
                                 {c.url ? (
                                   <a
                                     href={c.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="hover:text-cyan-400 underline decoration-cyan-900/50 underline-offset-2 break-all"
+                                    className="underline underline-offset-2 break-all hover:text-white transition-colors"
+                                    style={{ color: "var(--text-tertiary)", textDecorationColor: "var(--accent-border)" }}
                                   >
                                     {c.title}
                                   </a>
@@ -311,8 +388,6 @@ export function AICopilotCard({
                           </div>
                         </div>
                       )}
-
-                      <span className="text-[10px] text-neutral-500 block text-right">{m.timestamp}</span>
                     </div>
                   )}
                 </div>
@@ -321,96 +396,171 @@ export function AICopilotCard({
           ))}
 
           {loading && (
-            <div className="flex items-center gap-3 text-cyan-400 text-xs p-3.5 bg-cyan-950/20 rounded-2xl border border-cyan-900/30">
-              <div className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shrink-0" />
+            <div
+              className="flex items-center gap-3 text-[13px] font-medium p-4 rounded-[20px]"
+              style={{
+                background: "var(--accent-surface)",
+                border: "1px solid var(--accent-border)",
+                color: "var(--accent)",
+              }}
+            >
+              <div
+                className="w-4 h-4 rounded-full shrink-0"
+                style={{
+                  border: "2px solid var(--accent)",
+                  borderTopColor: "transparent",
+                  animation: "spin 0.8s linear infinite",
+                }}
+              />
               <span>Analyzing verified weather and event data...</span>
             </div>
           )}
         </div>
 
         {/* Input form */}
-        <form onSubmit={handleSend} className="relative mt-auto">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={loading}
-            placeholder="Ask WeatherGPT..."
-            className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={!query.trim() || loading}
-            aria-label="Send message"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-cyan-400 hover:text-cyan-300 disabled:opacity-30 transition-colors rounded-xl hover:bg-white/5"
-          >
-            <Send size={16} />
-          </button>
-        </form>
+        <div className="px-6 pb-6 pt-2 z-10" style={{ background: "hsla(var(--surface-1-hsl), 0.8)", backdropFilter: "blur(12px)" }}>
+          <form onSubmit={handleSend} className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={loading}
+              placeholder="Ask Copilot..."
+              className="w-full rounded-[20px] py-4 pl-5 pr-14 text-[14px] font-medium focus:outline-none disabled:opacity-50"
+              style={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                transition: "all var(--transition-fast)",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent-border)";
+                e.currentTarget.style.boxShadow = "0 0 0 4px var(--accent-surface)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-default)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!query.trim() || loading}
+              aria-label="Send message"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 disabled:opacity-30 rounded-xl"
+              style={{
+                background: query.trim() ? "var(--accent)" : "transparent",
+                color: query.trim() ? "#000" : "var(--accent)",
+                transition: "all var(--transition-fast)",
+              }}
+            >
+              <Send size={16} strokeWidth={query.trim() ? 2.5 : 2} />
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      onClick={() => setExpanded(true)}
       role="button"
       tabIndex={0}
+      onClick={() => setExpanded(true)}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setExpanded(true)}
       aria-label="Open WeatherGPT Copilot"
-      className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5 relative overflow-hidden flex flex-col justify-between h-48 cursor-pointer hover:border-cyan-500/30 transition-all group focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+      className="wg-surface-command relative overflow-hidden p-5 sm:p-6 wg-animate-in wg-stagger-4 flex flex-col justify-between cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] transition-all duration-200"
     >
-      <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl" />
-
-      <div className="flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-cyan-950 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-            <MessageSquare size={16} />
+      <div className="flex items-center justify-between z-10 relative mb-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)]"
+          >
+            <Sparkles size={16} />
           </div>
-          <h3 className="font-bold text-cyan-400">WeatherGPT Copilot</h3>
+          <div>
+            <h3 className="font-bold text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
+              <span>Copilot</span>
+              <span className="text-[11px] font-normal text-[var(--text-tertiary)] hidden sm:inline">• Meteorological Intelligence Engine</span>
+            </h3>
+          </div>
         </div>
-        <span className="text-[10px] bg-cyan-950/80 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-800/40">
-          Interactive
+
+        <span
+          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)]"
+        >
+          AI Command Active
         </span>
       </div>
 
-      <div className="z-10 mt-4 p-3 rounded-xl bg-black/40 border border-white/5 group-hover:border-cyan-500/20 transition-colors">
-        <p className="text-xs text-neutral-400 italic">
-          &quot;Analyzing verified weather and event data...&quot;
-        </p>
+      <div className="z-10 relative space-y-2.5">
+        {/* Sleek prompt trigger bar */}
+        <div
+          className="flex items-center justify-between px-4 py-3 rounded-xl bg-black/40 border border-cyan-500/20 group-hover:border-cyan-500/40 transition-colors duration-200"
+        >
+          <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] group-hover:text-white transition-colors">
+            Ask WeatherGPT about this weather...
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono text-[var(--text-tertiary)] hidden md:inline px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
+              Enter to Prompt
+            </span>
+            <Send size={13} className="text-[var(--accent)]" />
+          </div>
+        </div>
+
+        {/* Action suggestion pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <span className="text-[11px] font-normal text-[var(--text-tertiary)]">
+            Ask about local patterns, hazards, or agricultural impacts.
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
 function GroundingBadge({ status }: { status: GroundingStatus }) {
-  switch (status) {
-    case "grounded":
-      return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-emerald-950/60 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800/40">
-          <CheckCircle2 size={11} /> Verified Grounded
-        </span>
-      );
-    case "general_knowledge":
-      return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-sky-950/60 text-sky-400 px-2 py-0.5 rounded-full border border-sky-800/40">
-          <Info size={11} /> General Knowledge
-        </span>
-      );
-    case "partially_grounded":
-      return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-purple-950/60 text-purple-400 px-2 py-0.5 rounded-full border border-purple-800/40">
-          <Sparkles size={11} /> Partially Grounded
-        </span>
-      );
-    case "insufficient_evidence":
-      return (
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-amber-950/60 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800/40">
-          <AlertCircle size={11} /> Insufficient Evidence
-        </span>
-      );
-    default:
-      return null;
-  }
+  const configs: Record<string, { icon: React.ReactNode; label: string; bg: string; color: string; border: string }> = {
+    grounded: {
+      icon: <CheckCircle2 size={11} />,
+      label: "Verified Grounded",
+      bg: "hsla(160, 60%, 50%, 0.1)",
+      color: "var(--status-success)",
+      border: "hsla(160, 60%, 50%, 0.2)",
+    },
+    general_knowledge: {
+      icon: <Info size={11} />,
+      label: "General Knowledge",
+      bg: "hsla(210, 70%, 55%, 0.1)",
+      color: "var(--status-info)",
+      border: "hsla(210, 70%, 55%, 0.2)",
+    },
+    partially_grounded: {
+      icon: <Sparkles size={11} />,
+      label: "Partially Grounded",
+      bg: "hsla(270, 60%, 55%, 0.1)",
+      color: "hsl(270, 60%, 65%)",
+      border: "hsla(270, 60%, 55%, 0.2)",
+    },
+    insufficient_evidence: {
+      icon: <AlertCircle size={11} />,
+      label: "Insufficient Evidence",
+      bg: "hsla(45, 90%, 55%, 0.1)",
+      color: "var(--status-warning)",
+      border: "hsla(45, 90%, 55%, 0.2)",
+    },
+  };
+
+  const cfg = configs[status];
+  if (!cfg) return null;
+
+  return (
+    <span
+      className="wg-badge"
+      style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+    >
+      {cfg.icon} {cfg.label}
+    </span>
+  );
 }

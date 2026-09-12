@@ -12,7 +12,15 @@ import type { Coordinates, ISOTimestamp } from "./common";
 import type { DataProvenance } from "./weather";
 
 /** Supported v1 crop types. */
-export type CropType = "wheat" | "rice" | "maize" | "potato" | "mustard";
+export type CropType = "wheat" | "rice" | "maize" | "potato" | "mustard" | "generic";
+
+/** Supported v1 agriculture activity types. */
+export type AgricultureActivityType =
+  | "irrigation"
+  | "spraying"
+  | "sowing"
+  | "harvesting"
+  | "outdoor_field_work";
 
 /** Standard risk level classification. */
 export type RiskLevel = "low" | "moderate" | "high" | "critical";
@@ -85,7 +93,7 @@ export interface CropProfile {
  */
 export interface AgricultureAssessment {
   id: string;
-  crop: CropType;
+  crop?: CropType;
   cropDisplayName: string;
   location: {
     name: string;
@@ -98,10 +106,14 @@ export interface AgricultureAssessment {
     irrigation: AgricultureActivity;
     spraying: AgricultureActivity;
     fieldOperations: AgricultureActivity;
+    sowing?: AgricultureActivity;
+    harvesting?: AgricultureActivity;
+    outdoorFieldWork?: AgricultureActivity;
   };
   hazards: AgricultureHazard[];
   forecastSummary: AgricultureForecastSummary;
   evidence: AgricultureEvidence[];
+  cropEvidenceNote?: string;
   disclaimer: string;
   provenance: DataProvenance[];
 }

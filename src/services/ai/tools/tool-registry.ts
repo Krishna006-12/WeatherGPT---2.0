@@ -48,6 +48,9 @@ export class WeatherToolRegistry {
     this.getLiveEventsTool = new GetLiveEventsTool(services.eventRepository);
     this.getEventImpactTool = new GetEventImpactTool(services.impactEngine);
     this.getWeatherRiskTool = new GetWeatherRiskTool();
-    this.getAgricultureRiskTool = new GetAgricultureRiskTool(services.agricultureService);
+    this.getAgricultureRiskTool = new GetAgricultureRiskTool({
+      locationService: services.locationService,
+      weatherService: services.weatherService,
+    });
   }
 }

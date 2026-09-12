@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Search, X } from "lucide-react";
 import { useLocationSearch } from "@/hooks/use-location-search";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
@@ -31,9 +29,13 @@ export function LocationSearch({
   };
 
   return (
-    <div className="relative w-full max-w-xl">
-      <div className="flex gap-2">
-        <Input
+    <div className="relative w-full max-w-lg">
+      <div className="relative flex items-center">
+        <Search
+          size={16}
+          className="absolute left-3.5 text-[var(--text-tertiary)] pointer-events-none"
+        />
+        <input
           type="text"
           placeholder="Search city (e.g. Kanpur, London, Tokyo)..."
           value={searchTerm}
@@ -44,35 +46,42 @@ export function LocationSearch({
           onFocus={() => {
             if (searchTerm.trim().length >= 2) setIsOpen(true);
           }}
+          className="w-full h-9 pl-9 pr-8 text-xs sm:text-sm rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-border)] focus:bg-[var(--surface-1)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none transition-colors duration-150"
         />
         {searchTerm && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
+            aria-label="Clear search"
             onClick={() => {
               setSearchTerm("");
               setIsOpen(false);
             }}
+            className="absolute right-2.5 p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors"
           >
-            Clear
-          </Button>
+            <X size={13} />
+          </button>
         )}
       </div>
 
       {isOpen && searchTerm.trim().length >= 2 && (
-        <Card className="absolute z-50 mt-1 max-h-60 w-full overflow-auto p-1 shadow-lg">
+        <div
+          className="absolute z-50 mt-1.5 max-h-64 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md"
+        >
           {isLoading && (
-            <div className="p-3 text-sm text-neutral-500">Searching locations...</div>
+            <div className="p-3 text-xs text-[var(--text-tertiary)] flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+              Searching global coordinates...
+            </div>
           )}
 
           {isError && (
-            <div className="p-3 text-sm text-red-500">
-              {error.message || "Failed to search locations"}
+            <div className="p-3 text-xs text-[var(--status-danger)]">
+              {error?.message || "Failed to search locations"}
             </div>
           )}
 
           {!isLoading && !isError && results && results.length === 0 && (
-            <div className="p-3 text-sm text-neutral-500">
+            <div className="p-3 text-xs text-[var(--text-tertiary)]">
               No locations found for &ldquo;{searchTerm}&rdquo;
             </div>
           )}
@@ -83,19 +92,20 @@ export function LocationSearch({
               <button
                 key={loc.id}
                 type="button"
-                className="w-full rounded px-3 py-2 text-left text-sm transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="w-full rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] focus:bg-[var(--surface-3)] focus:outline-none group"
                 onClick={() => handleSelect(loc)}
               >
-                <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                   {loc.displayName}
                 </div>
-                <div className="text-xs text-neutral-500">
+                <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
                   {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
                 </div>
               </button>
             ))}
-        </Card>
+        </div>
       )}
     </div>
   );
 }
+

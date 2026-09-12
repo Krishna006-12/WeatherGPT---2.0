@@ -11,7 +11,7 @@
  */
 
 import type { IntentCategory } from "@/types/ai";
-import type { CropType } from "@/types/agriculture";
+import type { CropType, AgricultureActivityType } from "@/types/agriculture";
 
 export interface IntentClassification {
   intent: IntentCategory;
@@ -20,6 +20,7 @@ export interface IntentClassification {
   extractedEventKeyword?: string;
   targetImpactLocation?: string;
   extractedCrop?: CropType;
+  extractedActivity?: AgricultureActivityType;
   isForecastQuery?: boolean;
   isRiskQuery?: boolean;
   activityType?: "outdoor_work" | "travel" | "general";
@@ -119,6 +120,7 @@ const STOP_WORDS = [
   "work",
   "fieldwork",
   "construction",
+  "detailed",
   "hourly",
   "daily",
   "weekly",
@@ -224,8 +226,9 @@ export class IntentRouter {
     // "Is tomorrow safe to spray wheat in Kanpur?", "Can I irrigate my rice field?", "Weather impact on potato in Agra"
     if (this.isAgricultureQuery(clean)) {
       const extractedCrop = this.extractCrop(clean);
+      const extractedActivity = this.extractActivity(clean);
       const cleanForLoc = clean.replace(
-        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|fasal|kheti|irrigation|spraying|spray|harvesting|harvest)\b/gi,
+        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|harvesting|harvest|sowing|sow|planting|outdoor|precautions|precaution|weather|mausam)\b/gi,
         " "
       );
       const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
@@ -235,7 +238,8 @@ export class IntentRouter {
         intent: "agriculture",
         confidence: 0.9,
         extractedLocation: location,
-        extractedCrop: extractedCrop || "wheat",
+        extractedCrop, // Never assume a crop if the user did not provide one
+        extractedActivity,
         isForecastQuery: isFuture,
         isRiskQuery: true,
       };
@@ -454,8 +458,8 @@ export class IntentRouter {
       /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z\s]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Hinglish: "Kanpur mein kal mausam"
       /\b([a-zA-Z\s]+?)\s+mein\s+(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
-      // "London weather", "New Delhi forecast"
-      /\b([a-zA-Z\s]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
+      // "London weather", "New Delhi forecast" (excluding temporal/stop words)
+      /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z\s]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];
 
 
@@ -534,12 +538,36 @@ export class IntentRouter {
   private isAgricultureQuery(text: string): boolean {
     const agriTerms = [
       /\b(crop|crops|farming|farm|agriculture|agricultural|fasal|kheti)\b/i,
-      /\b(irrigation|irrigate|watering|sinchai)\b/i,
-      /\b(spraying|spray|pesticide|fungicide|foliar)\b/i,
-      /\b(harvest|harvesting|sowing|planting|cutting)\b/i,
+      /\b(irrigation|irrigate|watering|sinchai|paani)\b/i,
+      /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai)\b/i,
+      /\b(harvest|harvesting|sowing|sow|planting|cutting|katai|buvai|bone)\b/i,
       /\b(wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson)\b/i,
+      /\b(field work|outdoor field work|fieldwork|khet ka kaam)\b/i,
+      /\b(precautions for wheat|precautions for rice|precautions for crop|precautions for farming)\b/i,
     ];
     return agriTerms.some((pattern) => pattern.test(text));
+  }
+
+  /**
+   * Extract targeted agricultural activity from query.
+   */
+  extractActivity(text: string): AgricultureActivityType | undefined {
+    if (/\b(irrigation|irrigate|watering|sinchai|paani)\b/i.test(text)) {
+      return "irrigation";
+    }
+    if (/\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai)\b/i.test(text)) {
+      return "spraying";
+    }
+    if (/\b(sowing|sow|planting|plant|seeding|bone|buvai)\b/i.test(text)) {
+      return "sowing";
+    }
+    if (/\b(harvesting|harvest|cutting|reaping|katai)\b/i.test(text)) {
+      return "harvesting";
+    }
+    if (/\b(outdoor field work|outdoor work|field work|fieldwork|field operations|khet ka kaam)\b/i.test(text)) {
+      return "outdoor_field_work";
+    }
+    return undefined;
   }
 
   /**

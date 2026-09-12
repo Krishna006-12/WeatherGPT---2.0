@@ -58,6 +58,36 @@ export class MockAIProvider implements AIProvider {
     const isForecast = prompt.includes("Intent Detected: forecast");
     const isEvent = prompt.includes("Intent Detected: weather_event");
     const isGeneral = prompt.includes("Intent Detected: general");
+    const isAgriculture = prompt.includes("Intent Detected: agriculture") || prompt.includes("<verified_agriculture_assessment");
+
+    // Extract location name if available
+    const locMatch = prompt.match(/<target_location>[\s\S]*?Name:\s*([^\n]+)/i);
+    const locName = locMatch && locMatch[1] ? locMatch[1].trim() : "the requested location";
+
+    if (isAgriculture) {
+      const cropMatch = prompt.match(/Crop:\s*([^\n]+)/i);
+      const cropName = cropMatch && cropMatch[1] ? cropMatch[1].trim() : "Not specified / Generic";
+      const riskMatch = prompt.match(/Overall Risk Level:\s*([^\n]+)/i);
+      const riskLevel = riskMatch && riskMatch[1] ? riskMatch[1].trim() : "Low";
+      const periodMatch = prompt.match(/Target Period:\s*([^\n(]+)/i);
+      const period = periodMatch && periodMatch[1] ? periodMatch[1].trim() : "Tomorrow";
+      const evidenceNoteMatch = prompt.match(/Evidence Note:\s*([^\n]+)/i);
+      const evidenceNote = evidenceNoteMatch && evidenceNoteMatch[1] ? evidenceNoteMatch[1].trim() : undefined;
+
+      const weatherMatch = prompt.match(/Forecast Summary \(([^)]+)\)/i);
+      const weatherSummary = weatherMatch && weatherMatch[1] ? weatherMatch[1].trim() : "Verified weather observations and forecast metrics available";
+
+      const noteText = evidenceNote ? `\n\n${evidenceNote}` : "";
+
+      const answer = `🌾 Agriculture Intelligence\n\nCrop:\n${cropName}\n\nLocation:\n${locName}\n\nPeriod:\n${period}\n\nWeather:\n${weatherSummary}\n\nRisk:\n${riskLevel}\n\nRecommendation:\nReview local field conditions before proceeding with sensitive operations.\n\nReason:\nAdvisories are derived deterministically from verified atmospheric forecast parameters.\n\nConfidence:\nHigh\n\nSources:\nOpen-Meteo Weather API${noteText}`;
+
+      return JSON.stringify({
+        answer,
+        groundingStatus: "grounded",
+        uncertainty: null,
+        keyPoints: ["Verified weather data evaluated", "Deterministic activity advisory provided"],
+      });
+    }
 
     if (isImpact) {
       const promptUpper = prompt.toUpperCase();

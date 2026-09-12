@@ -6,7 +6,7 @@ import { WeatherService } from "@/services/weather/weather-service";
 import type { WeatherProvider } from "@/services/weather/weather-provider";
 import type { WeatherSnapshot } from "@/types/weather";
 import { globalEventRepository } from "@/services/storage/in-memory-repositories";
-import type { WeatherEvent } from "@/types/events";
+import type { WeatherEvent, EventLocation } from "@/types/events";
 
 function createMockWeather(name: string, lat: number, lon: number, country: string = "Global"): WeatherSnapshot {
   return {
@@ -62,6 +62,15 @@ describe("Deterministic Query Location Resolution", () => {
   let mockLocationService: LocationService;
   let mockWeatherProvider: WeatherProvider;
   let weatherService: WeatherService;
+
+  const DAYTON_CONTEXT_LOCATION: EventLocation = {
+    name: "Dayton",
+    city: "Dayton",
+    region: "Ohio",
+    country: "United States",
+    coordinates: { latitude: 39.7589, longitude: -84.1916 },
+    timezone: "America/New_York",
+  };
 
   const KANPUR_DASHBOARD_LOCATION = {
     name: "Kanpur",
@@ -200,6 +209,22 @@ describe("Deterministic Query Location Resolution", () => {
           ],
         };
       }
+      if (q === "dayton") {
+        return {
+          success: true,
+          data: [
+            {
+              id: 6,
+              name: "Dayton",
+              latitude: 39.7589,
+              longitude: -84.1916,
+              country: "United States",
+              timezone: "America/New_York",
+              displayName: "Dayton, Ohio, United States",
+            },
+          ],
+        };
+      }
       // Unknown / fictional locations (e.g. Atlantis, Narnia, Nowhere) return empty results
       return { success: true, data: [] };
     });
@@ -215,6 +240,9 @@ describe("Deterministic Query Location Resolution", () => {
         }
         if (Math.abs(coords.latitude - 28.6139) < 0.1) {
           return createMockWeather("New Delhi", 28.6139, 77.209, "India");
+        }
+        if (Math.abs(coords.latitude - 39.7589) < 0.1) {
+          return createMockWeather("Dayton", 39.7589, -84.1916, "United States");
         }
         return createMockWeather("Kanpur", 26.4499, 80.3319, "India");
       }),
@@ -450,6 +478,26 @@ describe("Deterministic Query Location Resolution", () => {
     );
   });
 
+  // Test Case L2: "Hourly weather in Kanpur" resolves Kanpur and does not search for "Hourly"
+  it("Scenario L2: 'Hourly weather in Kanpur' resolves Kanpur as explicit query location", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Hourly weather in Kanpur",
+      location: KANPUR_DASHBOARD_LOCATION,
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("weather");
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+    expect(res.data.metadata?.queryLocationName?.toLowerCase()).toBe("kanpur");
+    expect(res.data.groundingStatus).toBe("grounded");
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
+
   // Test Case M: "7-day forecast" with selected location Kanpur preserves Kanpur and does not search for "Dayton"
   it("Scenario M: '7-day forecast' with selected location preserves Kanpur and does not resolve Dayton", async () => {
     const res = await orchestrator.processQuery({
@@ -466,6 +514,69 @@ describe("Deterministic Query Location Resolution", () => {
     expect(res.data.groundingStatus).toBe("grounded");
     expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
       expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
+
+  // Test Case N: Previous context location = Dayton, current query explicitly specifies Kanpur -> Kanpur wins
+  it("Scenario N: Explicit query location (Kanpur) wins over previous conversation context (Dayton)", async () => {
+    const res = await orchestrator.processQuery({
+      message: "What is the weather in Kanpur?",
+      context: {
+        lastResolvedLocation: DAYTON_CONTEXT_LOCATION,
+      },
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+    expect(res.data.metadata?.queryLocationName?.toLowerCase()).toBe("kanpur");
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
+
+  // Test Case O: Non-follow-up query with dashboard location does not treat stale context (Dayton) as query's explicit location
+  it("Scenario O: Non-follow-up query does not treat stale conversation context (Dayton) as explicit query location", async () => {
+    const res = await orchestrator.processQuery({
+      message: "What is the weather?",
+      location: KANPUR_DASHBOARD_LOCATION,
+      context: {
+        lastResolvedLocation: DAYTON_CONTEXT_LOCATION,
+      },
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    // Stale context (Dayton) is not treated as explicit query location; dashboard selected location (Kanpur) wins
+    expect(res.data.metadata?.queryLocationName).toBeUndefined();
+    expect(res.data.metadata?.locationName).toBe("Kanpur");
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 26.4499, longitude: 80.3319 }),
+      expect.anything()
+    );
+  });
+
+  // Test Case P: Follow-up query ("Tomorrow?") preserves and uses previous conversation context (Dayton)
+  it("Scenario P: Follow-up query ('Tomorrow?') preserves and uses previous context location (Dayton)", async () => {
+    const res = await orchestrator.processQuery({
+      message: "Tomorrow?",
+      context: {
+        lastResolvedLocation: DAYTON_CONTEXT_LOCATION,
+      },
+    });
+
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+
+    expect(res.data.intent).toBe("forecast");
+    expect(res.data.metadata?.locationName).toBe("Dayton");
+    expect(res.data.metadata?.queryLocationName).toBeUndefined();
+    expect(mockWeatherProvider.getWeather).toHaveBeenCalledWith(
+      expect.objectContaining({ latitude: 39.7589, longitude: -84.1916 }),
       expect.anything()
     );
   });

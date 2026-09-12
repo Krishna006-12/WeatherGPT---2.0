@@ -1,13 +1,12 @@
 import { useImpact } from "@/hooks/use-impact";
 import { useEvents } from "@/hooks/use-events";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 export function ImpactCard({ location }: { location?: NormalizedLocation | null }) {
   const { data: eventsData, isLoading: eventsLoading } = useEvents({ limit: 1 });
   const event = eventsData?.events[0];
-  
+
   const { data: impact, isLoading: impactLoading } = useImpact({
     eventId: event?.id,
     lat: location?.latitude,
@@ -16,70 +15,125 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
     country: location?.country,
   });
 
-  if (eventsLoading || (event && impactLoading)) return <Skeleton className="h-48 rounded-3xl bg-[#1E1E1E]" />;
+  if (eventsLoading || (event && impactLoading)) return <div className="wg-skeleton h-56 w-full" />;
   if (!location) return null;
 
   if (!event) {
     return (
-      <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5 flex flex-col justify-between min-h-[192px]">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-white uppercase tracking-wide text-sm">Regional Impact</h3>
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-medium text-neutral-400">
-            Unassessed
-          </div>
-        </div>
-        <p className="text-sm text-neutral-400">
-          No verified event impact assessment is currently available for this location.
+      <div className="wg-surface-decision flex flex-col justify-center items-center min-h-[180px] p-6 text-center">
+        <ShieldCheck size={24} className="text-[var(--text-tertiary)] mb-2 opacity-60" />
+        <p className="text-sm font-medium text-[var(--text-secondary)]">No active events</p>
+        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+          Regional impact assessment is clear.
         </p>
       </div>
     );
   }
 
-  const relevanceColor =
-    impact?.relevanceStatus === "confirmed"
-      ? "text-red-400 bg-red-500/10 border-red-500/20"
-      : impact?.relevanceStatus === "likely" || impact?.relevanceStatus === "possible"
-      ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
-      : "text-neutral-400 bg-white/5 border-white/5";
+  const isConfirmed = impact?.relevanceStatus === "confirmed";
+  const isElevated = impact?.relevanceStatus === "likely" || impact?.relevanceStatus === "possible";
+
+  const relevanceStyles = isConfirmed
+    ? { color: "#F87171", bg: "rgba(239, 68, 68, 0.15)", border: "rgba(239, 68, 68, 0.35)" }
+    : isElevated
+    ? { color: "#FBBF24", bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.35)" }
+    : { color: "var(--text-tertiary)", bg: "rgba(255, 255, 255, 0.05)", border: "rgba(255, 255, 255, 0.1)" };
 
   return (
-    <div className="rounded-3xl bg-[#1C1C1E] p-6 border border-white/5">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-white uppercase tracking-wide text-sm">Selected Location Impact</h3>
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-cyan-950/40 border border-cyan-900/50 rounded-full text-[10px] font-medium text-cyan-400">
-          <CheckCircle2 size={12} /> Grounded
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
-          <span className="text-sm font-medium text-neutral-200">{location.displayName.split(",")[0]}</span>
+    <section
+      aria-label="Regional Impact Assessment"
+      className="wg-surface-decision flex flex-col justify-between h-full p-5 sm:p-6 wg-animate-in wg-stagger-3"
+    >
+      <div>
+        {/* Header: Title + Grounded indicator */}
+        <div className="flex justify-between items-center pb-3 mb-3 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium border capitalize ${relevanceColor}`}>
+            <ShieldAlert
+              size={16}
+              style={{
+                color: relevanceStyles.color !== "var(--text-tertiary)" ? relevanceStyles.color : "var(--text-secondary)",
+              }}
+            />
+            <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
+              Location Impact
+            </h3>
+          </div>
+
+          <span
+            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            style={{
+              background: "var(--accent-surface)",
+              color: "var(--accent)",
+              border: "1px solid var(--accent-border)",
+            }}
+          >
+            <CheckCircle2 size={11} strokeWidth={2.5} /> Grounded
+          </span>
+        </div>
+
+        {/* Tactical Location Posture Decision Box */}
+        <div className="p-3.5 rounded-xl bg-black/40 border border-[var(--border-subtle)] mb-3">
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-sm font-bold text-white tracking-tight">
+              {location.displayName.split(",")[0]}
+            </span>
+            <span
+              className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+              style={{
+                background: relevanceStyles.bg,
+                color: relevanceStyles.color,
+                border: `1px solid ${relevanceStyles.border}`,
+              }}
+            >
               {impact ? impact.relevanceStatus : "Monitoring"}
             </span>
           </div>
+
+          {/* 3-Segment Visual Risk Posture Bar */}
+          <div className="grid grid-cols-3 gap-1.5 pt-1">
+            <div
+              className={`h-2 rounded-full transition-all duration-200 ${
+                !isConfirmed && !isElevated ? "bg-emerald-400 shadow-sm shadow-emerald-950" : "bg-white/10"
+              }`}
+            />
+            <div
+              className={`h-2 rounded-full transition-all duration-200 ${
+                isElevated ? "bg-amber-400 shadow-sm shadow-amber-950" : "bg-white/10"
+              }`}
+            />
+            <div
+              className={`h-2 rounded-full transition-all duration-200 ${
+                isConfirmed ? "bg-red-500 shadow-sm shadow-red-950" : "bg-white/10"
+              }`}
+            />
+          </div>
+          <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] pt-1.5">
+            <span>Normal</span>
+            <span>Advisory</span>
+            <span>Warning</span>
+          </div>
         </div>
 
+        {/* Hazard assessment readout */}
         {impact?.actualHazardImpact && (
-          <div className="p-3 rounded-xl bg-black/30 border border-white/5 text-xs text-neutral-300">
-            <div className="text-[10px] font-semibold uppercase text-neutral-400 tracking-wider mb-1">
+          <div className="p-3 rounded-xl text-xs leading-relaxed bg-black/30 border border-[var(--border-subtle)] text-[var(--text-secondary)] mb-2.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
               Hazard Assessment
             </div>
             {impact.actualHazardImpact}
           </div>
         )}
 
+        {/* Actionable Advisory callout */}
         {impact?.advisory && (
-          <div className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-900/30 text-xs text-cyan-300">
-            <div className="text-[10px] font-semibold uppercase text-cyan-400 tracking-wider mb-1">
-              Advisory
+          <div className="p-3 rounded-xl text-xs leading-relaxed bg-[var(--accent-surface)] border border-[var(--accent-border)] text-[var(--accent)]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] opacity-80 mb-1">
+              Actionable Advisory
             </div>
             {impact.advisory}
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }
-

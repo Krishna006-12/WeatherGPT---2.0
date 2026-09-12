@@ -130,8 +130,35 @@ export const CROP_PROFILES: Record<CropType, CropProfile> = {
     },
     notes: "Oilseed crop sensitive to unseasonal rain during flowering, frost at pod setting, and overcast humid weather that promotes aphid risk.",
   },
+
+  generic: {
+    crop: "generic",
+    displayName: "General Crop",
+    temperature: {
+      heatStressThresholdC: 35.0,
+      extremeHeatThresholdC: 40.0,
+      coldChillingThresholdC: 5.0,
+      frostThresholdC: 2.0,
+    },
+    precipitation: {
+      moderate24hRainMm: 15.0,
+      heavy24hRainMm: 30.0,
+      excessive7dRainMm: 70.0,
+    },
+    wind: {
+      sprayingWindLimitKmh: 15.0,
+      lodgingWindRiskKmh: 35.0,
+    },
+    humidity: {
+      highHumidityThresholdPct: 80.0,
+    },
+    notes: "Standard atmospheric risk heuristics for general agricultural crops and operations.",
+  },
 };
 
-export function getCropProfile(crop: CropType): CropProfile {
+export function getCropProfile(crop?: CropType): CropProfile {
+  if (!crop || !CROP_PROFILES[crop]) {
+    return CROP_PROFILES.generic;
+  }
   return CROP_PROFILES[crop];
 }

@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { LiveEventCard, getEventIndiaRelevance } from "@/components/events/live-event-card";
 import type { WeatherEvent } from "@/types/events";
@@ -90,6 +90,6 @@ describe("LiveEventCard & Dynamic India Relevance", () => {
     });
 
     render(<LiveEventCard />);
-    expect(screen.getByText("No active live events.")).toBeInTheDocument();
+    expect(screen.getByText("No active live events")).toBeInTheDocument();
   });
 });

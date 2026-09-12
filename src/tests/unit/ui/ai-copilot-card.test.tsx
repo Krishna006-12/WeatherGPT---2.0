@@ -23,17 +23,17 @@ describe("AICopilotCard", () => {
 
   it("renders closed state initially", () => {
     render(<AICopilotCard location={mockLocation} />);
-    expect(screen.getByText(/WeatherGPT Copilot/i)).toBeInTheDocument();
-    expect(screen.getByText(/Analyzing verified weather and event data/i)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/Ask WeatherGPT/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Copilot")).toBeInTheDocument();
+    expect(screen.getByText(/Ask about local patterns/i)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/Ask Copilot/i)).not.toBeInTheDocument();
   });
 
   it("expands on click and shows input", () => {
     render(<AICopilotCard location={mockLocation} />);
-    const card = screen.getByText(/WeatherGPT Copilot/i).closest("div")?.parentElement;
+    const card = screen.getByText("Copilot").closest("div")?.parentElement;
     fireEvent.click(card!);
 
-    expect(screen.getByPlaceholderText(/Ask WeatherGPT/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Ask Copilot/i)).toBeInTheDocument();
     expect(screen.getByText(/How can I help/i)).toBeInTheDocument();
   });
 
@@ -53,10 +53,10 @@ describe("AICopilotCard", () => {
     render(<AICopilotCard location={mockLocation} />);
     
     // Expand
-    const card = screen.getByText(/WeatherGPT Copilot/i).closest("div")?.parentElement;
+    const card = screen.getByText("Copilot").closest("div")?.parentElement;
     fireEvent.click(card!);
 
-    const input = screen.getByPlaceholderText(/Ask WeatherGPT/i);
+    const input = screen.getByPlaceholderText(/Ask Copilot/i);
     fireEvent.change(input, { target: { value: "What is the weather?" } });
     
     const sendButton = input.nextElementSibling as HTMLButtonElement;
@@ -97,9 +97,9 @@ describe("AICopilotCard", () => {
 
     render(<AICopilotCard />);
     
-    fireEvent.click(screen.getByText(/WeatherGPT Copilot/i).closest("div")?.parentElement!);
+    fireEvent.click(screen.getByText("Copilot").closest("div")?.parentElement!);
 
-    const input = screen.getByPlaceholderText(/Ask WeatherGPT/i);
+    const input = screen.getByPlaceholderText(/Ask Copilot/i);
     fireEvent.change(input, { target: { value: "Unknown event impact?" } });
     fireEvent.click(input.nextElementSibling as HTMLButtonElement);
 
@@ -116,9 +116,9 @@ describe("AICopilotCard", () => {
 
     render(<AICopilotCard />);
     
-    fireEvent.click(screen.getByText(/WeatherGPT Copilot/i).closest("div")?.parentElement!);
+    fireEvent.click(screen.getByText("Copilot").closest("div")?.parentElement!);
 
-    const input = screen.getByPlaceholderText(/Ask WeatherGPT/i);
+    const input = screen.getByPlaceholderText(/Ask Copilot/i);
     fireEvent.change(input, { target: { value: "Crash me" } });
     fireEvent.click(input.nextElementSibling as HTMLButtonElement);
 

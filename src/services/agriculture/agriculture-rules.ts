@@ -168,6 +168,28 @@ export function evaluateIrrigationActivity(
 }
 
 /**
+ * Detect convective thunderstorm risk from observations, forecasts, or alerts.
+ */
+export function detectThunderstormRisk(weather: WeatherSnapshot): boolean {
+  const current = weather.current;
+  const cond = (current.condition || "").toLowerCase();
+  const desc = (current.description || "").toLowerCase();
+  if (cond.includes("thunder") || desc.includes("thunder") || desc.includes("lightning")) {
+    return true;
+  }
+  if (weather.alerts && weather.alerts.some((a) => `${a.title} ${a.description}`.toLowerCase().includes("thunder"))) {
+    return true;
+  }
+  if (weather.daily && weather.daily.slice(0, 2).some((d) => (d.condition || "").toLowerCase().includes("thunder"))) {
+    return true;
+  }
+  if (weather.hourly && weather.hourly.slice(0, 24).some((h) => (h.condition || "").toLowerCase().includes("thunder"))) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Deterministically evaluate Spraying feasibility (pesticides, foliar sprays).
  */
 export function evaluateSprayingActivity(
@@ -175,10 +197,20 @@ export function evaluateSprayingActivity(
   max24hWindKmh: number,
   next24hPrecipMm: number,
   currentPrecipRate: number,
-  sprayingWindLimitKmh: number
+  sprayingWindLimitKmh: number,
+  isThunderstorm: boolean = false
 ): AgricultureActivity {
-  // 1. Unfavorable: Rain active or heavy rain imminent, OR strong wind causing drift
-  if (currentPrecipRate > 0 || next24hPrecipMm >= 5.0) {
+  // 1. Unfavorable: Thunderstorm
+  if (isThunderstorm) {
+    return {
+      status: "unfavorable",
+      advisory: "Thunderstorm activity detected; chemical spraying is unfavorable due to severe wash-off and operator safety risks. Check local conditions before proceeding.",
+      reason: "Thunderstorm conditions and convective rainfall cause immediate chemical wash-off and pose field safety hazards.",
+    };
+  }
+
+  // 2. Unfavorable: Rain active or heavy rain imminent, OR strong wind causing drift
+  if (currentPrecipRate > 0 || next24hPrecipMm >= 4.0) {
     return {
       status: "unfavorable",
       advisory: "Rainfall is forecast, which may cause wash-off and affect outdoor spraying conditions. Check local field conditions before proceeding.",
@@ -194,7 +226,7 @@ export function evaluateSprayingActivity(
     };
   }
 
-  // 2. Caution: Borderline winds
+  // 3. Caution: Borderline winds
   if (currentWindKmh >= sprayingWindLimitKmh - 3.0 || max24hWindKmh >= sprayingWindLimitKmh) {
     return {
       status: "caution",
@@ -203,16 +235,143 @@ export function evaluateSprayingActivity(
     };
   }
 
-  // 3. Favorable: Dry foliage, calm winds
+  // 4. Favorable: Dry foliage, calm winds
   return {
     status: "favorable",
     advisory: "Weather conditions are calm and dry with low risk of wind drift or wash-off.",
-    reason: `Calm wind (${currentWindKmh} km/h) and dry weather (< 5 mm rain in 24h) provide optimal spraying conditions with minimal drift or wash-off risk.`,
+    reason: `Calm wind (${currentWindKmh} km/h) and dry weather (< 4 mm rain in 24h) provide optimal spraying conditions with minimal drift or wash-off risk.`,
   };
 }
 
 /**
- * Deterministically evaluate Field Operations & Harvesting feasibility.
+ * Deterministically evaluate Harvesting feasibility.
+ */
+export function evaluateHarvestingActivity(
+  next24hPrecipMm: number,
+  max24hPrecipProbPct: number,
+  isThunderstorm: boolean = false
+): AgricultureActivity {
+  // 1. Unfavorable: Thunderstorm
+  if (isThunderstorm) {
+    return {
+      status: "unfavorable",
+      advisory: "Thunderstorm risk is present; harvesting operations are unfavorable due to lightning safety hazards and grain damage.",
+      reason: "Thunderstorm conditions create direct physical hazards for machinery and high moisture damage risk for cut produce.",
+    };
+  }
+
+  // 2. Unfavorable: High rain probability or significant rainfall
+  if (next24hPrecipMm >= 5.0 || max24hPrecipProbPct >= 60) {
+    return {
+      status: "unfavorable",
+      advisory: "Rainfall is forecast; harvesting operations are unfavorable due to moisture damage and mold risk. Check local conditions before proceeding.",
+      reason: `Forecast rainfall (${next24hPrecipMm} mm) with ${max24hPrecipProbPct}% probability increases grain moisture, risking spoilage and delayed drying.`,
+    };
+  }
+
+  // 3. Caution: Passing showers or moderate probability
+  if (next24hPrecipMm >= 2.0 || max24hPrecipProbPct >= 35) {
+    return {
+      status: "caution",
+      advisory: "Passing showers or moderate rain chances are possible; monitor skies and protect harvested produce.",
+      reason: `Moderate rain probability (${max24hPrecipProbPct}%, ~${next24hPrecipMm} mm) could cause surface dampness on standing or harvested crop.`,
+    };
+  }
+
+  // 4. Favorable: Dry weather
+  return {
+    status: "favorable",
+    advisory: "Weather conditions are dry and favorable for harvesting and crop handling.",
+    reason: `Dry weather (${next24hPrecipMm} mm rain expected) and low precipitation probability favor clean harvesting and grain moisture control.`,
+  };
+}
+
+/**
+ * Deterministically evaluate Sowing feasibility.
+ */
+export function evaluateSowingActivity(
+  windows: WindowCalculations,
+  isThunderstorm: boolean = false
+): AgricultureActivity {
+  if (isThunderstorm) {
+    return {
+      status: "unfavorable",
+      advisory: "Thunderstorm activity detected; field sowing is unfavorable due to severe convective downpours and safety risks.",
+      reason: "Convective storm winds and intense downpours displace newly sown seeds and erode seed beds.",
+    };
+  }
+
+  if (windows.next24hPrecipMm >= 25.0) {
+    return {
+      status: "unfavorable",
+      advisory: "Heavy downpours forecast; sowing is unfavorable due to waterlogging and seed rot hazards.",
+      reason: `Excessive rainfall (${windows.next24hPrecipMm} mm in 24h) causes soil waterlogging, seed asphyxiation, and crust formation.`,
+    };
+  }
+
+  if (windows.minTemperatureC <= 2.0 || windows.maxTemperatureC >= 40.0) {
+    return {
+      status: "unfavorable",
+      advisory: "Temperature extremes forecast; sowing conditions are unfavorable.",
+      reason: `Thermal extremes (Min: ${windows.minTemperatureC}°C, Max: ${windows.maxTemperatureC}°C) severely impair seed germination and early seedling survival.`,
+    };
+  }
+
+  if (windows.next24hPrecipMm >= 8.0) {
+    return {
+      status: "caution",
+      advisory: "Moderate rainfall forecast; ensure seed bed is sufficiently drained before planting.",
+      reason: `Rainfall (${windows.next24hPrecipMm} mm) will wet topsoil; verify field workability to avoid soil compaction.`,
+    };
+  }
+
+  return {
+    status: "favorable",
+    advisory: "Weather conditions are mild and favorable for sowing operations.",
+    reason: "Moderate temperatures and manageable moisture forecast support uniform seed placement and germination.",
+  };
+}
+
+/**
+ * Deterministically evaluate Outdoor Field Work suitability.
+ */
+export function evaluateOutdoorFieldWorkActivity(
+  windows: WindowCalculations,
+  isThunderstorm: boolean = false
+): AgricultureActivity {
+  if (isThunderstorm) {
+    return {
+      status: "unfavorable",
+      advisory: "Thunderstorm risk present: outdoor field work has high safety risk. Cease outdoor operations.",
+      reason: "Convective thunderstorm activity, cloud-to-ground lightning, and gusty winds pose high safety risks for outdoor field work.",
+    };
+  }
+
+  if (windows.next24hPrecipMm >= 25.0 || windows.maxWindSpeedKmh >= 45.0 || windows.maxTemperatureC >= 42.0) {
+    return {
+      status: "unfavorable",
+      advisory: "Severe weather conditions forecast; outdoor field labor is unfavorable.",
+      reason: `Dangerous meteorological conditions (Wind: ${windows.maxWindSpeedKmh} km/h, Rain: ${windows.next24hPrecipMm} mm, Max Temp: ${windows.maxTemperatureC}°C) impede field safety.`,
+    };
+  }
+
+  if (windows.maxTemperatureC >= 36.0 || windows.next24hPrecipMm >= 6.0 || windows.maxWindSpeedKmh >= 30.0) {
+    return {
+      status: "caution",
+      advisory: "Elevated heat, wind, or light rain; proceed with field operations using appropriate precautions.",
+      reason: `Warm conditions (${windows.maxTemperatureC}°C) or gusty winds (${windows.maxWindSpeedKmh} km/h) require hydration breaks and careful equipment handling.`,
+    };
+  }
+
+  return {
+    status: "favorable",
+    advisory: "Weather conditions are mild and suitable for regular outdoor field work.",
+    reason: `Dry weather (${windows.next24hPrecipMm} mm rain expected) and moderate winds allow safe and efficient outdoor farm activities.`,
+  };
+}
+
+/**
+ * Deterministically evaluate Field Operations & Harvesting feasibility (backward compatibility).
  */
 export function evaluateFieldOperationsActivity(
   next24hPrecipMm: number,
@@ -251,11 +410,28 @@ export function evaluateFieldOperationsActivity(
  */
 export function evaluateCropHazards(
   crop: CropType,
-  windows: WindowCalculations
+  windows: WindowCalculations,
+  isThunderstorm: boolean = false
 ): { hazards: AgricultureHazard[]; evidence: AgricultureEvidence[] } {
   const profile = getCropProfile(crop);
   const hazards: AgricultureHazard[] = [];
   const evidence: AgricultureEvidence[] = [];
+
+  // --- Thunderstorm Convective Hazard ---
+  if (isThunderstorm) {
+    hazards.push({
+      type: "thunderstorm_hazard",
+      severity: "high",
+      description: "Thunderstorm warning: Convective storm activity detected; field activities carry elevated safety risk.",
+      triggerMetric: "Thunderstorm condition detected",
+      evidence: "Atmospheric instability and convective thunderstorm conditions detected in local weather.",
+    });
+    evidence.push({
+      parameter: "Thunderstorm Activity",
+      observationOrForecast: "Thunderstorm detected",
+      impactOnCrop: "High winds, convective downpours, and lightning hazard across open fields.",
+    });
+  }
 
   // --- 1. Temperature Extremes: Frost / Cold Stress ---
   if (windows.minTemperatureC <= profile.temperature.frostThresholdC) {
@@ -476,12 +652,15 @@ export function aggregateRiskLevel(hazards: AgricultureHazard[]): {
  * Main Pure Function: Evaluates Agriculture Risk deterministically from WeatherSnapshot.
  */
 export function evaluateAgricultureRisk(
-  crop: CropType,
+  crop: CropType | undefined,
   weather: WeatherSnapshot
 ): AgricultureAssessment {
   const assessedAt = new Date().toISOString();
-  const profile = getCropProfile(crop);
+  const isGenericOrMissing = !crop || crop === "generic";
+  const effectiveCrop: CropType = crop && crop !== "generic" ? crop : "generic";
+  const profile = getCropProfile(effectiveCrop);
   const windows = calculateForecastWindows(weather);
+  const isThunderstorm = detectThunderstormRisk(weather);
 
   // 1. Evaluate Activities
   const irrigation = evaluateIrrigationActivity(
@@ -494,7 +673,8 @@ export function evaluateAgricultureRisk(
     windows.max24hWindSpeedKmh,
     windows.next24hPrecipMm,
     weather.current.precipitation,
-    profile.wind.sprayingWindLimitKmh
+    profile.wind.sprayingWindLimitKmh,
+    isThunderstorm
   );
 
   const fieldOperations = evaluateFieldOperationsActivity(
@@ -504,15 +684,31 @@ export function evaluateAgricultureRisk(
     profile.precipitation.heavy24hRainMm
   );
 
+  const sowing = evaluateSowingActivity(windows, isThunderstorm);
+  const harvesting = evaluateHarvestingActivity(
+    windows.next24hPrecipMm,
+    windows.max24hPrecipProbPct,
+    isThunderstorm
+  );
+  const outdoorFieldWork = evaluateOutdoorFieldWorkActivity(windows, isThunderstorm);
+
   // 2. Evaluate Hazards & Evidence
-  const { hazards, evidence } = evaluateCropHazards(crop, windows);
+  const { hazards, evidence } = evaluateCropHazards(effectiveCrop, windows, isThunderstorm);
 
   // 3. Aggregate Overall Risk
   const { level: overallRiskLevel, primaryHazard } = aggregateRiskLevel(hazards);
 
   // 4. Deterministic ID Hash
-  const hashPayload = `${crop}_${weather.location.name}_${weather.observedAt}_${overallRiskLevel}`;
+  const hashPayload = `${effectiveCrop}_${weather.location.name}_${weather.observedAt}_${overallRiskLevel}`;
   const id = `agr_${generateDeterministicHash(hashPayload)}`;
+
+  const cropEvidenceNote = isGenericOrMissing
+    ? "Crop-specific evidence is insufficient; recommendation is based on verified weather conditions."
+    : undefined;
+
+  const cropDisplayName = isGenericOrMissing
+    ? "General Agriculture"
+    : profile.displayName;
 
   const forecastSummary: AgricultureForecastSummary = {
     next24hPrecipMm: windows.next24hPrecipMm,
@@ -526,8 +722,8 @@ export function evaluateAgricultureRisk(
 
   return {
     id,
-    crop,
-    cropDisplayName: profile.displayName,
+    crop: crop && crop !== "generic" ? crop : undefined,
+    cropDisplayName,
     location: {
       name: weather.location.name,
       coordinates: weather.location.coordinates,
@@ -539,10 +735,14 @@ export function evaluateAgricultureRisk(
       irrigation,
       spraying,
       fieldOperations,
+      sowing,
+      harvesting,
+      outdoorFieldWork,
     },
     hazards,
     forecastSummary,
     evidence,
+    cropEvidenceNote,
     disclaimer: DISCLAIMER_TEXT,
     provenance: weather.provenance || [
       {

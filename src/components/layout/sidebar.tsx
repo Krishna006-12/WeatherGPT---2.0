@@ -26,32 +26,32 @@ export function Sidebar() {
     {
       href: "/dashboard",
       label: "Dashboard Overview",
-      icon: <Grid size={22} />,
+      icon: <Grid size={20} />,
     },
     {
       href: "/weather",
       label: "Weather & Observations",
-      icon: <Globe size={22} />,
+      icon: <Globe size={20} />,
     },
     {
       href: "/intelligence",
       label: "Live Disaster Intelligence",
-      icon: <AlertTriangle size={22} />,
+      icon: <AlertTriangle size={20} />,
     },
     {
       href: "/impact",
       label: "Regional Risk & Impact",
-      icon: <Shield size={22} />,
+      icon: <Shield size={20} />,
     },
     {
       href: "/chat",
       label: "WeatherGPT AI Copilot",
-      icon: <MessageSquare size={22} />,
+      icon: <MessageSquare size={20} />,
     },
     {
       href: "/history",
       label: "Forecast & Meteorological Timeline",
-      icon: <History size={22} />,
+      icon: <History size={20} />,
     },
   ];
 
@@ -65,18 +65,26 @@ export function Sidebar() {
   return (
     <aside
       aria-label="Sidebar Navigation"
-      className="w-16 flex flex-col items-center py-6 bg-neutral-950 border-r border-neutral-800 shrink-0 z-30 select-none"
+      className="w-[58px] sm:w-[72px] flex flex-col items-center py-4 sm:py-5 shrink-0 z-30 select-none relative"
+      style={{
+        background: "var(--surface-1)",
+        borderRight: "1px solid var(--border-subtle)",
+      }}
     >
+      {/* Brand logo link */}
       <Link
         href="/dashboard"
         aria-label="WeatherGPT Home"
         title="WeatherGPT Home"
-        className="mb-8 text-cyan-400 hover:text-cyan-300 transition-colors p-1 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+        className="mb-6 sm:mb-7 p-2 sm:p-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-colors duration-150"
+        style={{ color: "var(--accent)" }}
       >
-        <Cloud size={28} />
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-[var(--accent-surface)] transition-opacity duration-150" />
+        <Cloud size={22} className="relative z-10 sm:w-6 sm:h-6" />
       </Link>
 
-      <nav aria-label="Main Sections" className="flex flex-col gap-5 w-full items-center">
+      {/* Main navigation list */}
+      <nav aria-label="Main Sections" className="flex flex-col gap-1.5 w-full items-center">
         {navItems.map((item) => (
           <NavLink
             key={item.href}
@@ -88,10 +96,11 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto">
+      {/* Settings link pinned to bottom */}
+      <div className="mt-auto pb-2">
         <NavLink
           href="/settings"
-          icon={<Settings size={22} />}
+          icon={<Settings size={20} />}
           label="System Intelligence Settings"
           active={pathname === "/settings" || pathname.startsWith("/settings/")}
         />
@@ -116,13 +125,41 @@ function NavLink({
       href={href}
       aria-label={label}
       title={label}
-      className={`p-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-        active
-          ? "bg-cyan-950/80 text-cyan-400 ring-1 ring-cyan-500/40 shadow-lg shadow-cyan-950/50"
-          : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/60"
-      }`}
+      className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group transition-colors duration-150"
+      style={{
+        color: active ? "var(--accent)" : "var(--text-tertiary)",
+        background: active ? "var(--accent-surface)" : "transparent",
+      }}
     >
-      {icon}
+      <div
+        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+        style={{
+          background: active ? "transparent" : "var(--surface-3)",
+        }}
+      />
+
+      {/* Refined vertical active indicator bar */}
+      {active && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full"
+          style={{ background: "var(--accent)" }}
+        />
+      )}
+
+      <div
+        className="relative z-10 transition-transform duration-150 group-hover:scale-105"
+        style={{ color: active ? "var(--accent)" : "inherit" }}
+      >
+        {icon}
+      </div>
+
+      {/* Desktop hover tooltip */}
+      <span
+        className="absolute left-[64px] px-2.5 py-1 rounded-md text-[11px] font-medium bg-[var(--surface-3)] text-[var(--text-primary)] border border-[var(--border-default)] shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 hidden md:block"
+      >
+        {label}
+      </span>
     </Link>
   );
 }
+
