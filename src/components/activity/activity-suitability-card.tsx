@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useActivity } from "@/hooks/use-activity";
+import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { ActivityType, ActivitySafetyLevel } from "@/types/activity";
 import {
@@ -62,6 +63,7 @@ function getSafetyBadge(level: ActivitySafetyLevel, score: number) {
 }
 
 export function ActivitySuitabilityCard({ location }: ActivitySuitabilityCardProps) {
+  const { t } = useLanguage();
   const [selectedActivity, setSelectedActivity] = useState<ActivityType>("running_cycling");
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -103,7 +105,7 @@ export function ActivitySuitabilityCard({ location }: ActivitySuitabilityCardPro
         <div className="flex items-center gap-2">
           <Compass size={18} className="text-[var(--text-accent)]" />
           <h3 className="text-sm font-semibold tracking-wide text-[var(--text-primary)]">
-            Activity Decision Intelligence
+            {t("activity.title", "Activity Decision Intelligence")}
           </h3>
         </div>
         <div className="flex items-center gap-2">

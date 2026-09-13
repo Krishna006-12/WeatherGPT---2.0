@@ -1,6 +1,7 @@
 import type { WeatherSnapshot } from "@/types/weather";
 import { CloudRain, Sun, Cloud, CloudLightning, Snowflake, CloudDrizzle, Droplets } from "lucide-react";
 import { formatDayName } from "@/lib/date-utils";
+import { useLanguage } from "@/context/language-context";
 
 function getWeatherIcon(condition: string) {
   const props = { size: 17, strokeWidth: 1.5 };
@@ -16,6 +17,7 @@ function getWeatherIcon(condition: string) {
 }
 
 export function SevenDayForecastCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
+  const { t } = useLanguage();
   if (isLoading || !weather) return <div className="wg-skeleton h-64 w-full" />;
 
   const timezone = weather.location.timezone;
@@ -44,10 +46,10 @@ export function SevenDayForecastCard({ weather, isLoading }: { weather?: Weather
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2.5">
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-            7-Day Forecast
+            {t("timeline.7_day_forecast", "7-Day Meteorological Outlook")}
           </h3>
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[var(--text-tertiary)] border border-[var(--border-subtle)]">
-            Weekly Cycle
+            {t("timeline.weekly_cycle", "Weekly Cycle")}
           </span>
         </div>
         <span className="text-[11px] font-medium text-[var(--text-tertiary)]">
@@ -57,7 +59,7 @@ export function SevenDayForecastCard({ weather, isLoading }: { weather?: Weather
 
       <div className="flex flex-col flex-1 justify-between divide-y divide-[var(--border-subtle)]">
         {days.map((day, i) => {
-          const label = i === 0 ? "Today" : formatDayName(day.date, timezone, "long");
+          const label = i === 0 ? t("timeline.today", "Today") : formatDayName(day.date, timezone, "long");
 
           // Proportional range bar calculation
           const leftPct = ((day.temperatureLow - globalMin) / range) * 100;

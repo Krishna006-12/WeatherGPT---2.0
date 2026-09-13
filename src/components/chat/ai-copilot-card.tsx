@@ -5,6 +5,8 @@ import { MessageSquare, X, Send, AlertCircle, FileText, CheckCircle2, Info, Aler
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { AIResponse, GroundingStatus, ConversationContext } from "@/types/ai";
 import { useVoiceAssistant } from "@/hooks/use-voice-assistant";
+import { useAuth } from "@/context/auth-context";
+import { useLanguage } from "@/context/language-context";
 
 interface ChatMessage {
   id: string;
@@ -15,12 +17,31 @@ interface ChatMessage {
   timestamp: string;
 }
 
+const CHAT_STORAGE_KEY = "weathergpt_chat_history_v2";
+
 function generateMessageId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 function getCurrentTimestamp(): string {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function getFollowUpSuggestions(cityName?: string, isFarmer?: boolean): string[] {
+  const city = cityName ? cityName.split(",")[0] : "this location";
+  if (isFarmer) {
+    return [
+      `Will it rain in ${city} in the next 24 hours?`,
+      `Is it safe to spray crops today?`,
+      `What is the 3-day soil moisture & irrigation outlook?`,
+    ];
+  }
+  return [
+    `Will it rain today in ${city}?`,
+    `Do I need an umbrella today?`,
+    `Are there any active weather alerts?`,
+    `What will the temperature be tonight?`,
+  ];
 }
 
 export function AICopilotCard({
@@ -34,6 +55,8 @@ export function AICopilotCard({
   fullHeight?: boolean;
   hideCollapse?: boolean;
 }) {
+  const { t } = useLanguage();
+  const { isFarmer } = useAuth();
   const [expanded, setExpanded] = useState(initialExpanded);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,6 +64,28 @@ export function AICopilotCard({
   const [lastContext, setLastContext] = useState<ConversationContext | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Restore chat history from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Persist chat history to localStorage (retain last 20 messages)
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-20)));
+      } catch {}
+    }
+  }, [messages]);
 
   const {
     isListening,
@@ -160,9 +205,12 @@ export function AICopilotCard({
     setMessages([]);
     setQuery("");
     setLastContext(undefined);
+    try {
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+    } catch {}
   };
 
-  const locationLabel = location?.name || "your location";
+  const locationLabel = location?.displayName || location?.name || "your location";
 
   if (expanded) {
     return (
@@ -190,7 +238,7 @@ export function AICopilotCard({
             </div>
             <div>
               <h3 className="font-bold text-[15px] flex items-center gap-2 tracking-tight" style={{ color: "var(--accent)" }}>
-                Copilot
+                {t("copilot.title", "Copilot")}
                 <span
                   className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider"
                   style={{
@@ -202,7 +250,7 @@ export function AICopilotCard({
                 </span>
               </h3>
               <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
-                Intelligence for {locationLabel}
+                {isFarmer ? t("user.farmer_mode", "Farmer Intelligence") : "Intelligence"} for {locationLabel}
               </p>
             </div>
           </div>
@@ -210,10 +258,10 @@ export function AICopilotCard({
             {messages.length > 0 && (
               <button
                 onClick={clearSession}
-                title="Clear conversation"
-                aria-label="Clear conversation"
-                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5"
-                style={{ color: "var(--text-tertiary)", transition: "all var(--transition-fast)" }}
+                title={t("copilot.clear_chat", "Clear conversation")}
+                aria-label={t("copilot.clear_chat", "Clear conversation")}
+                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
               >
                 <RotateCcw size={15} />
               </button>
@@ -222,8 +270,8 @@ export function AICopilotCard({
               <button
                 onClick={() => setExpanded(false)}
                 aria-label="Collapse Copilot"
-                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5"
-                style={{ color: "var(--text-tertiary)", transition: "all var(--transition-fast)" }}
+                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
               >
                 <X size={20} />
               </button>
@@ -234,7 +282,7 @@ export function AICopilotCard({
         {/* Message Thread */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 wg-hide-scroll">
           {messages.length === 0 && !loading && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-in fade-in duration-300">
               <div
                 className="p-5 rounded-[24px] space-y-2.5"
                 style={{
@@ -244,34 +292,32 @@ export function AICopilotCard({
               >
                 <div className="flex items-center gap-2 text-[13px] font-bold tracking-tight" style={{ color: "var(--accent)" }}>
                   <Sparkles size={16} />
-                  <span>AI Meteorological Copilot</span>
+                  <span>{t("copilot.title", "AI Meteorological Copilot")}</span>
                 </div>
                 <p className="text-[13px] leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>
-                  How can I help you understand the weather and regional intelligence for <span style={{ color: "var(--text-primary)" }}>{locationLabel}</span>?
+                  {isFarmer
+                    ? `Namaste! I am your agricultural meteorologist. Ask me about crop spraying feasibility, rain onset in ${locationLabel}, or soil moisture.`
+                    : `How can I help you understand the live weather and regional forecasts for ${locationLabel}?`}
                 </p>
               </div>
 
               <div className="space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-wider px-1" style={{ color: "var(--text-quaternary)" }}>Suggested Inquiries</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider px-1" style={{ color: "var(--text-quaternary)" }}>
+                  Suggested Inquiries
+                </span>
                 <div className="flex flex-col gap-2.5">
-                  {[
-                    `What is the weather in ${locationLabel} right now?`,
-                    "Will it rain today?",
-                    "Are there any severe weather warnings nearby?",
-                    "Could active hazard events affect my region?",
-                  ].map((p) => (
+                  {getFollowUpSuggestions(locationLabel, isFarmer).map((p) => (
                     <button
                       key={p}
                       onClick={() => handleSendQuery(p)}
-                      className="text-left text-[13px] p-3.5 rounded-[16px] flex items-center justify-between group"
+                      className="text-left text-[13px] p-3.5 rounded-[16px] flex items-center justify-between group transition-all duration-150"
                       style={{
                         background: "var(--surface-2)",
                         color: "var(--text-secondary)",
                         border: "1px solid var(--border-subtle)",
-                        transition: "all var(--transition-fast)",
                       }}
                     >
-                      <span className="font-medium">{p}</span>
+                      <span className="font-medium group-hover:text-[var(--text-primary)] transition-colors">{p}</span>
                       <Send size={14} className="opacity-0 group-hover:opacity-100 shrink-0 ml-2" style={{ color: "var(--accent)", transition: "opacity var(--transition-fast)" }} />
                     </button>
                   ))}
@@ -281,10 +327,13 @@ export function AICopilotCard({
           )}
 
           {messages.map((m) => (
-            <div key={m.id} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
+            <div
+              key={m.id}
+              className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2 duration-200`}
+            >
               {m.role === "user" ? (
                 <div
-                  className="max-w-[85%] rounded-[20px] rounded-tr-[4px] px-5 py-3.5"
+                  className="max-w-[85%] rounded-[20px] rounded-tr-[4px] px-5 py-3.5 shadow-sm"
                   style={{
                     background: "var(--accent-surface)",
                     border: "1px solid var(--accent-border)",
@@ -315,7 +364,7 @@ export function AICopilotCard({
                     </div>
                   ) : (
                     <div
-                      className="rounded-[20px] rounded-tl-[4px] p-5 space-y-4"
+                      className="rounded-[20px] rounded-tl-[4px] p-5 space-y-4 shadow-sm"
                       style={{
                         background: "var(--surface-2)",
                         border: "1px solid var(--border-subtle)",
@@ -445,24 +494,38 @@ export function AICopilotCard({
             </div>
           ))}
 
+          {/* Dynamic Contextual Follow-up Chips */}
+          {!loading && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && (
+            <div className="space-y-2 pt-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-quaternary)] px-1">
+                Suggested Follow-up
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {getFollowUpSuggestions(locationLabel, isFarmer).map((p, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendQuery(p)}
+                    className="text-[12px] font-medium px-3 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] hover:border-[var(--accent-border)] hover:bg-[var(--surface-3)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-150 flex items-center gap-1.5 text-left group shadow-xs"
+                  >
+                    <Sparkles size={11} className="text-[var(--accent)] shrink-0 group-hover:rotate-12 transition-transform" />
+                    <span>{p}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Organic 3-Dot Pulsing Typing Indicator */}
           {loading && (
-            <div
-              className="flex items-center gap-3 text-[13px] font-medium p-4 rounded-[20px]"
-              style={{
-                background: "var(--accent-surface)",
-                border: "1px solid var(--accent-border)",
-                color: "var(--accent)",
-              }}
-            >
-              <div
-                className="w-4 h-4 rounded-full shrink-0"
-                style={{
-                  border: "2px solid var(--accent)",
-                  borderTopColor: "transparent",
-                  animation: "spin 0.8s linear infinite",
-                }}
-              />
-              <span>Analyzing verified weather and event data...</span>
+            <div className="flex items-center gap-3 p-4 rounded-[20px] rounded-tl-[4px] bg-[var(--surface-2)] border border-[var(--border-subtle)] max-w-[280px] animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="flex items-center gap-1.5 py-1 px-1">
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span className="text-xs font-medium text-[var(--text-tertiary)]">
+                {t("copilot.analyzing", "WeatherGPT is thinking...")}
+              </span>
             </div>
           )}
         </div>
@@ -476,7 +539,7 @@ export function AICopilotCard({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={loading}
-              placeholder={isListening ? "Listening... speak now" : "Ask Copilot or use voice..."}
+              placeholder={isListening ? t("copilot.listening", "Listening... speak now") : t("copilot.placeholder", "Ask Copilot or use voice...")}
               className="w-full rounded-[20px] py-4 pl-5 pr-24 text-[14px] font-medium focus:outline-none disabled:opacity-50"
               style={{
                 background: "var(--surface-2)",
@@ -552,7 +615,7 @@ export function AICopilotCard({
           </div>
           <div>
             <h3 className="font-bold text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
-              <span>Copilot</span>
+              <span>{t("copilot.title", "Copilot")}</span>
               <span className="text-[11px] font-normal text-[var(--text-tertiary)] hidden sm:inline">• Meteorological Intelligence Engine</span>
             </h3>
           </div>
@@ -571,7 +634,7 @@ export function AICopilotCard({
           className="flex items-center justify-between px-4 py-3 rounded-xl bg-black/40 border border-cyan-500/20 group-hover:border-cyan-500/40 transition-colors duration-200"
         >
           <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] group-hover:text-white transition-colors">
-            Ask WeatherGPT about this weather...
+            {t("copilot.placeholder", "Ask WeatherGPT about this weather...")}
           </span>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-[var(--text-tertiary)] hidden md:inline px-1.5 py-0.5 rounded bg-white/5 border border-white/10">

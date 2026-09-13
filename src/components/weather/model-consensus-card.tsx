@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useConsensus } from "@/hooks/use-consensus";
+import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { ConsensusConfidence, NwpModelId } from "@/types/nwp";
 import {
@@ -48,6 +49,7 @@ function getConfidenceBadge(confidence: ConsensusConfidence, score: number): {
 }
 
 export function ModelConsensusCard({ location }: ModelConsensusCardProps) {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: report, isLoading, error } = useConsensus({
@@ -94,7 +96,7 @@ export function ModelConsensusCard({ location }: ModelConsensusCardProps) {
           <div className="flex items-center gap-2">
             <Layers size={17} className="text-cyan-400" />
             <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
-              NWP Model Consensus
+              {t("consensus.title", "NWP Model Consensus")}
             </h3>
           </div>
           <span

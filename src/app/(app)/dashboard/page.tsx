@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocation } from "@/context/location-context";
+import { useLanguage } from "@/context/language-context";
 import { useWeather } from "@/hooks/use-weather";
 import { WeatherHero } from "@/components/weather/weather-hero";
 import { HourlyForecastCard } from "@/components/weather/hourly-forecast-card";
@@ -16,6 +17,7 @@ import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 
 export default function DashboardPage() {
   const { selectedLocation } = useLocation();
+  const { t } = useLanguage();
 
   const {
     data: weather,
@@ -35,10 +37,10 @@ export default function DashboardPage() {
             className="text-2xl font-semibold mb-2"
             style={{ color: "var(--text-primary)" }}
           >
-            Welcome to WeatherGPT 2.0
+            {t("welcome.title", "Welcome to WeatherGPT 2.0")}
           </h2>
           <p style={{ color: "var(--text-tertiary)" }}>
-            Search for a city above to begin your weather intelligence experience.
+            {t("welcome.subtitle", "Search for a city above to begin your weather intelligence experience.")}
           </p>
         </div>
       </div>
@@ -46,15 +48,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-7 pb-12">
-      {/* 1. PRIMARY: Dominant Weather Hero Centerpiece */}
+    <div className="flex flex-col gap-5 sm:gap-6 lg:gap-7 pb-16">
+      {/* 1. PRIMARY: Dominant Weather Hero Centerpiece (Reference Matched) */}
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
 
       {/* 2. SECONDARY: Immediate Horizon & Live Intelligence */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Immediate Horizon & Risk Intelligence
+            {t("dashboard.immediate_horizon", "Immediate Horizon & Risk Intelligence")}
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
@@ -72,7 +74,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Environmental & Regional Analysis
+            {t("dashboard.regional_analysis", "Environmental & Regional Analysis")}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
@@ -93,7 +95,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Activity Suitability & Decision Intelligence
+            {t("activity.title", "Activity Suitability & Decision Intelligence")}
           </h2>
         </div>
         <div className="w-full">
@@ -105,7 +107,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            NWP Multi-Model Consensus & Forecast Confidence
+            {t("consensus.title", "NWP Multi-Model Consensus & Forecast Confidence")}
           </h2>
         </div>
         <div className="w-full">
@@ -113,11 +115,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 5. UTILITY: Meteorological AI Layer */}
+      {/* 6. UTILITY: Meteorological AI Layer */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            AI Meteorological Copilot
+            {t("copilot.title", "AI Meteorological Copilot")}
           </h2>
         </div>
         <div className="w-full">

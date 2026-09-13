@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAgriculture } from "@/hooks/use-agriculture";
+import { useLanguage } from "@/context/language-context";
 import { Sprout, CheckCircle2, AlertCircle, Droplets, Wind, Tractor, Leaf } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { CropType } from "@/types/agriculture";
@@ -15,6 +16,7 @@ const CROPS: { id: CropType; label: string }[] = [
 ];
 
 export function AgricultureCard({ location }: { location?: NormalizedLocation | null }) {
+  const { t } = useLanguage();
   const [selectedCrop, setSelectedCrop] = useState<CropType>("wheat");
 
   const { data: assessment, isLoading, error } = useAgriculture({
@@ -59,11 +61,11 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
   };
 
   const activities = [
-    { key: "irrigation", label: "Irrigation", icon: <Droplets size={13} className="text-[var(--accent)]" />, data: assessment.activities.irrigation },
-    { key: "spraying", label: "Spraying", icon: <Wind size={13} className="text-[var(--status-warning)]" />, data: assessment.activities.spraying },
-    { key: "fieldOperations", label: "Field Ops", icon: <Tractor size={13} className="text-[var(--status-success)]" />, data: assessment.activities.fieldOperations },
-    ...(assessment.activities.harvesting ? [{ key: "harvesting", label: "Harvesting", icon: <Leaf size={13} className="text-[var(--accent)]" />, data: assessment.activities.harvesting }] : []),
-    ...(assessment.activities.sowing ? [{ key: "sowing", label: "Sowing", icon: <Sprout size={13} className="text-[var(--status-success)]" />, data: assessment.activities.sowing }] : []),
+    { key: "irrigation", label: t("agri.irrigation", "Irrigation"), icon: <Droplets size={13} className="text-[var(--accent)]" />, data: assessment.activities.irrigation },
+    { key: "spraying", label: t("agri.spraying", "Spraying"), icon: <Wind size={13} className="text-[var(--status-warning)]" />, data: assessment.activities.spraying },
+    { key: "fieldOperations", label: t("agri.field_operations", "Field Ops"), icon: <Tractor size={13} className="text-[var(--status-success)]" />, data: assessment.activities.fieldOperations },
+    ...(assessment.activities.harvesting ? [{ key: "harvesting", label: t("agri.harvesting", "Harvesting"), icon: <Leaf size={13} className="text-[var(--accent)]" />, data: assessment.activities.harvesting }] : []),
+    ...(assessment.activities.sowing ? [{ key: "sowing", label: t("agri.sowing", "Sowing"), icon: <Sprout size={13} className="text-[var(--status-success)]" />, data: assessment.activities.sowing }] : []),
   ];
 
   return (
@@ -76,7 +78,7 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
         <div className="flex justify-between items-center mb-3.5">
           <div className="flex items-center gap-2">
             <Leaf size={15} className="text-[var(--status-success)]" />
-            <h3 className="wg-section-label">Agriculture</h3>
+            <h3 className="wg-section-label">{t("agri.title", "Agriculture")}</h3>
           </div>
 
           <span
@@ -87,7 +89,7 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
               border: "1px solid hsla(160, 60%, 50%, 0.2)",
             }}
           >
-            <CheckCircle2 size={10} strokeWidth={2.5} /> Grounded
+            <CheckCircle2 size={10} strokeWidth={2.5} /> {t("risk.verified", "Grounded")}
           </span>
         </div>
 

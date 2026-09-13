@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
+import { useLanguage } from "@/context/language-context";
 import { User, Sprout, LogIn, LogOut, Check, Shield } from "lucide-react";
 
 export function UserMenu() {
   const { session, isGuest, isFarmer, signInWithGoogle, setRole, signOut } = useAuth();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +43,7 @@ export function UserMenu() {
             {session.user.name}
           </span>
           <span className="text-[10px] text-[var(--text-tertiary)] flex items-center gap-1">
-            {isFarmer ? "Farmer Mode" : "Urban"} • {isGuest ? "Guest" : "Google"}
+            {isFarmer ? t("user.farmer_mode", "Farmer Mode") : t("user.urban_mode", "Urban")} • {isGuest ? t("user.guest", "Guest") : "Google"}
           </span>
         </div>
       </button>
@@ -59,7 +61,7 @@ export function UserMenu() {
                     : "bg-emerald-950/60 border border-emerald-800/60 text-emerald-300"
                 }`}
               >
-                {isGuest ? "Guest (Unsaved)" : "Verified Google"}
+                {isGuest ? t("user.guest", "Guest") : "Verified Google"}
               </span>
             </div>
             <p className="text-[11px] text-[var(--text-tertiary)] truncate">
@@ -70,7 +72,7 @@ export function UserMenu() {
           {/* Role Switching */}
           <div className="py-2.5 border-b border-[var(--border-subtle)]">
             <span className="text-[10px] uppercase font-semibold text-[var(--text-tertiary)] tracking-wider block mb-1.5">
-              Experience Mode
+              {t("user.farmer_mode", "Experience Mode")}
             </span>
             <div className="grid grid-cols-2 gap-1.5">
               <button
@@ -100,7 +102,7 @@ export function UserMenu() {
               >
                 <span className="flex items-center gap-1.5">
                   <User size={12} />
-                  General
+                  Urban
                 </span>
                 {!isFarmer && <Check size={12} />}
               </button>
@@ -119,7 +121,7 @@ export function UserMenu() {
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white text-neutral-900 text-xs font-medium hover:bg-neutral-100 transition-colors shadow-sm"
               >
                 <LogIn size={13} />
-                Sign in with Google
+                {t("user.sign_in_google", "Sign in with Google")}
               </button>
             ) : (
               <button
@@ -131,7 +133,7 @@ export function UserMenu() {
                 className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl bg-red-950/30 border border-red-900/40 text-red-400 text-xs font-medium hover:bg-red-950/50 transition-colors"
               >
                 <LogOut size={13} />
-                Sign Out
+                {t("user.sign_out", "Sign Out")}
               </button>
             )}
 

@@ -1,7 +1,9 @@
 import type { WeatherSnapshot } from "@/types/weather";
 import { Sunrise, Sunset } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
 
 export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
+  const { t } = useLanguage();
   if (isLoading || !weather) return <div className="wg-skeleton h-56 w-full" />;
 
   const today = weather.daily[0];
@@ -45,14 +47,14 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-            Sunrise & Sunset
+            {t("timeline.sun_cycle", "Sunrise & Sunset")}
           </h3>
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
             Celestial Arc
           </span>
         </div>
         <span className="text-[11px] font-bold text-amber-300">
-          {hours}h {mins}m of daylight
+          {hours}h {mins}m {t("timeline.daylight", "Daylight")}
         </span>
       </div>
 
@@ -125,7 +127,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
 
           {/* Zenith / Peak Indicator */}
           <text x="140" y="32" textAnchor="middle" fill="#FBBF24" fontSize="9" fontWeight="700" letterSpacing="0.08em" opacity="0.8">
-            ZENITH • NOON
+            {t("timeline.solar_noon", "ZENITH • NOON")}
           </text>
         </svg>
       </div>
@@ -137,7 +139,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
             <Sunrise size={17} className="text-amber-300" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[11px] font-medium text-neutral-400">Sunrise</span>
+            <span className="text-[11px] font-medium text-neutral-400">{t("timeline.sunrise", "Sunrise")}</span>
             <span className="text-sm sm:text-base font-bold text-white tracking-tight">
               {formatTime(today.sunrise)}
             </span>
@@ -146,7 +148,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
 
         <div className="flex items-center justify-end gap-2.5 text-right">
           <div className="flex flex-col">
-            <span className="text-[11px] font-medium text-neutral-400">Sunset</span>
+            <span className="text-[11px] font-medium text-neutral-400">{t("timeline.sunset", "Sunset")}</span>
             <span className="text-sm sm:text-base font-bold text-white tracking-tight">
               {formatTime(today.sunset)}
             </span>

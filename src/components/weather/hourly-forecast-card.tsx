@@ -1,6 +1,7 @@
 import type { WeatherSnapshot } from "@/types/weather";
 import { CloudRain, Sun, Cloud, CloudLightning, Snowflake, CloudDrizzle, Droplets } from "lucide-react";
 import { isCurrentHour, formatTime } from "@/lib/date-utils";
+import { useLanguage } from "@/context/language-context";
 
 function getWeatherIcon(condition: string) {
   const props = { size: 20, strokeWidth: 1.5 };
@@ -16,6 +17,7 @@ function getWeatherIcon(condition: string) {
 }
 
 export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
+  const { t } = useLanguage();
   if (isLoading || !weather) return <div className="wg-skeleton h-44 w-full" />;
 
   const timezone = weather.location.timezone;
@@ -30,10 +32,10 @@ export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSn
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2.5">
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-            Next 24 Hours
+            {t("timeline.next_24_hours", "Next 24 Hours")}
           </h3>
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[var(--text-tertiary)] border border-[var(--border-subtle)]">
-            Timeline
+            {t("timeline.timeline", "Timeline")}
           </span>
         </div>
         <span className="text-[11px] font-medium text-[var(--text-tertiary)]">
@@ -70,7 +72,7 @@ export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSn
                   }`}
                 >
                   {isNow && <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
-                  {isNow ? "Now" : formatTime(h.time, timezone)}
+                  {isNow ? t("timeline.now", "Now") : formatTime(h.time, timezone)}
                 </span>
 
                 {/* Weather Icon anchored on the guide rail */}

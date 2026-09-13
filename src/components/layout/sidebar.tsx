@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/context/language-context";
 import {
   Cloud,
   Grid,
@@ -22,41 +23,42 @@ interface NavItem {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const navItems: NavItem[] = [
     {
       href: "/dashboard",
-      label: "Dashboard Overview",
+      label: t("nav.overview", "Dashboard Overview"),
       icon: <Grid size={20} />,
     },
     {
       href: "/weather",
-      label: "Weather & Observations",
+      label: t("nav.weather", "Weather & Observations"),
       icon: <Globe size={20} />,
     },
     {
       href: "/intelligence",
-      label: "Live Disaster Intelligence",
+      label: t("nav.intelligence", "Live Disaster Intelligence"),
       icon: <AlertTriangle size={20} />,
     },
     {
       href: "/impact",
-      label: "Regional Risk & Impact",
+      label: t("nav.impact", "Regional Risk & Impact"),
       icon: <Shield size={20} />,
     },
     {
       href: "/chat",
-      label: "WeatherGPT AI Copilot",
+      label: t("nav.copilot", "WeatherGPT AI Copilot"),
       icon: <MessageSquare size={20} />,
     },
     {
       href: "/motion",
-      label: "Antigravity Motion Lab",
+      label: t("nav.motion", "Antigravity Motion Lab"),
       icon: <Sparkles size={20} />,
     },
     {
       href: "/history",
-      label: "Forecast & Meteorological Timeline",
+      label: t("nav.history", "Forecast & Meteorological Timeline"),
       icon: <History size={20} />,
     },
   ];
@@ -71,7 +73,7 @@ export function Sidebar() {
   return (
     <aside
       aria-label="Sidebar Navigation"
-      className="w-[58px] sm:w-[72px] flex flex-col items-center py-4 sm:py-5 shrink-0 z-30 select-none relative"
+      className="hidden md:flex w-[72px] flex-col items-center py-5 shrink-0 z-30 select-none relative"
       style={{
         background: "var(--surface-1)",
         borderRight: "1px solid var(--border-subtle)",
@@ -82,11 +84,11 @@ export function Sidebar() {
         href="/dashboard"
         aria-label="WeatherGPT Home"
         title="WeatherGPT Home"
-        className="mb-6 sm:mb-7 p-2 sm:p-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-colors duration-150"
+        className="mb-7 p-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-colors duration-150"
         style={{ color: "var(--accent)" }}
       >
         <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-[var(--accent-surface)] transition-opacity duration-150" />
-        <Cloud size={22} className="relative z-10 sm:w-6 sm:h-6" />
+        <Cloud size={24} className="relative z-10" />
       </Link>
 
       {/* Main navigation list */}
@@ -107,7 +109,7 @@ export function Sidebar() {
         <NavLink
           href="/settings"
           icon={<Settings size={20} />}
-          label="System Intelligence Settings"
+          label={t("nav.settings", "System Intelligence Settings")}
           active={pathname === "/settings" || pathname.startsWith("/settings/")}
         />
       </div>

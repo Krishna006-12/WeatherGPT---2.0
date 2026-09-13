@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, X, Clock, Trash2 } from "lucide-react";
 import { useLocationSearch } from "@/hooks/use-location-search";
 import { useLocation } from "@/context/location-context";
+import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface LocationSearchProps {
@@ -15,6 +16,7 @@ export function LocationSearch({
   onSelectLocation,
   selectedLocation: _selectedLocation,
 }: LocationSearchProps) {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,7 @@ export function LocationSearch({
         />
         <input
           type="text"
-          placeholder="Search city (e.g. Kanpur, London, Tokyo)..."
+          placeholder={t("topbar.search_placeholder", "Search city (e.g. Kanpur, London, Tokyo)...")}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -87,7 +89,7 @@ export function LocationSearch({
           <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider border-b border-[var(--border-subtle)] mb-1">
             <span className="flex items-center gap-1.5">
               <Clock size={12} className="text-cyan-400" />
-              Recent Searches
+              {t("topbar.recent_searches", "Recent Searches")}
             </span>
             <button
               type="button"
@@ -98,7 +100,7 @@ export function LocationSearch({
               className="text-[10px] text-neutral-400 hover:text-red-400 flex items-center gap-1 transition-colors"
             >
               <Trash2 size={10} />
-              Clear
+              {t("topbar.clear_all", "Clear")}
             </button>
           </div>
 
@@ -141,7 +143,7 @@ export function LocationSearch({
           {isLoading && (
             <div className="p-3 text-xs text-[var(--text-tertiary)] flex items-center gap-2">
               <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-              Searching global coordinates...
+              {t("copilot.analyzing", "Searching global coordinates...")}
             </div>
           )}
 
@@ -153,7 +155,7 @@ export function LocationSearch({
 
           {!isLoading && !isError && results && results.length === 0 && (
             <div className="p-3 text-xs text-[var(--text-tertiary)]">
-              No locations found for &ldquo;{searchTerm}&rdquo;
+              {t("topbar.no_recents", "No locations found")} &ldquo;{searchTerm}&rdquo;
             </div>
           )}
 

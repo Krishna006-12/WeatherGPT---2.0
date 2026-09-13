@@ -3,6 +3,7 @@ import { Settings } from "lucide-react";
 import { LocationSearch } from "@/components/weather/location-search";
 import { UserMenu } from "@/components/auth/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface TopbarProps {
@@ -15,7 +16,7 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
     <header
       className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 backdrop-blur-xl z-20 sticky top-0"
       style={{
-        background: "rgba(16, 17, 21, 0.9)",
+        background: "var(--topbar-bg)",
         borderBottom: "1px solid var(--border-subtle)",
       }}
     >
@@ -38,8 +39,8 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-2.5 ml-3">
+        <ThemeToggle />
         <LanguageSwitcher />
-
         <UserMenu />
 
         <Link

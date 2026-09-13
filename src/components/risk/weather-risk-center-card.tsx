@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRisk } from "@/hooks/use-risk";
+import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { RiskAssessment, RiskCategory, RiskSeverity } from "@/types/risk";
 import {
@@ -94,6 +95,7 @@ function getSeverityBadge(severity: RiskSeverity): {
 
 export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) {
   const [expandedCategory, setExpandedCategory] = useState<RiskCategory | null>(null);
+  const { t } = useLanguage();
 
   const { data: report, isLoading, error } = useRisk({
     latitude: location?.latitude,
@@ -120,7 +122,7 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
     );
   }
 
-  // Create a fast lookup map for the 6 assessments
+  // Create a fast lookup map for the assessments
   const assessmentMap = new Map<RiskCategory, RiskAssessment>();
   for (const a of report.assessments) {
     assessmentMap.set(a.type, a);
@@ -141,15 +143,15 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
           <div className="flex items-center gap-2">
             <AlertTriangle size={17} className="text-amber-400" />
             <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
-              Weather Risk Center
+              {t("risk.center_title", "Weather Risk Center")}
             </h3>
           </div>
           <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--text-tertiary)]">
-            Verified
+            {t("risk.verified", "Verified")}
           </span>
         </div>
 
-        {/* 6 Category Risk Rows */}
+        {/* Category Risk Rows */}
         <div className="flex flex-col divide-y divide-[var(--border-subtle)]">
           {ORDERED_CATEGORIES.map((catKey) => {
             const assessment = assessmentMap.get(catKey);
@@ -171,7 +173,7 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
                   <div className="flex items-center gap-2.5">
                     <IconComponent size={16} className="text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors" />
                     <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
-                      {meta.label}
+                      {t(`risk.${catKey}`, meta.label)}
                     </span>
                   </div>
 
@@ -180,7 +182,7 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
                       className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border ${badge.badgeClass}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${badge.dotColor}`} />
-                      {badge.label}
+                      {t(`risk.${assessment.severity}`, badge.label)}
                     </span>
                     {isExpanded ? (
                       <ChevronUp size={14} className="text-[var(--text-tertiary)]" />
