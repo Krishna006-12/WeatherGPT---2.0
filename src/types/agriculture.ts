@@ -1,20 +1,43 @@
 /**
- * Agriculture Intelligence v1 Data Contracts.
+ * Agriculture Intelligence Data Contracts.
  *
  * Weather-based agricultural decision-support models strictly derived from
- * atmospheric observations and forecast metrics.
- *
- * Grounding constraint: No sensor, soil, disease diagnosis, or stage-specific
- * telemetry is assumed or fabricated.
+ * atmospheric observations and forecast metrics, enriched with ICAR agronomic citations,
+ * FAO-56 Penman-Monteith ET₀ evapotranspiration, and SoilGrids parameters.
  */
 
 import type { Coordinates, ISOTimestamp } from "./common";
 import type { DataProvenance } from "./weather";
 
-/** Supported v1 crop types. */
-export type CropType = "wheat" | "rice" | "maize" | "potato" | "mustard" | "generic";
+/** Supported crop types (24+ ICAR prioritized crops + generic). */
+export type CropType =
+  | "wheat"
+  | "rice"
+  | "maize"
+  | "potato"
+  | "mustard"
+  | "cotton"
+  | "sugarcane"
+  | "chickpea"
+  | "soybean"
+  | "groundnut"
+  | "tomato"
+  | "onion"
+  | "chili"
+  | "tea"
+  | "coffee"
+  | "barley"
+  | "sorghum"
+  | "pearl_millet"
+  | "pigeon_pea"
+  | "lentil"
+  | "garlic"
+  | "jute"
+  | "mango"
+  | "banana"
+  | "generic";
 
-/** Supported v1 agriculture activity types. */
+/** Supported agriculture activity types. */
 export type AgricultureActivityType =
   | "irrigation"
   | "spraying"
@@ -62,7 +85,44 @@ export interface AgricultureForecastSummary {
   averageHumidityPct: number;
 }
 
-/** Heuristic crop sensitivity definition based purely on meteorological thresholds. */
+/** Fungal disease risk profile and meteorological triggers. */
+export interface DiseaseRiskAssessment {
+  diseaseName: string;
+  cropTarget: string;
+  riskLevel: RiskLevel;
+  temperatureOptimalMet: boolean;
+  humiditySustainedMet: boolean;
+  leafWetnessHoursEstimated: number;
+  pathogen: string;
+  preventativeAdvisory: string;
+  icarCitation: string;
+}
+
+/** Evapotranspiration (ET₀) and crop water requirement based on FAO-56. */
+export interface EvapotranspirationEstimate {
+  et0MmDay: number;
+  cropEtMmDay: number;
+  cropCoefficientKc: number;
+  rainfall24hMm: number;
+  irrigationDeficitMm: number;
+  recommendedWaterLitersPerM2: number;
+  method: string;
+}
+
+/** Soil profile parameters (SoilGrids / ICAR Soil Health Card standard). */
+export interface SoilHealthProfile {
+  soilType: "alluvial" | "black" | "red" | "laterite" | "sandy_loam" | "clay_loam";
+  displayName: string;
+  texture: string;
+  drainage: "poor" | "moderate" | "well_drained" | "excessive";
+  phRange: string;
+  organicCarbonPct: number;
+  fieldCapacityPct: number;
+  wiltingPointPct: number;
+  source: string;
+}
+
+/** Heuristic crop sensitivity definition based on meteorological thresholds and ICAR standards. */
 export interface CropProfile {
   crop: CropType;
   displayName: string;
@@ -85,6 +145,12 @@ export interface CropProfile {
     highHumidityThresholdPct: number;
   };
   notes: string;
+  icarCitation?: string;
+  et0CropCoefficient?: {
+    kcInitial: number;
+    kcMid: number;
+    kcEnd: number;
+  };
 }
 
 /**
@@ -113,6 +179,9 @@ export interface AgricultureAssessment {
   hazards: AgricultureHazard[];
   forecastSummary: AgricultureForecastSummary;
   evidence: AgricultureEvidence[];
+  diseaseRisks?: DiseaseRiskAssessment[];
+  evapotranspiration?: EvapotranspirationEstimate;
+  soilProfile?: SoilHealthProfile;
   cropEvidenceNote?: string;
   disclaimer: string;
   provenance: DataProvenance[];

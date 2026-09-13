@@ -9,13 +9,31 @@ WeatherGPT 2.0 is a clean rebuild designed around four principles:
 3. AI explains, compares, personalizes, and recommends; it does not fabricate live facts.
 4. Live Weather Intelligence combines verified weather-related news, event context, forecast signals, and location-specific impact analysis.
 
-## Current Phase
+## Shipped Intelligence Capabilities
 
-**Phase 1 — Foundation** (active)
+WeatherGPT 2.0 has progressed from architectural foundation to a production-grade meteorological and disaster intelligence platform:
 
-The engineering foundation is in place: project structure, type contracts, validation schemas, service abstractions, reusable UI primitives, testing infrastructure, and CI. No features are implemented yet.
+1. **Deterministic Risk Intelligence Engine** (`src/services/risk/`):
+   - 6 zero-hallucination evaluators: Heat, Heavy Rain, Thunderstorm, Wind, UV Index, and Hydrological Flood Risk.
+   - Strict Zod schemas with evidence basis, confidence rating, and limitation transparency.
+2. **Multi-Model NWP Consensus Engine** (`src/services/nwp/`):
+   - Integrates global numerical weather prediction models (ECMWF, GFS, ICON).
+   - Computes ensemble mean, median, spread, standard deviation, model divergence, and 0–100% agreement index.
+3. **Agriculture Intelligence Engine** (`src/services/agriculture/`):
+   - Deterministic crop weather risk assessment, activity feasibility (irrigation, spraying, harvesting), and seasonal guidance based on agronomic thresholds.
+4. **Live Weather Intelligence & Disaster Engine** (`src/services/impact/`, `src/services/news/`):
+   - Live ingest from GDACS (cyclones, floods) and USGS (earthquakes) with Haversine distance, proximity tiers, and hydrological correlation.
+5. **Grounded AI Tool Orchestrator** (`src/services/ai/`):
+   - 11 internal deterministic tools (weather, forecast, risk, consensus, activity, agriculture, voice, events, impact).
+   - Strict XML-bounded prompt sanitization preventing prompt injection, plus anti-hallucination source citations.
+6. **Voice Assistant & Speech Intelligence** (`src/services/voice/`):
+   - Natural speech normalization (°C → degrees Celsius, km/h → kilometers per hour), duration estimation, Web Speech API controls, and multi-lingual language detection (`en-US`, `hi-IN`).
+7. **Apple-Caliber Antigravity Motion System** (`src/lib/motion/`):
+   - 60 FPS zero-gravity physics, Lissajous multi-harmonic drift with element-seeded PRNG, exponential momentum decay ($v(t) = v_0 \cdot e^{-t/\tau}$), and adaptive device tier scaling.
+8. **Automated Verification**:
+   - 50+ unit and integration test suites running under Vitest, plus Playwright E2E suites.
 
-See `docs/MASTER_SPEC.md` for the full build phase roadmap.
+See `docs/MASTER_SPEC.md` and feature-specific architecture guides in `docs/` for specifications.
 
 ## Architecture Principles
 

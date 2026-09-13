@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WeatherCharts } from "@/components/weather/weather-charts";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
@@ -107,6 +108,9 @@ export function WeatherDisplay({
           </div>
         </CardContent>
       </Card>
+
+      {/* Interactive Visualizations (Thermal curve, Precipitation, and NWP Ensemble) */}
+      <WeatherCharts weather={weather} isLoading={isLoading} />
 
       {/* Hourly Preview */}
       <Card>

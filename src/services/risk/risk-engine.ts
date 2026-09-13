@@ -26,6 +26,8 @@ import { evaluateThunderstormRisk } from "./risk-evaluators/thunderstorm-risk";
 import { evaluateWindRisk } from "./risk-evaluators/wind-risk";
 import { evaluateUVRisk } from "./risk-evaluators/uv-risk";
 import { evaluateFloodRisk } from "./risk-evaluators/flood-risk";
+import { evaluateDroughtRisk } from "./risk-evaluators/drought-risk";
+import { evaluateCycloneRisk } from "./risk-evaluators/cyclone-risk";
 
 export interface EvaluateRiskOptions {
   weather: WeatherSnapshot;
@@ -72,13 +74,15 @@ export class RiskEngine {
       ? `Target: ${temporalTarget}`
       : "Current & Next 24h";
 
-    // Run all 6 deterministic evaluators
+    // Run all 8 deterministic evaluators
     const heat = evaluateHeatRisk(weather, targetDay, timeWindow);
     const heavyRain = evaluateHeavyRainRisk(weather, targetDay, timeWindow);
     const thunderstorm = evaluateThunderstormRisk(weather, targetDay, timeWindow);
     const wind = evaluateWindRisk(weather, targetDay, timeWindow);
     const uv = evaluateUVRisk(weather, timeWindow);
     const flood = await evaluateFloodRisk(weather.location, eventRepo, timeWindow);
+    const drought = evaluateDroughtRisk(weather, targetDay, timeWindow);
+    const cyclone = evaluateCycloneRisk(weather, targetDay, timeWindow);
 
     const assessments: RiskAssessment[] = [
       heat,
@@ -87,6 +91,8 @@ export class RiskEngine {
       wind,
       uv,
       flood,
+      drought,
+      cyclone,
     ];
 
     // Calculate overall severity

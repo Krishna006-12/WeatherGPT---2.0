@@ -13,7 +13,9 @@ export type RiskCategory =
   | "thunderstorm"
   | "wind"
   | "uv"
-  | "flood";
+  | "flood"
+  | "drought"
+  | "cyclone";
 
 /** Deterministic severity classifications. */
 export type RiskSeverity =

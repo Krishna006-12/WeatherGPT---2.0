@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Settings,
   Shield,
+  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -47,6 +48,11 @@ export function Sidebar() {
       href: "/chat",
       label: "WeatherGPT AI Copilot",
       icon: <MessageSquare size={20} />,
+    },
+    {
+      href: "/motion",
+      label: "Antigravity Motion Lab",
+      icon: <Sparkles size={20} />,
     },
     {
       href: "/history",

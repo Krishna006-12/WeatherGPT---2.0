@@ -2,6 +2,8 @@
 
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { MobileNav } from "./mobile-nav";
+import { FPSOverlay } from "@/components/motion/FPSOverlay";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import { useLocation } from "@/context/location-context";
 
@@ -33,10 +35,12 @@ export function DashboardLayout({
           onSelectLocation={handleSelectLocation}
           selectedLocation={activeSelectedLocation}
         />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 pb-20 md:pb-8">
           <div className="mx-auto max-w-[1400px] w-full">{children}</div>
         </main>
       </div>
+      <MobileNav />
+      <FPSOverlay />
     </div>
   );
 }

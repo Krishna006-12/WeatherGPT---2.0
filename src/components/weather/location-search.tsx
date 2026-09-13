@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, X, Clock, Trash2 } from "lucide-react";
 import { useLocationSearch } from "@/hooks/use-location-search";
+import { useLocation } from "@/context/location-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface LocationSearchProps {
@@ -16,11 +17,28 @@ export function LocationSearch({
 }: LocationSearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { recentLocations, removeRecent, clearRecents } = useLocation();
+
+  const isSearchMode = searchTerm.trim().length >= 2;
+  const isRecentsMode = isOpen && searchTerm.trim().length === 0 && recentLocations.length > 0;
 
   const { data: results, isLoading, isError, error } = useLocationSearch(
     searchTerm,
-    isOpen && searchTerm.trim().length >= 2
+    isOpen && isSearchMode
   );
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSelect = (location: NormalizedLocation) => {
     onSelectLocation(location);
@@ -29,7 +47,7 @@ export function LocationSearch({
   };
 
   return (
-    <div className="relative w-full max-w-lg">
+    <div ref={containerRef} className="relative w-full max-w-lg">
       <div className="relative flex items-center">
         <Search
           size={16}
@@ -44,7 +62,7 @@ export function LocationSearch({
             setIsOpen(true);
           }}
           onFocus={() => {
-            if (searchTerm.trim().length >= 2) setIsOpen(true);
+            setIsOpen(true);
           }}
           className="w-full h-9 pl-9 pr-8 text-xs sm:text-sm rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-border)] focus:bg-[var(--surface-1)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none transition-colors duration-150"
         />
@@ -54,7 +72,7 @@ export function LocationSearch({
             aria-label="Clear search"
             onClick={() => {
               setSearchTerm("");
-              setIsOpen(false);
+              setIsOpen(true);
             }}
             className="absolute right-2.5 p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors"
           >
@@ -63,10 +81,63 @@ export function LocationSearch({
         )}
       </div>
 
-      {isOpen && searchTerm.trim().length >= 2 && (
-        <div
-          className="absolute z-50 mt-1.5 max-h-64 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md"
-        >
+      {/* Recents Mode Dropdown */}
+      {isRecentsMode && (
+        <div className="absolute z-50 mt-1.5 max-h-72 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
+          <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider border-b border-[var(--border-subtle)] mb-1">
+            <span className="flex items-center gap-1.5">
+              <Clock size={12} className="text-cyan-400" />
+              Recent Searches
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearRecents();
+              }}
+              className="text-[10px] text-neutral-400 hover:text-red-400 flex items-center gap-1 transition-colors"
+            >
+              <Trash2 size={10} />
+              Clear
+            </button>
+          </div>
+
+          {recentLocations.map((loc) => (
+            <div
+              key={`recent-${loc.id}-${loc.displayName}`}
+              className="flex items-center justify-between rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] group"
+            >
+              <button
+                type="button"
+                className="flex-1 text-left focus:outline-none"
+                onClick={() => handleSelect(loc)}
+              >
+                <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                  {loc.displayName}
+                </div>
+                <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+                  {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
+                </div>
+              </button>
+              <button
+                type="button"
+                aria-label={`Remove ${loc.displayName}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeRecent(loc.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-red-400 transition-opacity"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Live Search Query Dropdown */}
+      {isOpen && isSearchMode && (
+        <div className="absolute z-50 mt-1.5 max-h-64 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
           {isLoading && (
             <div className="p-3 text-xs text-[var(--text-tertiary)] flex items-center gap-2">
               <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
@@ -108,4 +179,3 @@ export function LocationSearch({
     </div>
   );
 }
-

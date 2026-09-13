@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { LocationSearch } from "@/components/weather/location-search";
+import { UserMenu } from "@/components/auth/user-menu";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface TopbarProps {
@@ -35,7 +37,11 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2.5 sm:gap-3 ml-3">
+      <div className="flex items-center gap-2 sm:gap-2.5 ml-3">
+        <LanguageSwitcher />
+
+        <UserMenu />
+
         <Link
           href="/settings"
           aria-label="System Settings"

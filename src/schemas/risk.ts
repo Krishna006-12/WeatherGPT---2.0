@@ -12,6 +12,8 @@ export const riskCategorySchema = z.enum([
   "wind",
   "uv",
   "flood",
+  "drought",
+  "cyclone",
 ]);
 
 export const riskSeveritySchema = z.enum([

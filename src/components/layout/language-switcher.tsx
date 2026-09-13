@@ -1,0 +1,38 @@
+"use client";
+
+import { useLanguage } from "@/context/language-context";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
+import { Languages } from "lucide-react";
+
+export function LanguageSwitcher() {
+  const { language, setLanguage } = useLanguage();
+
+  const options: { code: SupportedLanguage; label: string; short: string }[] = [
+    { code: "en", label: "English", short: "EN" },
+    { code: "hi", label: "हिंदी", short: "हिं" },
+    { code: "pa", label: "ਪੰਜਾਬੀ", short: "ਪੰ" },
+  ];
+
+  return (
+    <div className="flex items-center p-0.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+      <div className="px-1.5 text-[var(--text-tertiary)] hidden sm:flex">
+        <Languages size={13} />
+      </div>
+      {options.map((opt) => (
+        <button
+          key={opt.code}
+          type="button"
+          onClick={() => setLanguage(opt.code)}
+          className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+            language === opt.code
+              ? "bg-[var(--surface-3)] text-white font-semibold shadow-sm"
+              : "text-[var(--text-tertiary)] hover:text-white"
+          }`}
+          title={opt.label}
+        >
+          {opt.short}
+        </button>
+      ))}
+    </div>
+  );
+}

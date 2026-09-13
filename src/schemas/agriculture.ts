@@ -1,5 +1,5 @@
 /**
- * Zod schemas for Agriculture Intelligence v1 validation.
+ * Zod schemas for Agriculture Intelligence validation.
  * Validates external requests and internal assessment outputs at boundaries.
  */
 
@@ -12,6 +12,25 @@ export const cropTypeSchema = z.enum([
   "maize",
   "potato",
   "mustard",
+  "cotton",
+  "sugarcane",
+  "chickpea",
+  "soybean",
+  "groundnut",
+  "tomato",
+  "onion",
+  "chili",
+  "tea",
+  "coffee",
+  "barley",
+  "sorghum",
+  "pearl_millet",
+  "pigeon_pea",
+  "lentil",
+  "garlic",
+  "jute",
+  "mango",
+  "banana",
   "generic",
 ]);
 
@@ -79,6 +98,40 @@ export const agricultureForecastSummarySchema = z.object({
   averageHumidityPct: z.number().min(0).max(100),
 });
 
+export const diseaseRiskAssessmentSchema = z.object({
+  diseaseName: z.string().min(1),
+  cropTarget: z.string().min(1),
+  riskLevel: riskLevelSchema,
+  temperatureOptimalMet: z.boolean(),
+  humiditySustainedMet: z.boolean(),
+  leafWetnessHoursEstimated: z.number().nonnegative(),
+  pathogen: z.string().min(1),
+  preventativeAdvisory: z.string().min(1),
+  icarCitation: z.string().min(1),
+});
+
+export const evapotranspirationEstimateSchema = z.object({
+  et0MmDay: z.number().nonnegative(),
+  cropEtMmDay: z.number().nonnegative(),
+  cropCoefficientKc: z.number().positive(),
+  rainfall24hMm: z.number().nonnegative(),
+  irrigationDeficitMm: z.number(),
+  recommendedWaterLitersPerM2: z.number().nonnegative(),
+  method: z.string().min(1),
+});
+
+export const soilHealthProfileSchema = z.object({
+  soilType: z.enum(["alluvial", "black", "red", "laterite", "sandy_loam", "clay_loam"]),
+  displayName: z.string().min(1),
+  texture: z.string().min(1),
+  drainage: z.enum(["poor", "moderate", "well_drained", "excessive"]),
+  phRange: z.string().min(1),
+  organicCarbonPct: z.number().nonnegative(),
+  fieldCapacityPct: z.number().nonnegative(),
+  wiltingPointPct: z.number().nonnegative(),
+  source: z.string().min(1),
+});
+
 export const agricultureAssessmentSchema = z.object({
   id: z.string().min(1),
   crop: cropTypeSchema.optional(),
@@ -101,6 +154,9 @@ export const agricultureAssessmentSchema = z.object({
   hazards: z.array(agricultureHazardSchema),
   forecastSummary: agricultureForecastSummarySchema,
   evidence: z.array(agricultureEvidenceSchema),
+  diseaseRisks: z.array(diseaseRiskAssessmentSchema).optional(),
+  evapotranspiration: evapotranspirationEstimateSchema.optional(),
+  soilProfile: soilHealthProfileSchema.optional(),
   cropEvidenceNote: z.string().optional(),
   disclaimer: z.string().min(1),
   provenance: z.array(dataProvenanceSchema),

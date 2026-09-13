@@ -22,6 +22,9 @@ import type {
 } from "@/types/agriculture";
 import { getCropProfile } from "./crop-profiles";
 import { generateDeterministicHash } from "@/lib/deduplicator";
+import { evaluateFungalDiseaseRisk } from "./disease-evaluator";
+import { calculateEvapotranspiration } from "./evapotranspiration-service";
+import { getRegionalSoilProfile } from "./soil-service";
 
 const DISCLAIMER_TEXT =
   "Weather-based advisory derived from atmospheric observations and forecasts. Local soil, crop, pest, and disease conditions are not directly measured.";
@@ -729,6 +732,14 @@ export function evaluateAgricultureRisk(
     averageHumidityPct: windows.averageHumidityPct,
   };
 
+  const diseaseRisks = evaluateFungalDiseaseRisk(effectiveCrop, weather);
+  const evapotranspiration = calculateEvapotranspiration(effectiveCrop, weather);
+  const soilProfile = getRegionalSoilProfile(
+    weather.location.coordinates.latitude,
+    weather.location.coordinates.longitude,
+    weather.location.region
+  );
+
   return {
     id,
     crop: crop && crop !== "generic" ? crop : undefined,
@@ -751,6 +762,9 @@ export function evaluateAgricultureRisk(
     hazards,
     forecastSummary,
     evidence,
+    diseaseRisks,
+    evapotranspiration,
+    soilProfile,
     cropEvidenceNote,
     disclaimer: DISCLAIMER_TEXT,
     provenance: weather.provenance || [

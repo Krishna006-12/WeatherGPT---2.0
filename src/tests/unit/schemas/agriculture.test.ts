@@ -16,8 +16,8 @@ describe("Agriculture Zod Schemas", () => {
     });
 
     it("rejects unsupported crops", () => {
-      expect(cropTypeSchema.safeParse("cotton").success).toBe(false);
-      expect(cropTypeSchema.safeParse("soybean").success).toBe(false);
+      expect(cropTypeSchema.safeParse("avocado").success).toBe(false);
+      expect(cropTypeSchema.safeParse("dragonfruit").success).toBe(false);
       expect(cropTypeSchema.safeParse("").success).toBe(false);
       expect(cropTypeSchema.safeParse(123).success).toBe(false);
     });
@@ -52,7 +52,7 @@ describe("Agriculture Zod Schemas", () => {
       const res = agricultureQuerySchema.safeParse({
         lat: "26.4652",
         lon: "80.3498",
-        crop: "sugarcane",
+        crop: "avocado",
       });
       expect(res.success).toBe(false);
     });

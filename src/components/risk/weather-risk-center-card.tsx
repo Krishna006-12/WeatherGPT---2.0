@@ -31,15 +31,19 @@ const CATEGORY_META: Record<
   heat: { label: "Heat", icon: Flame },
   uv: { label: "UV", icon: Sun },
   flood: { label: "Flood", icon: Waves },
+  drought: { label: "Drought", icon: Flame },
+  cyclone: { label: "Cyclone", icon: Wind },
 };
 
 const ORDERED_CATEGORIES: RiskCategory[] = [
+  "cyclone",
+  "flood",
   "heavy_rain",
   "thunderstorm",
   "wind",
   "heat",
+  "drought",
   "uv",
-  "flood",
 ];
 
 function getSeverityBadge(severity: RiskSeverity): {

@@ -2,6 +2,8 @@ import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import { Droplets, Wind, Eye, Gauge } from "lucide-react";
 
+import { FloatingElement } from "@/components/motion/FloatingElement";
+
 interface WeatherHeroProps {
   weather?: WeatherSnapshot;
   isLoading: boolean;
@@ -213,10 +215,12 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
           {/* Telemetry Status Indicator */}
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live Telemetry Feed
-            </span>
+            <FloatingElement id="hero-telemetry-badge" massTier="light" envelopeScale={0.7} pressScale={false}>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live Telemetry Feed
+              </span>
+            </FloatingElement>
           </div>
         </div>
 
@@ -224,9 +228,11 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         <div className="py-6 sm:py-8 flex flex-col md:flex-row md:items-baseline justify-between gap-4">
           <div className="flex flex-col">
             <div className="flex items-baseline">
-              <span className="text-[5.5rem] sm:text-[7rem] md:text-[8.5rem] leading-[0.88] font-extralight tracking-tighter text-[var(--text-primary)] select-none">
-                {Math.round(current.temperature)}°
-              </span>
+              <FloatingElement id="hero-temperature-dial" massTier="heavy" envelopeScale={0.5} pressScale={true}>
+                <span className="text-[5.5rem] sm:text-[7rem] md:text-[8.5rem] leading-[0.88] font-extralight tracking-tighter text-[var(--text-primary)] select-none inline-block">
+                  {Math.round(current.temperature)}°
+                </span>
+              </FloatingElement>
             </div>
 
             {/* Condition descriptor & temperature relationships */}

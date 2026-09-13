@@ -93,9 +93,29 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* Apple System Motion Easings */
+  --ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-spring-soft: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring-snappy: cubic-bezier(0.18, 0.89, 0.32, 1.15);
+
   --transition-fast: 160ms var(--ease-in-out);
   --transition-normal: 240ms var(--ease-out);
   --transition-slow: 320ms var(--ease-out);
+  --transition-spring-snappy: 220ms var(--ease-spring-snappy);
+}
+
+/* Display-P3 Wide Color Gamut Enhancement with sRGB Fallbacks */
+@supports (color: color(display-p3 1 1 1)) {
+  :root {
+    --accent: color(display-p3 0.18 0.76 0.94);
+    --accent-hover: color(display-p3 0.24 0.82 0.98);
+    --status-success: color(display-p3 0.25 0.84 0.58);
+    --status-warning: color(display-p3 0.98 0.74 0.18);
+    --status-danger: color(display-p3 0.96 0.42 0.42);
+    --status-info: color(display-p3 0.38 0.65 0.98);
+  }
 }
 
 @keyframes fade-in {
@@ -195,6 +215,25 @@ body {
   border: 1px solid hsla(194, 80%, 54%, 0.28);
   border-radius: var(--radius-2xl);
   box-shadow: 0 8px 32px -4px hsla(194, 85%, 50%, 0.1), inset 0 1px 0 hsla(194, 80%, 54%, 0.15);
+}
+
+/* Apple-style Glassmorphism Overlay (Alert drawer, chat panel, modal sheets) */
+.wg-glass-overlay {
+  background: rgba(28, 28, 30, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Tactile Micro-interaction: Scale on press with snappy spring return */
+.wg-pressable {
+  transition: transform 180ms var(--ease-spring-snappy);
+  will-change: transform;
+}
+
+.wg-pressable:active {
+  transform: scale(0.96);
 }
 
 .wg-card-hover {

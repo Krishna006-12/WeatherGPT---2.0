@@ -14,7 +14,7 @@ describe("GET /api/agriculture Route", () => {
   });
 
   it("returns 400 when crop parameter is invalid", async () => {
-    const req = new Request("http://localhost:3000/api/agriculture?lat=26.46&lon=80.34&crop=barley");
+    const req = new Request("http://localhost:3000/api/agriculture?lat=26.46&lon=80.34&crop=invalid_crop");
     const response = await GET(req);
     expect(response.status).toBe(400);
     const json = await response.json();

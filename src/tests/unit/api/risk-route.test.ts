@@ -69,7 +69,7 @@ describe("GET /api/risk Route", () => {
     const json = await response.json();
 
     expect(json.location.name).toBe("Kanpur");
-    expect(json.assessments).toHaveLength(6);
+    expect(json.assessments).toHaveLength(8);
     expect(weatherRiskReportSchema.safeParse(json).success).toBe(true);
   });
 

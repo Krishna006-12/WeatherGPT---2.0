@@ -195,7 +195,7 @@ describe("Copilot Weather Risk Center Integration (Phase 9)", () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    expect(result.data.assessments).toHaveLength(6);
+    expect(result.data.assessments).toHaveLength(8);
     expect(result.data.overallSeverity).toBe("high");
     expect(result.data.activitySuitability.status).toBe("unfavorable");
     expect(result.data.primaryHazard).toBe("thunderstorm");
@@ -212,7 +212,7 @@ describe("Copilot Weather Risk Center Integration (Phase 9)", () => {
     expect(res.data.groundingStatus).toBe("grounded");
     expect(res.data.citations.length).toBeGreaterThan(0);
     expect(res.data.riskReport).toBeDefined();
-    expect(res.data.riskReport?.assessments).toHaveLength(6);
+    expect(res.data.riskReport?.assessments).toHaveLength(8);
   });
 
   it("3. handles specific hazard risk questions (heavy rain, thunderstorm, wind, flood)", async () => {
