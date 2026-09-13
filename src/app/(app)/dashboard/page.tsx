@@ -9,6 +9,9 @@ import { SevenDayForecastCard } from "@/components/weather/seven-day-forecast-ca
 import { LiveEventCard } from "@/components/events/live-event-card";
 import { ImpactCard } from "@/components/impact/impact-card";
 import { AgricultureCard } from "@/components/agriculture/agriculture-card";
+import { WeatherRiskCenterCard } from "@/components/risk/weather-risk-center-card";
+import { ModelConsensusCard } from "@/components/weather/model-consensus-card";
+import { ActivitySuitabilityCard } from "@/components/activity/activity-suitability-card";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 
 export default function DashboardPage() {
@@ -51,14 +54,15 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Immediate Horizon & Intelligence
+            Immediate Horizon & Risk Intelligence
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
           <div className="lg:col-span-8 flex flex-col">
             <HourlyForecastCard weather={weather} isLoading={isWeatherLoading} />
           </div>
-          <div className="lg:col-span-4 flex flex-col">
+          <div className="lg:col-span-4 flex flex-col gap-5 lg:gap-6">
+            <WeatherRiskCenterCard location={selectedLocation} />
             <LiveEventCard />
           </div>
         </div>
@@ -85,7 +89,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. UTILITY: Meteorological AI Layer */}
+      {/* 4. DECISION INTELLIGENCE: Activity Weather Suitability */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Activity Suitability & Decision Intelligence
+          </h2>
+        </div>
+        <div className="w-full">
+          <ActivitySuitabilityCard location={selectedLocation} />
+        </div>
+      </div>
+
+      {/* 5. NWP INTELLIGENCE: Multi-Model Consensus & Confidence */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            NWP Multi-Model Consensus & Forecast Confidence
+          </h2>
+        </div>
+        <div className="w-full">
+          <ModelConsensusCard location={selectedLocation} />
+        </div>
+      </div>
+
+      {/* 5. UTILITY: Meteorological AI Layer */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, AlertCircle, FileText, CheckCircle2, Info, AlertTriangle, RotateCcw, Sparkles } from "lucide-react";
+import { MessageSquare, X, Send, AlertCircle, FileText, CheckCircle2, Info, AlertTriangle, RotateCcw, Sparkles, Sprout, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { AIResponse, GroundingStatus, ConversationContext } from "@/types/ai";
+import { useVoiceAssistant } from "@/hooks/use-voice-assistant";
 
 interface ChatMessage {
   id: string;
@@ -40,6 +41,21 @@ export function AICopilotCard({
   const [lastContext, setLastContext] = useState<ConversationContext | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isListening,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    isPlaying,
+    speak,
+    cancel: cancelSpeech,
+  } = useVoiceAssistant({
+    onFinalTranscript: (spokenText) => {
+      setQuery(spokenText);
+      handleSendQuery(spokenText);
+    },
+  });
 
   useEffect(() => {
     if (expanded && inputRef.current) {
@@ -314,6 +330,40 @@ export function AICopilotCard({
                           style={{ borderTop: "1px solid var(--border-subtle)" }}
                         >
                           <GroundingBadge status={m.response.groundingStatus} />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isPlaying) {
+                                cancelSpeech();
+                              } else {
+                                speak(m.content);
+                              }
+                            }}
+                            title={isPlaying ? "Stop audio" : "Listen to briefing"}
+                            aria-label={isPlaying ? "Stop audio" : "Listen to briefing"}
+                            className="wg-badge flex items-center gap-1.5 hover:bg-white/10 transition-colors cursor-pointer"
+                            style={{
+                              background: isPlaying ? "hsla(192, 85%, 56%, 0.15)" : "var(--surface-3)",
+                              color: isPlaying ? "var(--accent)" : "var(--text-secondary)",
+                              border: isPlaying ? "1px solid var(--accent-border)" : "1px solid var(--border-subtle)",
+                            }}
+                          >
+                            {isPlaying ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                            <span className="text-[10px] font-medium">{isPlaying ? "Stop Audio" : "Listen"}</span>
+                          </button>
+                          {m.response.intent === "agriculture" && (m.response.crop || m.response.metadata?.crop) && (
+                            <span
+                              className="wg-badge flex items-center gap-1"
+                              style={{
+                                background: "hsla(140, 60%, 50%, 0.1)",
+                                color: "var(--status-success)",
+                                border: "1px solid hsla(140, 60%, 50%, 0.2)",
+                              }}
+                            >
+                              <Sprout size={11} />
+                              <span>Crop: {(m.response.crop || m.response.metadata?.crop || "").charAt(0).toUpperCase() + (m.response.crop || m.response.metadata?.crop || "").slice(1)}</span>
+                            </span>
+                          )}
                           {m.response.metadata?.isFallback && (
                             <span
                               className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
@@ -426,11 +476,11 @@ export function AICopilotCard({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={loading}
-              placeholder="Ask Copilot..."
-              className="w-full rounded-[20px] py-4 pl-5 pr-14 text-[14px] font-medium focus:outline-none disabled:opacity-50"
+              placeholder={isListening ? "Listening... speak now" : "Ask Copilot or use voice..."}
+              className="w-full rounded-[20px] py-4 pl-5 pr-24 text-[14px] font-medium focus:outline-none disabled:opacity-50"
               style={{
                 background: "var(--surface-2)",
-                border: "1px solid var(--border-default)",
+                border: isListening ? "1px solid var(--accent)" : "1px solid var(--border-default)",
                 color: "var(--text-primary)",
                 transition: "all var(--transition-fast)",
               }}
@@ -443,6 +493,28 @@ export function AICopilotCard({
                 e.currentTarget.style.boxShadow = "none";
               }}
             />
+            {isSpeechSupported && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isListening) {
+                    stopListening();
+                  } else {
+                    startListening();
+                  }
+                }}
+                disabled={loading}
+                aria-label={isListening ? "Stop listening" : "Speak query"}
+                title={isListening ? "Listening... click to stop" : "Speak to WeatherGPT"}
+                className={`absolute right-12 top-1/2 -translate-y-1/2 p-2.5 rounded-xl transition-all cursor-pointer ${
+                  isListening
+                    ? "bg-red-500/20 text-red-400 animate-pulse border border-red-500/40"
+                    : "text-[var(--text-tertiary)] hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            )}
             <button
               type="submit"
               disabled={!query.trim() || loading}

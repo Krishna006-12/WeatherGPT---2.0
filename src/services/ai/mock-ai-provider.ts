@@ -8,6 +8,7 @@ import { AppError } from "@/lib/errors";
 export interface MockAIProviderOptions {
   customResponse?: string;
   simulateError?: "timeout" | "rate_limit" | "malformed" | "unavailable";
+  customError?: Error;
   responseGenerator?: (prompt: string) => string;
 }
 
@@ -23,11 +24,52 @@ export class MockAIProvider implements AIProvider {
     this.options = options;
   }
 
+  setResponse(response: string): void {
+    this.options = {
+      ...this.options,
+      customResponse: response,
+      simulateError: undefined,
+      customError: undefined,
+    };
+  }
+
+  setFailure(error?: Error | "unavailable"): void {
+    if (error instanceof AppError) {
+      this.options = {
+        ...this.options,
+        customError: error,
+        simulateError: undefined,
+        customResponse: undefined,
+      };
+    } else if (error instanceof Error) {
+      this.options = {
+        ...this.options,
+        customError: new AppError(
+          "AI_PROVIDER_UNAVAILABLE",
+          error.message || "AI service temporarily unavailable",
+          502
+        ),
+        simulateError: undefined,
+        customResponse: undefined,
+      };
+    } else {
+      this.options = {
+        ...this.options,
+        simulateError: error ?? "unavailable",
+        customError: undefined,
+        customResponse: undefined,
+      };
+    }
+  }
+
   async generateCompletion(
     prompt: string,
     _systemInstruction?: string,
     _options?: AICompletionOptions
   ): Promise<string> {
+    if (this.options.customError) {
+      throw this.options.customError;
+    }
     if (this.options.simulateError === "timeout") {
       throw new AppError("AI_PROVIDER_UNAVAILABLE", "Gemini API request timed out", 504);
     }

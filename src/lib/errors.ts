@@ -12,6 +12,9 @@ export type AppErrorCode =
   | "AI_RESPONSE_INVALID"
   | "AI_RATE_LIMITED"
   | "RATE_LIMITED"
+  | "RISK_EVALUATION_FAILED"
+  | "ACTIVITY_ENGINE_ERROR"
+  | "NWP_UPSTREAM_ERROR"
   | "UNKNOWN_ERROR";
 
 export class AppError extends Error {
@@ -49,7 +52,10 @@ export class AppError extends Error {
       case "WEATHER_PROVIDER_UNAVAILABLE":
       case "FEED_SYNC_FAILED":
       case "AI_PROVIDER_UNAVAILABLE":
+      case "NWP_UPSTREAM_ERROR":
         return 502;
+      case "RISK_EVALUATION_FAILED":
+      case "ACTIVITY_ENGINE_ERROR":
       case "UNKNOWN_ERROR":
       default:
         return 500;

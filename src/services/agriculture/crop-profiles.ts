@@ -37,7 +37,7 @@ export const CROP_PROFILES: Record<CropType, CropProfile> = {
 
   rice: {
     crop: "rice",
-    displayName: "Rice (Paddy)",
+    displayName: "Rice",
     temperature: {
       heatStressThresholdC: 35.0, // Extreme temperatures above 35°C during hot afternoons cause spikelet sterility
       extremeHeatThresholdC: 38.0, // Severe heat stress threshold

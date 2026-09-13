@@ -55,6 +55,21 @@ export class SearchLocationTool implements WeatherIntelligenceTool<SearchLocatio
       return { success: true, data: [] };
     }
 
-    return this.locationService.search(parsed.data.query, parsed.data.count);
+    const locService = this.locationService as any;
+    let res: any;
+    if (typeof locService.search === "function") {
+      res = await locService.search(parsed.data.query, parsed.data.count);
+    } else if (typeof locService.searchLocations === "function") {
+      res = await locService.searchLocations(parsed.data.query, parsed.data.count);
+    } else if (typeof locService.resolveLocation === "function") {
+      const single = await locService.resolveLocation(parsed.data.query);
+      res = single?.data ? { success: true, data: [single.data] } : single;
+    } else {
+      res = { success: true, data: [] };
+    }
+    if (Array.isArray(res)) {
+      return { success: true, data: res };
+    }
+    return res;
   }
 }

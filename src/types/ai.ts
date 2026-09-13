@@ -9,6 +9,10 @@ import type { WeatherSnapshot } from "./weather";
 import type { ImpactAssessment } from "./impact";
 import type { AgricultureAssessment } from "./agriculture";
 import type { NewsArticle } from "./news";
+import type { RiskAssessment, WeatherRiskReport } from "./risk";
+import type { ModelConsensusReport } from "./nwp";
+import type { ActivitySuitabilityReport } from "./activity";
+import type { VoiceAssistantReport } from "./voice";
 
 /** Supported high-level user intents. */
 export type IntentCategory =
@@ -17,7 +21,9 @@ export type IntentCategory =
   | "weather_event"
   | "impact"
   | "agriculture"
-  | "general";
+  | "general"
+  | "consensus"
+  | "activity";
 
 /** Grounding verification status of an AI answer. */
 export type GroundingStatus =
@@ -43,6 +49,30 @@ export interface ConversationContext {
   lastEventTitle?: string;
 }
 
+/** Structured agricultural intelligence assessment and activity suitability result. */
+export type StructuredAgricultureData = AgricultureAssessment & {
+  period?: string;
+  factors?: {
+    precipitationProbability: number;
+    rainfall: number;
+    temperature: { current?: number; max: number; min: number };
+    humidity: number;
+    wind: { current?: number; max: number };
+    thunderstormRisk: boolean;
+    condition: string;
+  };
+  activitySuitability?: {
+    irrigation: { status: string; advisory: string; reason: string };
+    spraying: { status: string; advisory: string; reason: string };
+    sowing: { status: string; advisory: string; reason: string };
+    harvesting: { status: string; advisory: string; reason: string };
+    outdoor_field_work: { status: string; advisory: string; reason: string };
+  };
+  recommendation?: string;
+  reason?: string;
+  confidence?: string;
+};
+
 /**
  * Validated AI response contract.
  * Every response returned to clients must adhere to this structure.
@@ -56,6 +86,12 @@ export interface AIResponse {
   generatedAt: ISOTimestamp;
   model?: string;
   uncertainty?: string;
+  crop?: string;
+  agriculture?: StructuredAgricultureData;
+  riskReport?: WeatherRiskReport;
+  modelConsensus?: ModelConsensusReport;
+  activitySuitability?: ActivitySuitabilityReport;
+  voice?: VoiceAssistantReport;
   metadata?: {
     locationName?: string;
     selectedLocationName?: string;
@@ -67,6 +103,12 @@ export interface AIResponse {
     isFallback?: boolean;
     fallbackReason?: string;
     conversationContext?: ConversationContext;
+    crop?: string;
+    agriculture?: StructuredAgricultureData;
+    riskReport?: WeatherRiskReport;
+    modelConsensus?: ModelConsensusReport;
+    activitySuitability?: ActivitySuitabilityReport;
+    voice?: VoiceAssistantReport;
   };
 }
 
@@ -91,7 +133,11 @@ export interface GroundedContext {
     primaryHazard?: string;
     recommendation: string;
     advisory: string;
+    assessments?: RiskAssessment[];
   };
+  modelConsensus?: ModelConsensusReport;
+  activitySuitability?: ActivitySuitabilityReport;
+  isVoiceQuery?: boolean;
   untrustedSourceDelimiters: string;
   builtAt: ISOTimestamp;
 }

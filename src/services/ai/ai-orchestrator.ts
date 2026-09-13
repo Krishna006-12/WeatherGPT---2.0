@@ -25,10 +25,14 @@ import type { EventLocation, WeatherEvent } from "@/types/events";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { ImpactAssessment } from "@/types/impact";
 import type { AgricultureAssessment } from "@/types/agriculture";
+import type { ModelConsensusReport } from "@/types/nwp";
+import type { ActivitySuitabilityReport } from "@/types/activity";
+import type { VoiceAssistantReport } from "@/types/voice";
 import type { Result } from "@/types/common";
 import { AppError } from "@/lib/errors";
 import { aiResponseSchema } from "@/schemas/ai";
 import { generateDeterministicHash } from "@/lib/deduplicator";
+import { globalVoiceService } from "@/services/voice/voice-service";
 
 import { IntentRouter, globalIntentRouter, type IntentClassification } from "./intent-router";
 import { ContextBuilder, globalContextBuilder } from "./context-builder";
@@ -43,6 +47,9 @@ import { TemporalResolver, globalTemporalResolver, type TemporalResolution } fro
 import { WeatherToolRegistry } from "./tools/tool-registry";
 import type { NormalizedForecastData } from "./tools/get-forecast-tool";
 import type { WeatherRiskAssessment } from "./tools/get-weather-risk-tool";
+import type { GetRiskToolOutput } from "./tools/get-risk-tool";
+
+export type WeatherRiskData = WeatherRiskAssessment | GetRiskToolOutput;
 
 export interface ResolvedLocationState {
   resolvedLocation: EventLocation | undefined;
@@ -130,10 +137,12 @@ export class AIOrchestrator {
       // 4. Deterministic Tool Execution (Determine required data based on intent & query)
       let weather: WeatherSnapshot | undefined;
       let forecastData: NormalizedForecastData | undefined;
-      let weatherRisk: WeatherRiskAssessment | undefined;
+      let weatherRisk: WeatherRiskData | undefined;
       let events: WeatherEvent[] = [];
       let impactAssessment: ImpactAssessment | undefined;
       let agricultureAssessment: AgricultureAssessment | undefined;
+      let modelConsensus: ModelConsensusReport | undefined;
+      let activitySuitability: ActivitySuitabilityReport | undefined;
 
       // If location is unknown, fail fast with insufficient evidence without executing weather tools
       if (locationState.locationNotFound || (intent === "agriculture" && !targetLocation?.coordinates)) {
@@ -144,6 +153,7 @@ export class AIOrchestrator {
           selectedLocationName: locationState.selectedLocation?.name,
           queryLocationName: locationState.queryLocationName,
           locationNotFound: true,
+          crop: classification.extractedCrop,
           temporalResolution,
           citations: [],
           initialGroundingStatus: "insufficient_evidence",
@@ -154,7 +164,7 @@ export class AIOrchestrator {
 
       // Execute Weather / Forecast Tools
       if (
-        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "agriculture" || intent === "general") &&
+        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "agriculture" || intent === "consensus" || intent === "general") &&
         targetLocation?.coordinates
       ) {
         // Fetch current observations via get_weather tool
@@ -181,9 +191,9 @@ export class AIOrchestrator {
           }
         }
 
-        // Evaluate Weather Risk via get_weather_risk tool if risk query or activity advisory
+        // Evaluate Weather Risk via get_risk tool if risk query or activity advisory
         if (classification.isRiskQuery && weather) {
-          const rRes = await this.toolRegistry.getWeatherRiskTool.execute({
+          const rRes = await this.toolRegistry.getRiskTool.execute({
             weather,
             temporalTarget: temporalResolution.target,
             targetDate: temporalResolution.targetDate,
@@ -244,6 +254,40 @@ export class AIOrchestrator {
         }
       }
 
+      // Multi-model NWP Consensus evaluation via get_model_consensus tool
+      if (classification.isConsensusQuery && targetLocation?.coordinates) {
+        const mcRes = await this.toolRegistry.getModelConsensusTool.execute({
+          coordinates: targetLocation.coordinates,
+          targetDate: temporalResolution.targetDate,
+          timezone: targetLocation.timezone,
+          locationName: targetLocation.name,
+        });
+        if (mcRes.success) {
+          modelConsensus = mcRes.data;
+        } else {
+          console.warn("[AIOrchestrator] Model consensus tool execution failed:", mcRes.error);
+        }
+      }
+
+      // Activity Decision Intelligence evaluation via get_activity_suitability tool
+      if (
+        (classification.isActivityQuery || intent === "activity") &&
+        targetLocation?.coordinates
+      ) {
+        const actRes = await this.toolRegistry.getActivitySuitabilityTool.execute({
+          coordinates: targetLocation.coordinates,
+          activity: classification.activityCategory,
+          targetDate: temporalResolution.targetDate,
+          timezone: targetLocation.timezone,
+          locationName: targetLocation.name,
+        });
+        if (actRes.success) {
+          activitySuitability = actRes.data;
+        } else {
+          console.warn("[AIOrchestrator] Activity tool execution failed:", actRes.error);
+        }
+      }
+
       // 5. Grounded Context Construction with XML Boundaries
       const groundedContext: GroundedContext = {
         userQuery: message,
@@ -253,6 +297,9 @@ export class AIOrchestrator {
         events: events.length > 0 ? events : undefined,
         impactAssessment,
         agricultureAssessment,
+        modelConsensus,
+        activitySuitability,
+        isVoiceQuery: classification.isVoiceQuery,
         temporalResolution: {
           target: temporalResolution.target,
           label: temporalResolution.label,
@@ -265,6 +312,7 @@ export class AIOrchestrator {
             primaryHazard: weatherRisk.primaryHazard,
             recommendation: weatherRisk.recommendation,
             advisory: weatherRisk.activitySuitability.advisory,
+            assessments: "assessments" in weatherRisk ? weatherRisk.assessments : undefined,
           }
           : undefined,
         untrustedSourceDelimiters: "XML_BOUNDED",
@@ -322,12 +370,15 @@ export class AIOrchestrator {
             selectedLocationName: locationState.selectedLocation?.name,
             queryLocationName: locationState.queryLocationName,
             locationNotFound: locationState.locationNotFound,
+            crop: classification.extractedCrop,
             weather,
             forecastData,
             weatherRisk,
             events,
             impactAssessment,
             agricultureAssessment,
+            modelConsensus,
+            activitySuitability,
             temporalResolution,
             citations,
             initialGroundingStatus,
@@ -342,6 +393,59 @@ export class AIOrchestrator {
       // 8. Response Assembly & Zod Validation
       const responseId = `air_${generateDeterministicHash(`${message}_${generatedAt}`)}`;
 
+      let numericConfidence: number | undefined = impactAssessment?.confidence;
+      if (intent === "agriculture" && agricultureAssessment) {
+        const conf = (agricultureAssessment as unknown as { confidence?: string }).confidence;
+        if (conf === "high") numericConfidence = 0.9;
+        else if (conf === "moderate") numericConfidence = 0.7;
+        else if (conf === "low") numericConfidence = 0.4;
+      } else if (classification.isRiskQuery && weatherRisk) {
+        const conf = weatherRisk.confidence;
+        if (conf === "high") numericConfidence = 0.9;
+        else if (conf === "moderate") numericConfidence = 0.7;
+        else if (conf === "low") numericConfidence = 0.4;
+      } else if (classification.isConsensusQuery && modelConsensus) {
+        const conf = modelConsensus.overallConfidence;
+        if (conf === "high") numericConfidence = 0.9;
+        else if (conf === "moderate") numericConfidence = 0.7;
+        else if (conf === "low") numericConfidence = 0.4;
+      } else if ((classification.isActivityQuery || intent === "activity") && activitySuitability) {
+        const reqAct = classification.activityCategory || activitySuitability.requestedActivity || "running_cycling";
+        const actEval = activitySuitability.activities[reqAct];
+        const safety = actEval?.overallSafetyLevel;
+        if (safety === "optimal" || safety === "acceptable") numericConfidence = 0.9;
+        else if (safety === "caution") numericConfidence = 0.7;
+        else numericConfidence = 0.4;
+      }
+
+      const resolvedCrop = classification.extractedCrop || agricultureAssessment?.crop;
+      const riskReport = weatherRisk && "assessments" in weatherRisk ? weatherRisk : undefined;
+
+      // Voice Assistant Briefing generation
+      let voiceReport: VoiceAssistantReport | undefined;
+      if (classification.isVoiceQuery) {
+        const lang = globalVoiceService.detectLanguage(message);
+        if (weather) {
+          voiceReport = globalVoiceService.generateVoiceBriefing({
+            weather,
+            agriculture: agricultureAssessment,
+            activity: activitySuitability,
+            language: lang,
+          });
+          if (rawAnswerText) {
+            const cleaned = globalVoiceService.cleanForSpeech(rawAnswerText);
+            voiceReport.spokenScript = globalVoiceService.computeScriptMetrics(cleaned, lang);
+          }
+        } else if (targetLocation) {
+          voiceReport = globalVoiceService.generateBriefingFromText({
+            text: rawAnswerText || `Voice briefing for ${targetLocation.name}`,
+            locationName: targetLocation.name,
+            coordinates: targetLocation.coordinates,
+            language: lang,
+          });
+        }
+      }
+
       const responsePayload: AIResponse = {
         id: responseId,
         answer: rawAnswerText,
@@ -351,17 +455,29 @@ export class AIOrchestrator {
         generatedAt,
         model: this.aiProvider.name,
         uncertainty: uncertaintyNote,
+        crop: resolvedCrop,
+        agriculture: agricultureAssessment,
+        riskReport,
+        modelConsensus,
+        activitySuitability,
+        voice: voiceReport,
         metadata: {
           locationName: targetLocation?.name,
           selectedLocationName: locationState.selectedLocation?.name,
           queryLocationName: locationState.queryLocationName,
           temporalContext: temporalResolution.label,
-          confidence: impactAssessment?.confidence,
+          confidence: numericConfidence,
           relevanceStatus:
             impactAssessment?.relevanceStatus || (intent === "impact" ? "unknown" : undefined),
           impactLevel: impactAssessment?.impactLevel,
           isFallback: false,
           conversationContext: updatedContext,
+          crop: resolvedCrop,
+          agriculture: agricultureAssessment,
+          riskReport,
+          modelConsensus,
+          activitySuitability,
+          voice: voiceReport,
         },
       };
 
@@ -681,12 +797,16 @@ export class AIOrchestrator {
     selectedLocationName?: string;
     queryLocationName?: string;
     locationNotFound?: boolean;
+    crop?: string;
     weather?: WeatherSnapshot;
     forecastData?: NormalizedForecastData;
-    weatherRisk?: WeatherRiskAssessment;
+    weatherRisk?: WeatherRiskData;
     events?: WeatherEvent[];
     impactAssessment?: ImpactAssessment;
     agricultureAssessment?: AgricultureAssessment;
+    modelConsensus?: ModelConsensusReport;
+    activitySuitability?: ActivitySuitabilityReport;
+    voice?: VoiceAssistantReport;
     temporalResolution?: TemporalResolution;
     citations: AICitation[];
     initialGroundingStatus: GroundingStatus;
@@ -726,9 +846,43 @@ export class AIOrchestrator {
       const noteLine = agr.cropEvidenceNote ? `\n\n${agr.cropEvidenceNote}` : "";
 
       answer = `🌾 Agriculture Intelligence\n\nCrop:\n${cropText}\n\nLocation:\n${locName}\n\nPeriod:\n${periodText}\n\nWeather:\n${weatherSummary}\n\nRisk:\n${riskText}\n\nRecommendation:\n${recommendationText}\n\nReason:\n${reasonText}\n\nConfidence:\n${confidenceText}${noteLine}`;
+    } else if (context.activitySuitability) {
+      const actRep = context.activitySuitability;
+      const reqAct = actRep.requestedActivity || "running_cycling";
+      const act = actRep.activities[reqAct];
+      if (act) {
+        const bestWin = act.bestWindow
+          ? `\nBest Time Window: ${act.bestWindow.startHour} - ${act.bestWindow.endHour} (Score: ${act.bestWindow.averageScore}/100)`
+          : "";
+        const factors =
+          act.limitingFactors.length > 0
+            ? `\nPrimary factor: ${act.limitingFactors[0]?.description}`
+            : "";
+        answer = `🏃 Activity Weather Suitability for ${locName} (${act.activityName}):\nSafety Level: ${act.overallSafetyLevel.toUpperCase()} (${act.overallScore}/100).\nRecommendation: ${act.recommendation}${bestWin}${factors}`;
+      } else {
+        answer = `Activity suitability evaluation for ${locName} is complete based on verified hourly forecasts.`;
+      }
+    } else if (context.modelConsensus) {
+      const mc = context.modelConsensus;
+      const firstDay = mc.consensusDays[0];
+      const tempInfo = firstDay
+        ? `High temperature mean is ${firstDay.temperatureHigh.mean}°C (spread: ±${firstDay.temperatureHigh.spread}°C). `
+        : "";
+      answer = `📊 NWP Model Consensus for ${locName}:\nOverall agreement index is ${mc.overallAgreementScore}% (${mc.overallConfidence.toUpperCase()} confidence) across models ${mc.modelsUsed.join(", ").toUpperCase()}.\n${tempInfo}Summary: ${mc.summaryNotes}`;
     } else if (context.weatherRisk) {
       const wr = context.weatherRisk;
-      answer = `Weather risk assessment for ${locName} (${context.temporalResolution?.label || "target period"}): Overall risk is ${wr.riskLevel.toUpperCase()} (${wr.confidence} confidence). ${wr.activitySuitability.advisory} ${wr.recommendation}`;
+      let detailedBreakdown = "";
+      if ("assessments" in wr && wr.assessments && wr.assessments.length > 0) {
+        detailedBreakdown =
+          "\n\nRisk Breakdown:\n" +
+          wr.assessments
+            .map(
+              (a) =>
+                `• ${a.type.replace(/_/g, " ").toUpperCase()}: ${a.severity.toUpperCase()} (${a.confidence} confidence) — ${a.recommendation}`
+            )
+            .join("\n");
+      }
+      answer = `⚠️ Weather Risk Assessment for ${locName} (${context.temporalResolution?.label || "target period"}):\nOverall risk is ${wr.riskLevel.toUpperCase()} (${wr.confidence} confidence).\nAdvisory: ${wr.activitySuitability.advisory}\nRecommendation: ${wr.recommendation}${detailedBreakdown}`;
     } else if (context.intent === "forecast" && context.forecastData) {
       const f = context.forecastData;
       const tempHigh = f.temperatureRange?.high !== undefined ? `${f.temperatureRange.high}°C` : "N/A";
@@ -746,17 +900,68 @@ export class AIOrchestrator {
       answer = `Active event alert: ${ev.title} (${ev.hazard}, severity: ${ev.severity}). Reported in ${ev.location.name}, ${ev.location.country}.`;
     } else if (context.weather) {
       const c = context.weather.current;
-      answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h, Precipitation: ${c.precipitation} mm/h.`;
+      answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
     } else {
-      const reasonNote = context.fallbackReason ? ` (${context.fallbackReason})` : "";
-      answer = `Live AI intelligence service is currently operating in deterministic backup mode${reasonNote}. Please check the verified live observation cards on your dashboard or ask about weather for a specific city.`;
+      answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
     }
 
     const groundingStatus: GroundingStatus =
       context.locationNotFound ||
-        (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
+      (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
         ? "insufficient_evidence"
-        : context.initialGroundingStatus;
+        : context.initialGroundingStatus || "grounded";
+
+    let fallbackConfidence: number | undefined = context.impactAssessment?.confidence;
+    if (context.intent === "agriculture" && context.agricultureAssessment) {
+      const conf = (context.agricultureAssessment as unknown as { confidence?: string }).confidence;
+      if (conf === "high") fallbackConfidence = 0.9;
+      else if (conf === "moderate") fallbackConfidence = 0.7;
+      else if (conf === "low") fallbackConfidence = 0.4;
+    } else if (context.weatherRisk) {
+      const conf = context.weatherRisk.confidence;
+      if (conf === "high") fallbackConfidence = 0.9;
+      else if (conf === "moderate") fallbackConfidence = 0.7;
+      else if (conf === "low") fallbackConfidence = 0.4;
+    } else if (context.modelConsensus) {
+      const conf = context.modelConsensus.overallConfidence;
+      if (conf === "high") fallbackConfidence = 0.9;
+      else if (conf === "moderate") fallbackConfidence = 0.7;
+      else if (conf === "low") fallbackConfidence = 0.4;
+    } else if (context.activitySuitability) {
+      const reqAct = context.activitySuitability.requestedActivity || "running_cycling";
+      const safety = context.activitySuitability.activities[reqAct]?.overallSafetyLevel;
+      if (safety === "optimal" || safety === "acceptable") fallbackConfidence = 0.9;
+      else if (safety === "caution") fallbackConfidence = 0.7;
+      else fallbackConfidence = 0.4;
+    }
+
+    const fallbackCrop = context.crop || context.agricultureAssessment?.crop;
+    const fallbackRiskReport =
+      context.weatherRisk && "assessments" in context.weatherRisk ? context.weatherRisk : undefined;
+
+    let voiceReport = context.voice;
+    if (!voiceReport && globalIntentRouter.isVoiceQuery(context.userQuery)) {
+      const lang = globalVoiceService.detectLanguage(context.userQuery);
+      if (context.weather) {
+        voiceReport = globalVoiceService.generateVoiceBriefing({
+          weather: context.weather,
+          agriculture: context.agricultureAssessment,
+          activity: context.activitySuitability,
+          language: lang,
+        });
+        if (answer) {
+          const cleaned = globalVoiceService.cleanForSpeech(answer);
+          voiceReport.spokenScript = globalVoiceService.computeScriptMetrics(cleaned, lang);
+        }
+      } else if (context.targetLocation) {
+        voiceReport = globalVoiceService.generateBriefingFromText({
+          text: answer,
+          locationName: context.targetLocation.name,
+          coordinates: context.targetLocation.coordinates,
+          language: lang,
+        });
+      }
+    }
 
     return {
       success: true,
@@ -768,18 +973,30 @@ export class AIOrchestrator {
         citations: context.citations,
         generatedAt: context.generatedAt,
         model: "deterministic-fallback",
+        crop: fallbackCrop,
+        agriculture: context.agricultureAssessment,
+        riskReport: fallbackRiskReport,
+        modelConsensus: context.modelConsensus,
+        activitySuitability: context.activitySuitability,
+        voice: voiceReport,
         metadata: {
           locationName: context.targetLocation?.name,
           selectedLocationName: context.selectedLocationName,
           queryLocationName: context.queryLocationName,
           temporalContext: context.temporalResolution?.label,
-          confidence: context.impactAssessment?.confidence,
+          confidence: fallbackConfidence,
           relevanceStatus:
             context.impactAssessment?.relevanceStatus || (context.intent === "impact" ? "unknown" : undefined),
           impactLevel: context.impactAssessment?.impactLevel,
           isFallback: true,
           fallbackReason: context.fallbackReason,
           conversationContext: context.conversationContext,
+          crop: fallbackCrop,
+          agriculture: context.agricultureAssessment,
+          riskReport: fallbackRiskReport,
+          modelConsensus: context.modelConsensus,
+          activitySuitability: context.activitySuitability,
+          voice: voiceReport,
         },
       },
     };

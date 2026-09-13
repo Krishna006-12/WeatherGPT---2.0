@@ -21,8 +21,15 @@ import { GetForecastTool } from "./get-forecast-tool";
 import { GetLiveEventsTool } from "./get-live-events-tool";
 import { GetEventImpactTool } from "./get-event-impact-tool";
 import { GetWeatherRiskTool } from "./get-weather-risk-tool";
+import { GetRiskTool } from "./get-risk-tool";
 import { GetAgricultureRiskTool } from "./get-agriculture-risk-tool";
+import { GetModelConsensusTool } from "./get-model-consensus-tool";
+import { GetActivitySuitabilityTool } from "./get-activity-suitability-tool";
+import { GetVoiceBriefingTool } from "./get-voice-briefing-tool";
 import type { AgricultureService } from "@/services/agriculture/agriculture-service";
+import type { NwpService } from "@/services/nwp/nwp-service";
+import type { ActivityService } from "@/services/activity/activity-service";
+import type { VoiceService } from "@/services/voice/voice-service";
 
 export interface WeatherToolRegistryServices {
   locationService: LocationService;
@@ -30,6 +37,9 @@ export interface WeatherToolRegistryServices {
   eventRepository: EventRepository;
   impactEngine: ImpactEngine;
   agricultureService?: AgricultureService;
+  nwpService?: NwpService;
+  activityService?: ActivityService;
+  voiceService?: VoiceService;
 }
 
 export class WeatherToolRegistry {
@@ -39,7 +49,11 @@ export class WeatherToolRegistry {
   readonly getLiveEventsTool: GetLiveEventsTool;
   readonly getEventImpactTool: GetEventImpactTool;
   readonly getWeatherRiskTool: GetWeatherRiskTool;
+  readonly getRiskTool: GetRiskTool;
   readonly getAgricultureRiskTool: GetAgricultureRiskTool;
+  readonly getModelConsensusTool: GetModelConsensusTool;
+  readonly getActivitySuitabilityTool: GetActivitySuitabilityTool;
+  readonly getVoiceBriefingTool: GetVoiceBriefingTool;
 
   constructor(services: WeatherToolRegistryServices) {
     this.searchLocationTool = new SearchLocationTool(services.locationService);
@@ -48,8 +62,19 @@ export class WeatherToolRegistry {
     this.getLiveEventsTool = new GetLiveEventsTool(services.eventRepository);
     this.getEventImpactTool = new GetEventImpactTool(services.impactEngine);
     this.getWeatherRiskTool = new GetWeatherRiskTool();
+    this.getRiskTool = new GetRiskTool({ eventRepository: services.eventRepository });
     this.getAgricultureRiskTool = new GetAgricultureRiskTool({
       locationService: services.locationService,
+      weatherService: services.weatherService,
+    });
+    this.getModelConsensusTool = new GetModelConsensusTool({
+      nwpService: services.nwpService,
+    });
+    this.getActivitySuitabilityTool = new GetActivitySuitabilityTool({
+      activityService: services.activityService,
+    });
+    this.getVoiceBriefingTool = new GetVoiceBriefingTool({
+      voiceService: services.voiceService,
       weatherService: services.weatherService,
     });
   }

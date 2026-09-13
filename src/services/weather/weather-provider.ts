@@ -9,7 +9,7 @@
  * Flow: Provider API → Adapter (implements WeatherProvider) → WeatherSnapshot
  */
 
-import type { Coordinates } from '@/types/common';
+import type { Coordinates, Result } from '@/types/common';
 import type { WeatherSnapshot } from '@/types/weather';
 
 /**
@@ -23,7 +23,7 @@ export interface WeatherProviderConfig {
 
 /**
  * The adapter contract that every weather provider must implement.
- * Returns raw data in the normalized WeatherSnapshot shape.
+ * Returns raw data in the normalized WeatherSnapshot shape (or wrapped in a Result).
  * The WeatherService validates this output through Zod before
  * passing it to the rest of the application.
  */
@@ -39,5 +39,5 @@ export interface WeatherProvider {
   getWeather(
     coordinates: Coordinates,
     timezone?: string
-  ): Promise<WeatherSnapshot>;
+  ): Promise<WeatherSnapshot | Result<WeatherSnapshot>>;
 }

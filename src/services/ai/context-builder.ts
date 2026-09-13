@@ -61,7 +61,34 @@ CRITICAL INSTRUCTIONS & GROUNDING RULES:
    - PROHIBITED CLAIMS: NEVER generate unsupported claims such as "Your wheat will definitely be damaged" or claims of guaranteed crop damage or disease infection.
    - ZERO FABRICATION: NEVER invent soil moisture, soil temperature, crop stage, yield forecasts, fertilizer amounts, or commercial pesticide brands.
    - INSUFFICIENT CROP EVIDENCE: If no reliable crop-specific rule exists or no crop was explicitly provided, state: "Crop-specific evidence is insufficient; recommendation is based on verified weather conditions."
-   - Base all advisories strictly on <verified_agriculture_assessment> and <verified_weather_data>.`;
+   - Base all advisories strictly on <verified_agriculture_assessment> and <verified_weather_data>.
+10. UNIFIED WEATHER RISK CENTER GROUNDING & INTERPRETATION:
+    - When answering risk queries (e.g. outdoor work safety, travel safety, heavy rain, thunderstorms, wind, heat, UV, flood):
+      - Base your evaluation STRICTLY on the <verified_risk_center> data.
+      - NEVER invent, calculate, or speculate on risk levels or numerical weather variables.
+      - Distinguish clearly between:
+        * "unavailable": variable is not provided by authoritative weather provider (e.g. UV).
+        * "no_evidence": e.g. no active flood bulletins in verified event records, which does NOT mean flooding is impossible.
+      - State the deterministic severity (Low, Moderate, High, Extreme, No evidence, Unavailable), explain the verified evidence metrics, time window, and the recommendation.
+11. NWP MULTI-MODEL CONSENSUS & FORECAST CONFIDENCE:
+    - When answering questions about forecast confidence, model consensus, or comparing models (ECMWF, GFS, ICON):
+      - Base your evaluation STRICTLY on the <verified_model_consensus> section.
+      - Quote verified consensus metrics: overall agreement score, consensus confidence level (High, Moderate, Low), and temperature/rain spreads.
+      - If models diverge on precipitation or high temperature, explicitly explain the divergence (e.g., which model predicts higher or lower).
+      - NEVER invent model names, fake spread numbers, or claim 100% agreement when models diverge.
+12. ACTIVITY SUITABILITY & DECISION INTELLIGENCE GROUNDING:
+    - When answering queries about activity suitability (commute, highway road travel, outdoor work, school sports, running/cycling, outdoor events):
+      - Base your evaluation STRICTLY on the <verified_activity_suitability> section.
+      - Quote the deterministic safety level (Optimal, Acceptable, Caution, Unsafe) and suitability score (0–100).
+      - Always highlight the recommended Best Time Window (e.g. 06:00 - 09:00) and any primary Limiting Factors (rain risk, heat index, high wind, poor visibility).
+      - NEVER invent safe windows or contradict the deterministic safety rating calculated by the Activity Engine.
+13. VOICE ASSISTANT & SPOKEN BRIEFINGS:
+    - When answering voice queries or requests for audio/spoken briefings:
+      - Formulate your response in clean, fluent, conversational natural language optimized for speech synthesis.
+      - Do NOT use markdown tables, ascii art, complex bullet nesting, or repetitive bracketed codes.
+      - Pronounce meteorological concepts naturally (e.g., say "24 degrees Celsius" rather than "24°C", "15 kilometers per hour" rather than "15 km/h").
+      - Provide a structured spoken narrative: Current conditions -> Forecast highlights -> Risk or activity advisory -> Closing recommendation.
+      - Keep sentences concise, clear, and easy to follow when heard aloud.`;
 
 export class ContextBuilder {
   /**
@@ -163,12 +190,32 @@ export class ContextBuilder {
       );
     }
 
-    // --- 6. Verified Weather Risk Assessment ---
+    // --- 6. Verified Weather Risk Assessment & Unified Risk Center ---
     if (context.weatherRisk) {
       const wr = context.weatherRisk;
+      const riskSnippets: string[] = [];
+
+      if (wr.assessments && wr.assessments.length > 0) {
+        for (const a of wr.assessments) {
+          const evidenceStr =
+            a.evidence.length > 0
+              ? a.evidence.map((e) => `  - [${e.metric}]: ${e.value}${e.unit ? ` ${e.unit}` : ""} (${e.source})`).join("\n")
+              : "  - (No matching hazard evidence detected)";
+          riskSnippets.push(
+            `<risk_category type="${a.type}" severity="${a.severity}" confidence="${a.confidence}" status="${a.status}">\nSeverity: ${a.severity.toUpperCase()}\nConfidence: ${a.confidence}\nStatus: ${a.status}\nTime Window: ${a.timeWindow}\nEvidence:\n${evidenceStr}\nReason: ${a.reason || "Evaluated from verified metrics."}\nRecommendation: ${a.recommendation}\n</risk_category>`
+          );
+        }
+      }
+
       contextSections.push(
-        `<verified_weather_risk riskLevel="${wr.riskLevel}" confidence="${wr.confidence}">\nOverall Risk Level: ${wr.riskLevel.toUpperCase()}\nConfidence: ${wr.confidence}\nPrimary Hazard: ${wr.primaryHazard || "None"}\nActivity Advisory: ${wr.advisory}\nRecommendation: ${wr.recommendation}\n</verified_weather_risk>`
+        `<verified_risk_center overallSeverity="${wr.riskLevel}" confidence="${wr.confidence}">\nOverall Severity: ${wr.riskLevel.toUpperCase()}\nConfidence: ${wr.confidence}\nPrimary Hazard: ${wr.primaryHazard || "None"}\nActivity Advisory: ${wr.advisory}\nOverall Recommendation: ${wr.recommendation}\n${riskSnippets.join("\n")}\n</verified_risk_center>`
       );
+
+      citations.push({
+        title: `Verified Weather Risk Assessment for ${context.targetLocation?.name || "Target Location"}`,
+        source: "Open-Meteo & Live Intelligence",
+        publishedAt: context.builtAt,
+      });
     }
 
     // --- 7. Verified Agriculture Assessment ---
@@ -217,7 +264,83 @@ export class ContextBuilder {
       }
     }
 
-    // --- 8. Untrusted Source Materials (Sanitized with Strict Delimiters) ---
+    // --- 8. Verified NWP Model Consensus ---
+    if (context.modelConsensus) {
+      const mc = context.modelConsensus;
+      const modelsStr = mc.modelsUsed.join(", ").toUpperCase();
+      const daySnippets = mc.consensusDays.slice(0, 3).map((d) => {
+        const tempSpread = d.temperatureHigh.spread;
+        const precipSpread = d.precipitationSum.spread;
+        const outliers = d.divergentModels.map((o) => `  - ${o.explanation}`).join("\n");
+        return `<day_consensus date="${d.date}" confidence="${d.confidence}" agreement="${d.agreementScore}%">
+Condition: ${d.consensusCondition} (${d.conditionAgreementPercent}% agreement)
+Temp High: Mean ${d.temperatureHigh.mean}°C (Spread: ±${tempSpread}°C, Min: ${d.temperatureHigh.min}°C, Max: ${d.temperatureHigh.max}°C, Agreement: ${d.temperatureHigh.agreementLevel})
+Precip Sum: Mean ${d.precipitationSum.mean}mm (Spread: ${precipSpread}mm, Agreement: ${d.precipitationSum.agreementLevel})
+Wind Speed: Mean ${d.windSpeedMax.mean} km/h (Spread: ${d.windSpeedMax.spread} km/h)
+${outliers ? `Model Divergence:\n${outliers}\n` : ""}</day_consensus>`;
+      });
+
+      contextSections.push(
+        `<verified_model_consensus models="${modelsStr}" agreementScore="${mc.overallAgreementScore}%" overallConfidence="${mc.overallConfidence}">
+Overall Confidence: ${mc.overallConfidence.toUpperCase()} (${mc.overallAgreementScore}% agreement index)
+Models Evaluated: ${modelsStr}
+Summary: ${mc.summaryNotes}
+Daily Breakdown:
+${daySnippets.join("\n")}
+</verified_model_consensus>`
+      );
+
+      citations.push({
+        title: `NWP Multi-Model Consensus (ECMWF, GFS, ICON) for ${mc.location.name}`,
+        source: "Open-Meteo Multi-Model NWP",
+        publishedAt: mc.evaluatedAt,
+      });
+    }
+
+    // --- 9. Verified Activity Decision Intelligence ---
+    if (context.activitySuitability) {
+      const actRep = context.activitySuitability;
+      const requested = actRep.requestedActivity;
+      const actsToRender = requested
+        ? [actRep.activities[requested]]
+        : Object.values(actRep.activities);
+
+      const actSnippets = actsToRender.filter(Boolean).map((a) => {
+        const bestWinStr = a.bestWindow
+          ? `${a.bestWindow.startHour} - ${a.bestWindow.endHour} (Score: ${a.bestWindow.averageScore}/100, ${a.bestWindow.safetyLevel})`
+          : "None identified";
+        const worstWinStr = a.worstWindow
+          ? `${a.worstWindow.startHour} - ${a.worstWindow.endHour} (Score: ${a.worstWindow.averageScore}/100, ${a.worstWindow.safetyLevel})`
+          : "None";
+        const factors = a.limitingFactors
+          .map((f) => `  - [${f.severity.toUpperCase()}] ${f.description}: ${f.impact}`)
+          .join("\n");
+
+        return `<activity_evaluation activity="${a.activity}" name="${a.activityName}" safety="${a.overallSafetyLevel}" score="${a.overallScore}/100">
+Safety Level: ${a.overallSafetyLevel.toUpperCase()} (Score: ${a.overallScore}/100)
+Recommendation: ${a.recommendation}
+Best Time Window: ${bestWinStr}
+Challenging Window: ${worstWinStr}
+${factors ? `Limiting Weather Factors:\n${factors}` : "Limiting Factors: None (optimal conditions)"}
+</activity_evaluation>`;
+      });
+
+      contextSections.push(
+        `<verified_activity_suitability location="${actRep.location.name}" targetDate="${actRep.targetDate}">
+Location: ${actRep.location.name}, ${actRep.location.country}
+Target Date: ${actRep.targetDate}
+${actSnippets.join("\n\n")}
+</verified_activity_suitability>`
+      );
+
+      citations.push({
+        title: `Activity Decision Intelligence for ${actRep.location.name}`,
+        source: "Open-Meteo Activity Engine",
+        publishedAt: actRep.generatedAt,
+      });
+    }
+
+    // --- 10. Untrusted Source Materials (Sanitized with Strict Delimiters) ---
     if (context.articles && context.articles.length > 0) {
       const articleSnippets = context.articles.slice(0, 3).map((art) => {
         // Strict prompt-injection sanitation
@@ -243,7 +366,14 @@ export class ContextBuilder {
       context.impactAssessment.evidence.some((e) => e.type === "downstream_unestablished" || e.type === "no_evidence_available")
     ) {
       initialGroundingStatus = "insufficient_evidence";
-    } else if (!context.weather && (!context.events || context.events.length === 0) && !context.weatherRisk && !context.agricultureAssessment) {
+    } else if (
+      !context.weather &&
+      (!context.events || context.events.length === 0) &&
+      !context.weatherRisk &&
+      !context.agricultureAssessment &&
+      !context.modelConsensus &&
+      !context.activitySuitability
+    ) {
       initialGroundingStatus = "insufficient_evidence";
     }
 
@@ -254,9 +384,13 @@ export class ContextBuilder {
         idx === self.findIndex((other) => other.source === c.source && other.title === c.title)
     );
 
+    const voiceGuidance = context.isVoiceQuery
+      ? `\nSpoken Format Instruction: The user requested a spoken voice briefing. Provide a clear, natural spoken response suitable for text-to-speech audio playback without markdown tables, ascii symbols, or repetitive bracketed tags.\n`
+      : "";
+
     // Build the user prompt
     const prompt = `User Query: "${sanitizeText(context.userQuery)}"
-Intent Detected: ${context.intent}
+Intent Detected: ${context.intent}${voiceGuidance}
 
 <verified_data>
 ${contextSections.join("\n\n")}

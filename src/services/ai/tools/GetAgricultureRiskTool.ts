@@ -106,6 +106,7 @@ export interface AgricultureIntelligenceFactors {
 }
 
 export interface AgricultureRiskToolOutput extends AgricultureAssessment {
+  period?: string;
   factors: AgricultureIntelligenceFactors;
   relevantWeatherRisk: {
     riskLevel: RiskLevel;
@@ -429,6 +430,7 @@ export class GetAgricultureRiskTool
         id,
         crop: crop && crop !== "generic" ? crop : undefined,
         cropDisplayName,
+        period: targetDate || temporalTarget || "today",
         location: {
           name: weather.location.name || resolvedLocationName,
           coordinates: resolvedCoords,

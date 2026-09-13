@@ -75,25 +75,24 @@ export class WeatherService {
 
       // Provider may return WeatherSnapshot directly or wrapped in a Result ({ success: true, data: snapshot })
       let candidate: unknown = rawResult;
-      if (rawResult && typeof rawResult === "object" && "success" in rawResult) {
-        const res = rawResult as Result<unknown>;
-        if (!res.success) {
+      if ("success" in rawResult) {
+        if (!rawResult.success) {
           return {
             success: false,
             error:
-              res.error instanceof AppError
-                ? res.error
+              rawResult.error instanceof AppError
+                ? rawResult.error
                 : new AppError(
                     "WEATHER_PROVIDER_UNAVAILABLE",
-                    res.error instanceof Error ? res.error.message : "Weather provider error",
+                    rawResult.error instanceof Error ? rawResult.error.message : "Weather provider error",
                     502
                   ),
           };
         }
-        candidate = res.data;
+        candidate = rawResult.data;
       } else if (
-        rawResult &&
         typeof rawResult === "object" &&
+        rawResult !== null &&
         "data" in rawResult &&
         !("current" in rawResult)
       ) {

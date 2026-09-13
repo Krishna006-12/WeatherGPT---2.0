@@ -3,6 +3,8 @@
  */
 
 import { z } from "zod";
+import { weatherRiskReportSchema } from "./risk";
+import { modelConsensusReportSchema } from "./nwp";
 
 export const intentCategorySchema = z.enum([
   "weather",
@@ -11,6 +13,8 @@ export const intentCategorySchema = z.enum([
   "impact",
   "agriculture",
   "general",
+  "consensus",
+  "activity",
 ]);
 
 export const groundingStatusSchema = z.enum([
@@ -60,6 +64,12 @@ export const aiResponseMetadataSchema = z.object({
   isFallback: z.boolean().optional(),
   fallbackReason: z.string().optional(),
   conversationContext: conversationContextSchema.optional(),
+  crop: z.string().optional(),
+  agriculture: z.record(z.string(), z.unknown()).optional(),
+  riskReport: weatherRiskReportSchema.optional(),
+  modelConsensus: modelConsensusReportSchema.optional(),
+  activitySuitability: z.record(z.string(), z.unknown()).optional(),
+  voice: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const aiResponseSchema = z.object({
@@ -71,6 +81,12 @@ export const aiResponseSchema = z.object({
   generatedAt: z.string().min(1),
   model: z.string().optional(),
   uncertainty: z.string().optional(),
+  crop: z.string().optional(),
+  agriculture: z.record(z.string(), z.unknown()).optional(),
+  riskReport: weatherRiskReportSchema.optional(),
+  modelConsensus: modelConsensusReportSchema.optional(),
+  activitySuitability: z.record(z.string(), z.unknown()).optional(),
+  voice: z.record(z.string(), z.unknown()).optional(),
   metadata: aiResponseMetadataSchema.optional(),
 });
 

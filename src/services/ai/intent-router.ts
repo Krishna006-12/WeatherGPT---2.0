@@ -12,9 +12,11 @@
 
 import type { IntentCategory } from "@/types/ai";
 import type { CropType, AgricultureActivityType } from "@/types/agriculture";
+import type { ActivityType } from "@/types/activity";
 
 export interface IntentClassification {
   intent: IntentCategory;
+  intents: IntentCategory[];
   confidence: number;
   extractedLocation?: string;
   extractedEventKeyword?: string;
@@ -23,8 +25,12 @@ export interface IntentClassification {
   extractedActivity?: AgricultureActivityType;
   isForecastQuery?: boolean;
   isRiskQuery?: boolean;
+  isConsensusQuery: boolean;
+  isActivityQuery: boolean;
+  activityCategory?: ActivityType;
   activityType?: "outdoor_work" | "travel" | "general";
   isFollowUp?: boolean;
+  isVoiceQuery?: boolean;
 }
 
 const TEMPORAL_WORDS = [
@@ -188,6 +194,21 @@ const STOP_WORDS = [
   "this location",
   "location",
   "locations",
+  "risk",
+  "risks",
+  "weather risk",
+  "hazard",
+  "hazards",
+  "voice",
+  "audio",
+  "briefing",
+  "spoken",
+  "speak",
+  "listen",
+  "read",
+  "sunao",
+  "bolkar",
+  "boliye",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -250,7 +271,15 @@ export class IntentRouter {
    */
   classify(query: string): IntentClassification {
     const clean = query.trim().toLowerCase();
+    const isVoice = this.isVoiceQuery(clean);
+    const result = this.classifyInternal(clean);
+    return {
+      ...result,
+      isVoiceQuery: isVoice,
+    };
+  }
 
+  private classifyInternal(clean: string): IntentClassification {
     // 1. Check for Agriculture Intent
     // "Is tomorrow safe to spray wheat in Kanpur?", "Can I irrigate my rice field?", "Will rain affect wheat harvesting?"
     if (this.isAgricultureQuery(clean)) {
@@ -265,12 +294,15 @@ export class IntentRouter {
 
       return {
         intent: "agriculture",
+        intents: ["agriculture"],
         confidence: 0.9,
         extractedLocation: location,
         extractedCrop, // Never assume a crop if the user did not provide one
         extractedActivity,
         isForecastQuery: isFuture,
         isRiskQuery: true,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
@@ -285,23 +317,113 @@ export class IntentRouter {
 
       return {
         intent: "impact",
+        intents: ["impact"],
         confidence: 0.9,
         extractedLocation: target,
         extractedEventKeyword: eventKeyword,
         targetImpactLocation: target,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
-    // 3. Check for General/Educational Queries (e.g. "What causes flash floods?", "How do cyclones form?")
+    // 3. Check for NWP Model Consensus / Forecast Confidence Intent
+    // "How confident is this forecast?", "Do models agree on rain?", "What is the ECMWF vs GFS consensus?"
+    if (this.isConsensusQuery(clean)) {
+      const cleanForLoc = clean.replace(
+        /\b(?:model|models|consensus|agreement|divergence|spread|ecmwf|gfs|icon|nwp|ensemble|accuracy|reliable|reliability|certainty|confident|confidence|agree|kar\s+rahe\s+hain|difference|kitna|kya|hai|vs)\b/gi,
+        " "
+      );
+      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
+
+      return {
+        intent: "consensus",
+        intents: ["consensus"],
+        confidence: 0.9,
+        extractedLocation: location,
+        isForecastQuery: isFuture,
+        isConsensusQuery: true,
+        isActivityQuery: false,
+      };
+    }
+
+    // 4. Check for Activity Suitability / Decision Intelligence Intent
+    // "Can I go running today?", "Is road travel safe to Jaipur?", "Best time for kids to play sports outside?", "Outdoor construction tomorrow"
+    if (this.isActivityQuery(clean)) {
+      const extractedCategory = this.extractActivityCategory(clean);
+      const cleanForLoc = clean.replace(
+        /\b(?:can\s+i|is\s+it\s+safe\s+to|best\s+time\s+to|suitability\s+for|weather\s+for|safe\s+for|should\s+i|good\s+for|kya|hai|safe|go|running|jogging|run|cycling|cycle|commute|driving|drive|travel|outdoor\s+construction|construction\s+work|construction|building\s+work|site\s+work|outdoor\s+work|outdoor\s+labor|school\s+sports|children\s+play|kids\s+play|sports|cricket|picnic|event|gathering|today|tomorrow|aaj|kal|shaam|morning|afternoon)\b/gi,
+        " "
+      );
+      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
+
+      return {
+        intent: "activity",
+        intents: ["activity"],
+        confidence: 0.92,
+        extractedLocation: location,
+        isForecastQuery: isFuture,
+        isRiskQuery: true,
+        isConsensusQuery: false,
+        isActivityQuery: true,
+        activityCategory: extractedCategory,
+        activityType:
+          extractedCategory === "travel_road"
+            ? "travel"
+            : extractedCategory === "outdoor_work"
+            ? "outdoor_work"
+            : "general",
+      };
+    }
+
+    // 5. Check for General/Educational Queries (e.g. "What causes flash floods?", "How do cyclones form?")
     if (this.isGeneralKnowledgeQuery(clean)) {
       return {
         intent: "general",
+        intents: ["general"],
         confidence: 0.95,
         extractedEventKeyword: this.extractEventKeyword(clean),
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
-    // 4. Check for Live Weather Event queries
+    // 6. Check for Weather Risk / Activity Assessment Intent
+    // "Is tomorrow good for outdoor work?", "Is it safe to go outside?", "Will there be heavy rain?", "Is there flood risk?"
+    if (this.isRiskQuery(clean)) {
+      const cleanForLoc = clean
+        .replace(
+          /\b(?:is\s+it\s+)?(?:good\s+for|safe\s+to|safe\s+for|should\s+i)?\s*(?:outdoor\s+work|work\s+outside|outside|travel|drive|trip|weather\s+risk|risk|baarish\s+ka\s+risk|barish\s+ka\s+risk|bahar\s+kaam\s+karna\s+safe\s+hai|kaam\s+karna\s+safe\s+hai|kya\s+hai|kitna\s+hai|heavy\s+rain|thunderstorm|wind|flood)\b/gi,
+          " "
+        )
+        .replace(/\s+/g, " ")
+        .trim();
+      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
+      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso|will there be|how strong will)\b/i.test(clean);
+      const activityType: "outdoor_work" | "travel" | "general" =
+        /\b(travel|road|drive|trip|driving)\b/i.test(clean)
+          ? "travel"
+          : /\b(outdoor work|work outside|construction|fieldwork|outdoor|kaam karna|bahar kaam)\b/i.test(clean)
+          ? "outdoor_work"
+          : "general";
+
+      const matchedIntent: IntentCategory = isFuture ? "forecast" : "weather";
+      return {
+        intent: matchedIntent,
+        intents: [matchedIntent],
+        confidence: 0.9,
+        extractedLocation: location,
+        isForecastQuery: isFuture,
+        isRiskQuery: true,
+        isConsensusQuery: false,
+        isActivityQuery: false,
+        activityType,
+      };
+    }
+
+    // 7. Check for Live Weather Event queries
     // "What's happening with the Nepal flood?", "Active cyclones in Bay of Bengal", "Latest flood updates"
     if (this.isWeatherEventQuery(clean)) {
       const location = this.extractLocation(clean);
@@ -309,71 +431,58 @@ export class IntentRouter {
 
       return {
         intent: "weather_event",
+        intents: ["weather_event"],
         confidence: 0.85,
         extractedLocation: location,
         extractedEventKeyword: eventKeyword,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
-    // 5. Check for Weather Risk / Activity Assessment Intent
-    // "Is tomorrow good for outdoor work?", "Is it safe to go outside?", "Should I travel tomorrow?"
-    if (this.isRiskQuery(clean)) {
-      const cleanForLoc = clean.replace(
-        /\b(?:is\s+it\s+)?(?:good\s+for|safe\s+to|safe\s+for|should\s+i)?\s*(?:outdoor\s+work|work\s+outside|outside|travel|drive|trip)\b/gi,
-        " "
-      );
-      const location = this.extractLocation(cleanForLoc) || this.extractLocation(clean);
-      const isFuture = /\b(tomorrow|next week|weekend|next 24|next 48|kal|parso)\b/i.test(clean);
-      const activityType: "outdoor_work" | "travel" | "general" =
-        /\b(travel|road|drive|trip|driving)\b/i.test(clean)
-          ? "travel"
-          : /\b(outdoor work|work outside|construction|fieldwork|outdoor)\b/i.test(clean)
-          ? "outdoor_work"
-          : "general";
-
-      return {
-        intent: isFuture ? "forecast" : "weather",
-        confidence: 0.9,
-        extractedLocation: location,
-        isForecastQuery: isFuture,
-        isRiskQuery: true,
-        activityType,
-      };
-    }
-
-    // 5. Check for pure follow-up queries (e.g. "Tomorrow?", "Will it rain?", "And the temperature?")
+    // 8. Check for pure follow-up queries (e.g. "Tomorrow?", "Will it rain?", "And the temperature?")
     if (this.isFollowUpQuery(clean)) {
       const isForecast = /\b(tomorrow|next week|rain|will it rain|weekend)\b/i.test(clean);
+      const matchedIntent: IntentCategory = isForecast ? "forecast" : "weather";
       return {
-        intent: isForecast ? "forecast" : "weather",
+        intent: matchedIntent,
+        intents: [matchedIntent],
         confidence: 0.85,
         isForecastQuery: isForecast,
         isFollowUp: true,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
-    // 6. Check for Forecast queries
+    // 9. Check for Forecast queries
     // "Will it rain tomorrow in Kanpur?", "7-day forecast for Delhi", "Forecast for next week"
     if (this.isForecastQuery(clean)) {
       const location = this.extractLocation(clean);
 
       return {
         intent: "forecast",
+        intents: ["forecast"],
         confidence: 0.9,
         extractedLocation: location,
         isForecastQuery: true,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
-    // 7. Check for Current Weather queries
+    // 10. Check for Current Weather queries
     // "What's the weather in Kanpur?", "Weather in Kanpur", "Current temperature in London"
     if (this.isWeatherQuery(clean)) {
       const location = this.extractLocation(clean);
 
       return {
         intent: "weather",
+        intents: ["weather"],
         confidence: 0.9,
         extractedLocation: location,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
@@ -382,14 +491,20 @@ export class IntentRouter {
     if (fallbackLocation) {
       return {
         intent: "weather",
+        intents: ["weather"],
         confidence: 0.6,
         extractedLocation: fallbackLocation,
+        isConsensusQuery: false,
+        isActivityQuery: false,
       };
     }
 
     return {
       intent: "general",
+      intents: ["general"],
       confidence: 0.5,
+      isConsensusQuery: false,
+      isActivityQuery: false,
     };
   }
 
@@ -415,6 +530,21 @@ export class IntentRouter {
   }
 
   private isGeneralKnowledgeQuery(text: string): boolean {
+    // If it asks about consensus or model confidence, it is not general knowledge
+    if (this.isConsensusQuery(text)) {
+      return false;
+    }
+
+    // If it asks about activity suitability, it is not general knowledge
+    if (this.isActivityQuery(text)) {
+      return false;
+    }
+
+    // If it asks for voice/audio briefing, it is not general knowledge
+    if (this.isVoiceQuery(text)) {
+      return false;
+    }
+
     // If it asks about ongoing event updates, it's not general knowledge
     if (/\b(what('s| is) happening|latest on|latest updates|situation in|status of)\b/i.test(text)) {
       return false;
@@ -469,11 +599,95 @@ export class IntentRouter {
     return followUpPatterns.some((pattern) => pattern.test(text.trim()));
   }
 
+  private isConsensusQuery(text: string): boolean {
+    const consensusPatterns = [
+      /\b(?:model|models)\s+(?:consensus|agree|agreement|divergence|spread|disagreement)\b/i,
+      /\b(?:forecast|model)\s+agreement\b/i,
+      /\b(?:weather\s+models|forecast\s+models)\b/i,
+      /\bwhich\s+(?:weather\s+)?models\s+agree\b/i,
+      /\b(?:ecmwf|gfs|icon|nwp|multi-model|ensemble forecast|ensemble mean|ensemble spread)\b/i,
+      /\bhow\s+(?:confident|reliable|accurate|certain)\b.*\b(?:forecast|prediction)\b/i,
+      /\b(?:weather\s+)?forecast\s+(?:confidence|certainty|reliability|accuracy)\b/i,
+      /\b(?:do\s+(?:the\s+)?(?:weather\s+)?models\s+agree|are\s+models\s+in\s+agreement)\b/i,
+      /\bcompare\s+(?:ecmwf|gfs|icon|models)\b/i,
+      /\b(?:ecmwf|gfs|icon)\s+(?:vs|and|aur)\s+(?:ecmwf|gfs|icon)\b/i,
+      // Hindi / Hinglish consensus patterns
+      /\bkya\s+models\s+(?:me\s+|mein\s+)?(?:agree|consensus|agreement)\b/i,
+      /\bmodels\s+(?:me\s+|mein\s+)?consensus\b/i,
+      /\bmodels\s+agree\s+kar\s+rahe\b/i,
+      /\bforecast\s+kitna\s+(?:reliable|accurate)\b/i,
+      /\bkitna\s+sure\s+hai\s+forecast\b/i,
+      /\bforecast\s+kitna\s+sure\s+hai\b/i,
+      /\b(?:farak|difference)\s+(?:hai|kya\s+hai)\b/i,
+      /\bforecast\s+confidence\s+kya\s+hai\b/i,
+      /\bmodels\s+kya\s+keh\s+rahe\b/i,
+    ];
+    return consensusPatterns.some((pattern) => pattern.test(text));
+  }
+
+  private isActivityQuery(text: string): boolean {
+    if (this.isAgricultureQuery(text)) {
+      return false;
+    }
+
+    const activityPatterns = [
+      /\b(?:running|jogging|jog|run|cycling|cycle|bike ride|biking)\b/i,
+      /\b(?:commute|daily commute|drive to work|office travel|road travel|highway travel|road trip|long drive|driving safe)\b/i,
+      /\b(?:outdoor\s+construction|construction\s+work|construction|building\s+work|site\s+work|civil\s+work|roof\s+work|roofing|painting\s+work|outdoor\s+labor(?:\/work)?|outdoor\s+labour|manual\s+labor|manual\s+labour)\b/i,
+      /\b(?:good\s+for|safe\s+for|safe\s+to|best\s+time\s+for|suitable\s+for)\s+(?:outdoor\s+construction|construction\s+work|construction|building\s+work|site\s+work|civil\s+work|roof\s+work|roofing|outdoor\s+labor|outdoor\s+labour|manual\s+labor)\b/i,
+      /\b(?:school sports|children play|kids play|playground|recess|sports day|cricket match|football match)\b/i,
+      /\b(?:outdoor event|outdoor party|wedding outdoors|picnic|outdoor dining|barbecue|bbq)\b/i,
+      /\b(?:best time to (?:run|cycle|travel|drive|work outside|go outside|play))\b/i,
+      /\b(?:is it safe to (?:run|cycle|travel|drive|play outside|commute))\b/i,
+      /\b(?:activity suitability|weather suitability)\b/i,
+      // Hindi / Hinglish activity patterns
+      /\bkya (?:running|cycling|travel|driving|bahar khelna) safe hai\b/i,
+      /\b(?:travel karne ke liye|driving ke liye|running ke liye|bahar khelne ke liye)\b/i,
+      /\b(?:aaj|kal|shaam ko|subah) (?:running|cycling|travel|driving)\b/i,
+    ];
+
+    return activityPatterns.some((pattern) => pattern.test(text));
+  }
+
+  private extractActivityCategory(text: string): ActivityType {
+    if (/\b(?:running|jogging|jog|run|cycling|cycle|biking)\b/i.test(text)) {
+      return "running_cycling";
+    }
+    if (/\b(?:school|children|kids|playground|recess|sports|cricket|football)\b/i.test(text)) {
+      return "school_sports";
+    }
+    if (
+      /\b(?:construction|building\s+work|site\s+work|civil\s+work|field\s+work|roof|roofing|painting|labor|labour|outdoor\s+labor|outdoor\s+labour|work\s+outside|outside\s+work|bahar\s+kaam)\b/i.test(
+        text
+      )
+    ) {
+      return "outdoor_work";
+    }
+    if (/\b(?:commute|metro|bus|traffic|office travel)\b/i.test(text)) {
+      return "commute";
+    }
+    if (/\b(?:event|party|wedding|marriage|picnic|dining|gathering|bbq)\b/i.test(text)) {
+      return "outdoor_events";
+    }
+    if (/\b(?:travel|road|highway|driving|drive|trip|car travel)\b/i.test(text)) {
+      return "travel_road";
+    }
+    return "running_cycling";
+  }
+
   private isRiskQuery(text: string): boolean {
     const riskPatterns = [
-      /\b(safe to go outside|good for outdoor work|outdoor work|safe outside|should i travel|travel tomorrow|safe to travel|safe for travel)\b/i,
-      /\b(safe for outdoor|can i go out|is it safe outside|is it safe to travel|good for travel)\b/i,
+      /\b(weather risk|risk tomorrow|risk today|risk factor)\b/i,
+      /\b(safe to work outside|work outside tomorrow|work outside safe|safe for outdoor|safe to go outside|good for outdoor work|outdoor work|safe outside|should i travel|travel tomorrow|safe to travel|safe for travel)\b/i,
+      /\b(can i go out|is it safe outside|is it safe to travel|good for travel)\b/i,
       /\b(travel safe|outdoor safe|work outside safe)\b/i,
+      /\b(heavy rain|heavy rainfall|torrential rain)\b/i,
+      /\b(thunderstorm risk|thunderstorm|lightning risk)\b/i,
+      /\b(how strong (will|is) the wind|wind risk|strong wind)\b/i,
+      /\b(flood risk|flooding risk|is there (a )?flood risk|any flood risk)\b/i,
+      // Hindi / Hinglish risk patterns
+      /\b(bahar kaam karna safe|kaam karna safe hai|bahar kaam|bahar safe)\b/i,
+      /\b(baarish ka risk|barish ka risk|baarish risk|risk kitna hai|risk kya hai)\b/i,
     ];
     return riskPatterns.some((pattern) => pattern.test(text));
   }
@@ -508,9 +722,23 @@ export class IntentRouter {
       /\b(how hot|how cold|is it raining|is it sunny|is it cloudy)\b/i,
       /\b(current weather|today's weather|mausam|aaj ka mausam)\b/i,
       /\b(weather in|temp in|temperature in)\b/i,
+      /\b(voice briefing|audio briefing|voice update|audio update|audio summary)\b/i,
+      /\b(boliye mausam|sunao|bolkar bataiye)\b/i,
     ];
 
     return weatherKeywords.some((pattern) => pattern.test(text));
+  }
+
+  /**
+   * Check if query requests voice briefing or spoken output.
+   */
+  isVoiceQuery(text: string): boolean {
+    const voiceTerms = [
+      /\b(?:voice\s+briefing|audio\s+briefing|spoken\s+briefing|voice\s+update|audio\s+update|audio\s+summary|voice\s+report)\b/i,
+      /\b(?:speak\s+the\s+weather|read\s+out|read\s+to\s+me|read\s+me|listen\s+to\s+(?:the\s+)?weather|speak\s+to\s+me)\b/i,
+      /\b(?:bolkar\s+batao|bolkar\s+bataiye|sunao|boliye\s+mausam|aawaz\s+me|aawaz\s+mein)\b/i,
+    ];
+    return voiceTerms.some((pattern) => pattern.test(text));
   }
 
   /**
@@ -527,7 +755,7 @@ export class IntentRouter {
       // "weather London", "forecast Tokyo"
       /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Hinglish: "Kanpur mein kal mausam", "Kanpur mein: Ignore..."
-      /\b([a-zA-Z0-9\s\-_]+?)\s+mein(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?\b/i,
+      /\b([a-zA-Z0-9\s\-_]+?)\s+mein(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?(?:\b|$|\?|\.|\,)/i,
       // "London weather", "New Delhi forecast" (excluding temporal/stop words)
       /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z0-9\s\-_]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];
@@ -612,7 +840,7 @@ export class IntentRouter {
       /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai|fertilizer|fertilizers)\b/i,
       /\b(harvest|harvesting|sowing|sow|planting|plant|cutting|katai|buvai|bone|seed|seeding)\b/i,
       /\b(wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson)\b/i,
-      /\b(field work|outdoor field work|fieldwork|khet ka kaam|outdoor work)\b/i,
+      /\b(outdoor field work|field work|fieldwork|khet ka kaam|farm work)\b/i,
       /\b(precautions for wheat|precautions for rice|precautions for crop|precautions for farming)\b/i,
     ];
     return agriTerms.some((pattern) => pattern.test(text));

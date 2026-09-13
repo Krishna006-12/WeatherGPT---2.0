@@ -15,7 +15,11 @@ export type WeatherToolName =
   | "get_live_events"
   | "get_event_impact"
   | "get_weather_risk"
-  | "get_agriculture_risk";
+  | "get_risk"
+  | "get_agriculture_risk"
+  | "get_model_consensus"
+  | "get_activity_suitability"
+  | "get_voice_briefing";
 
 export interface WeatherIntelligenceTool<TInput, TOutput> {
   readonly name: WeatherToolName;
