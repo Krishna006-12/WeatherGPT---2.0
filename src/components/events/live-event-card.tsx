@@ -2,6 +2,7 @@ import { useEvents } from "@/hooks/use-events";
 import type { WeatherEvent } from "@/types/events";
 import { globalImpactEngine } from "@/services/impact/impact-engine";
 import { Activity, ShieldCheck, MapPin } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
 
 export function getEventIndiaRelevance(event: WeatherEvent): { label: string; badgeClass: string } {
   const assessment = globalImpactEngine.assessIndiaImpact(event);
@@ -36,6 +37,7 @@ export function getEventIndiaRelevance(event: WeatherEvent): { label: string; ba
 
 export function LiveEventCard() {
   const { data, isLoading, isError } = useEvents({ limit: 1 });
+  const { t } = useLanguage();
 
   if (isLoading) return <div className="wg-skeleton h-56 w-full" />;
   if (isError || !data || data.events.length === 0) {
@@ -84,15 +86,15 @@ export function LiveEventCard() {
               className="text-xs uppercase font-bold tracking-wider"
               style={{ color: isHighSeverity ? "var(--status-danger)" : "var(--text-primary)" }}
             >
-              Live Intelligence Bulletin
+              {t("intel.bulletin", "Live Intelligence Bulletin")}
             </h3>
           </div>
 
           <span
             className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
               isHighSeverity
-                ? "bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm shadow-red-950"
-                : "bg-white/5 text-neutral-300 border border-white/10"
+                ? "bg-red-500/20 text-red-500 dark:text-red-300 border border-red-500/35 shadow-sm"
+                : "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
             }`}
           >
             {event.severity}
@@ -102,9 +104,9 @@ export function LiveEventCard() {
         {/* 1. WHAT IS HAPPENING: Readable Headline & Scope */}
         <div className="mb-3.5">
           <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)] block mb-1">
-            Hazard Condition
+            {t("intel.hazard_condition", "Hazard Condition")}
           </span>
-          <h4 className="text-base sm:text-lg font-semibold leading-snug text-white">
+          <h4 className="text-base sm:text-lg font-semibold leading-snug text-[var(--text-primary)]">
             {event.title}
           </h4>
           <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] mt-1.5">
@@ -114,12 +116,14 @@ export function LiveEventCard() {
         </div>
 
         {/* 2. EVIDENCE: Verified Agency / Sensor Sources */}
-        <div className="p-3 rounded-xl bg-black/30 border border-[var(--border-subtle)] mb-3 flex items-center justify-between text-xs">
+        <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] mb-3 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-[var(--accent)] shrink-0" />
             <span className="text-[var(--text-secondary)] font-medium">
-              {event.sources ? event.sources.length : 0} Verified Agency Source
-              {(event.sources ? event.sources.length : 0) !== 1 ? "s" : ""}
+              {event.sources ? event.sources.length : 0}{" "}
+              {(event.sources ? event.sources.length : 0) === 1
+                ? t("intel.verified_source", "Verified Agency Source")
+                : t("intel.verified_sources", "Verified Agency Sources")}
             </span>
           </div>
           <span className="font-mono text-[10px] text-[var(--text-tertiary)]">
@@ -132,15 +136,17 @@ export function LiveEventCard() {
       <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)]">
-            Subcontinent Assessment
+            {t("intel.subcontinent", "Subcontinent Assessment")}
           </span>
           <span className="text-xs font-semibold text-[var(--text-secondary)] mt-0.5">
-            Regional Threat Rating
+            {t("intel.threat_rating", "Regional Threat Rating")}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[var(--text-tertiary)] hidden sm:inline">Relevance:</span>
+          <span className="text-[11px] text-[var(--text-tertiary)] hidden sm:inline">
+            {t("intel.relevance", "Relevance")}:
+          </span>
           <span
             className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${indiaRelevance.badgeClass}`}
           >

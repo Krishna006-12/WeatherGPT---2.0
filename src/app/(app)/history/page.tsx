@@ -7,6 +7,7 @@ import { useHistoricalWeather } from "@/hooks/use-historical-weather";
 import { HourlyForecastCard } from "@/components/weather/hourly-forecast-card";
 import { SunriseCard } from "@/components/weather/sunrise-card";
 import { SevenDayForecastCard } from "@/components/weather/seven-day-forecast-card";
+import { useLanguage } from "@/context/language-context";
 import {
   History as HistoryIcon,
   CheckCircle2,
@@ -22,6 +23,7 @@ type HistoricalWindow = "1_year_ago" | "3_years_ago" | "5_years_ago" | "10_years
 
 export default function HistoryPage() {
   const { selectedLocation } = useLocation();
+  const { t } = useLanguage();
   const [selectedWindow, setSelectedWindow] = useState<HistoricalWindow>("1_year_ago");
 
   const {
@@ -65,8 +67,12 @@ export default function HistoryPage() {
     return (
       <div className="flex h-full min-h-[50vh] items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2 text-white">Meteorological Timeline</h2>
-          <p className="text-neutral-400">Search for a location above to view hourly progression and forecast timelines.</p>
+          <h2 className="text-2xl font-semibold mb-2 text-[var(--text-primary)]">
+            {t("history.title", "Meteorological Timeline")}
+          </h2>
+          <p className="text-[var(--text-secondary)]">
+            Search for a location above to view hourly progression and forecast timelines.
+          </p>
         </div>
       </div>
     );
@@ -77,22 +83,22 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1 flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-1 flex items-center gap-2.5">
             <HistoryIcon className="text-cyan-400" size={24} />
-            Meteorological Timeline &amp; Climate Archive
+            {t("history.title", "Meteorological Timeline & Climate Archive")}
           </h1>
-          <p className="text-sm text-neutral-400">
-            Chronological atmospheric progression, solar interval cycles, and ERA5 historical reanalysis for {selectedLocation.displayName}.
+          <p className="text-sm text-[var(--text-secondary)]">
+            {t("history.subtitle", "Chronological atmospheric progression, solar interval cycles, and ERA5 historical reanalysis")} for {selectedLocation.displayName}.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-cyan-950/40 border border-cyan-900/50 rounded-full text-xs font-medium text-cyan-400">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/25 rounded-full text-xs font-medium text-cyan-600 dark:text-cyan-400">
             <CheckCircle2 size={13} />
-            <span>Open-Meteo Grounded</span>
+            <span>{t("history.open_meteo_badge", "Open-Meteo Grounded")}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-950/40 border border-purple-900/50 rounded-full text-xs font-medium text-purple-300">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-500/10 border border-purple-500/25 rounded-full text-xs font-medium text-purple-600 dark:text-purple-300">
             <Activity size={13} />
-            <span>ERA5 1940–Present</span>
+            <span>{t("history.era5_badge", "ERA5 1940–Present")}</span>
           </div>
         </div>
       </div>
@@ -101,12 +107,12 @@ export default function HistoryPage() {
       <section className="p-5 sm:p-6 rounded-2xl bg-[var(--surface-1)] border border-[var(--border-subtle)] shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
           <div>
-            <div className="flex items-center gap-2 text-white font-semibold text-base">
+            <div className="flex items-center gap-2 text-[var(--text-primary)] font-semibold text-base">
               <Calendar size={18} className="text-purple-400" />
-              Historical Climate Reanalysis &amp; Anomaly Comparison
+              {t("history.era5_title", "Historical Climate Reanalysis & Anomaly Comparison")}
             </div>
             <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-              Comparing current atmospheric state with verified ERA5 historical records for this exact calendar week.
+              {t("history.era5_desc", "Comparing current atmospheric state with verified ERA5 historical records for this exact calendar week.")}
             </p>
           </div>
 
@@ -117,44 +123,44 @@ export default function HistoryPage() {
               onClick={() => setSelectedWindow("1_year_ago")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 selectedWindow === "1_year_ago"
-                  ? "bg-purple-950/70 border border-purple-800/60 text-purple-300"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-300"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              1 Year Ago ({now.getFullYear() - 1})
+              {t("history.1_year", "1 Year Ago")} ({now.getFullYear() - 1})
             </button>
             <button
               type="button"
               onClick={() => setSelectedWindow("3_years_ago")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 selectedWindow === "3_years_ago"
-                  ? "bg-purple-950/70 border border-purple-800/60 text-purple-300"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-300"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              3 Years ({now.getFullYear() - 3})
+              {t("history.3_years", "3 Years Ago")} ({now.getFullYear() - 3})
             </button>
             <button
               type="button"
               onClick={() => setSelectedWindow("5_years_ago")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 selectedWindow === "5_years_ago"
-                  ? "bg-purple-950/70 border border-purple-800/60 text-purple-300"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-300"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              5 Years ({now.getFullYear() - 5})
+              {t("history.5_years", "5 Years Ago")} ({now.getFullYear() - 5})
             </button>
             <button
               type="button"
               onClick={() => setSelectedWindow("10_years_ago")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 selectedWindow === "10_years_ago"
-                  ? "bg-purple-950/70 border border-purple-800/60 text-purple-300"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-300"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              10 Years ({now.getFullYear() - 10})
+              {t("history.10_years", "10 Years Ago")} ({now.getFullYear() - 10})
             </button>
           </div>
         </div>
@@ -174,27 +180,31 @@ export default function HistoryPage() {
                 <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)] mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
                     <Thermometer size={14} className="text-amber-400" />
-                    Historical Temperature
+                    {t("history.temp", "Historical Temperature")}
                   </span>
                   <span className="font-mono text-[11px]">{startDate}</span>
                 </div>
-                <div className="text-xl font-bold text-white">
+                <div className="text-xl font-bold text-[var(--text-primary)]">
                   {archiveReport.summary.averageMaxTemp}°C{" "}
-                  <span className="text-xs font-normal text-neutral-400">avg max</span>
+                  <span className="text-xs font-normal text-[var(--text-secondary)]">
+                    {t("history.avg_max", "avg max")}
+                  </span>
                 </div>
                 <div className="text-[11px] mt-1.5 flex items-center gap-1">
                   {archiveReport.climatologicalAnomaly.temperatureAnomalyC >= 0 ? (
-                    <span className="text-amber-400 flex items-center">
+                    <span className="text-amber-500 dark:text-amber-400 flex items-center">
                       <ArrowUpRight size={12} />
                       +{archiveReport.climatologicalAnomaly.temperatureAnomalyC}°C
                     </span>
                   ) : (
-                    <span className="text-cyan-400 flex items-center">
+                    <span className="text-cyan-500 dark:text-cyan-400 flex items-center">
                       <ArrowDownRight size={12} />
                       {archiveReport.climatologicalAnomaly.temperatureAnomalyC}°C
                     </span>
                   )}
-                  <span className="text-neutral-400">vs 1991–2020 ERA5 baseline</span>
+                  <span className="text-[var(--text-tertiary)]">
+                    {t("history.baseline", "vs 1991–2020 ERA5 baseline")}
+                  </span>
                 </div>
               </div>
 
@@ -203,17 +213,21 @@ export default function HistoryPage() {
                 <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)] mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
                     <CloudRain size={14} className="text-blue-400" />
-                    Historical Precipitation
+                    {t("history.precip", "Historical Precipitation")}
                   </span>
-                  <span className="text-neutral-400 text-[11px]">{archiveReport.summary.daysWithRain} rain days</span>
+                  <span className="text-[var(--text-tertiary)] text-[11px]">
+                    {archiveReport.summary.daysWithRain} {t("history.rain_days", "rain days")}
+                  </span>
                 </div>
-                <div className="text-xl font-bold text-white">
+                <div className="text-xl font-bold text-[var(--text-primary)]">
                   {archiveReport.summary.totalPrecipitationMm} mm{" "}
-                  <span className="text-xs font-normal text-neutral-400">total 7d</span>
+                  <span className="text-xs font-normal text-[var(--text-secondary)]">
+                    {t("history.total_7d", "total 7d")}
+                  </span>
                 </div>
-                <div className="text-[11px] mt-1.5 text-neutral-400">
+                <div className="text-[11px] mt-1.5 text-[var(--text-tertiary)]">
                   {archiveReport.climatologicalAnomaly.precipitationAnomalyPct >= 0 ? "+" : ""}
-                  {archiveReport.climatologicalAnomaly.precipitationAnomalyPct}% relative to normal
+                  {archiveReport.climatologicalAnomaly.precipitationAnomalyPct}% {t("history.relative_normal", "relative to normal")}
                 </div>
               </div>
 
@@ -221,13 +235,13 @@ export default function HistoryPage() {
               <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] flex flex-col justify-between">
                 <div className="text-xs font-medium text-[var(--text-tertiary)] flex items-center gap-1.5">
                   <Activity size={14} className="text-purple-400" />
-                  ERA5 Anomaly Characterization
+                  {t("history.characterization", "ERA5 Anomaly Characterization")}
                 </div>
-                <div className="text-xs font-semibold text-purple-300 my-1">
+                <div className="text-xs font-semibold text-purple-600 dark:text-purple-300 my-1">
                   {archiveReport.climatologicalAnomaly.characterization}
                 </div>
-                <div className="text-[10px] text-neutral-500">
-                  Source: ECMWF Copernicus Climate Change Service (C3S)
+                <div className="text-[10px] text-[var(--text-tertiary)]">
+                  {t("history.ecmwf_source", "Source: ECMWF Copernicus Climate Change Service (C3S)")}
                 </div>
               </div>
             </div>
@@ -242,9 +256,11 @@ export default function HistoryPage() {
                   <div className="text-[10px] font-mono text-[var(--text-tertiary)] mb-1">
                     {r.date.slice(5)}
                   </div>
-                  <div className="font-bold text-white">{Math.round(r.temperatureMax)}° / {Math.round(r.temperatureMin)}°</div>
-                  <div className="text-[10px] text-blue-400 mt-0.5">
-                    {r.precipitationSum > 0 ? `${r.precipitationSum} mm` : "Dry"}
+                  <div className="font-bold text-[var(--text-primary)]">
+                    {Math.round(r.temperatureMax)}° / {Math.round(r.temperatureMin)}°
+                  </div>
+                  <div className="text-[10px] text-blue-500 dark:text-blue-400 mt-0.5">
+                    {r.precipitationSum > 0 ? `${r.precipitationSum} mm` : t("history.dry", "Dry")}
                   </div>
                 </div>
               ))}

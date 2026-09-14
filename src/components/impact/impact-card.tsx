@@ -2,8 +2,10 @@ import { useImpact } from "@/hooks/use-impact";
 import { useEvents } from "@/hooks/use-events";
 import { CheckCircle2, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
+import { useLanguage } from "@/context/language-context";
 
 export function ImpactCard({ location }: { location?: NormalizedLocation | null }) {
+  const { t } = useLanguage();
   const { data: eventsData, isLoading: eventsLoading } = useEvents({ limit: 1 });
   const event = eventsData?.events[0];
 
@@ -37,7 +39,7 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
     ? { color: "#F87171", bg: "rgba(239, 68, 68, 0.15)", border: "rgba(239, 68, 68, 0.35)" }
     : isElevated
     ? { color: "#FBBF24", bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.35)" }
-    : { color: "var(--text-tertiary)", bg: "rgba(255, 255, 255, 0.05)", border: "rgba(255, 255, 255, 0.1)" };
+    : { color: "var(--text-tertiary)", bg: "var(--surface-3)", border: "var(--border-subtle)" };
 
   return (
     <section
@@ -55,7 +57,7 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
               }}
             />
             <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
-              Location Impact
+              {t("impact.location_impact", "Location Impact")}
             </h3>
           </div>
 
@@ -67,14 +69,14 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
               border: "1px solid var(--accent-border)",
             }}
           >
-            <CheckCircle2 size={11} strokeWidth={2.5} /> Grounded
+            <CheckCircle2 size={11} strokeWidth={2.5} /> {t("impact.grounded", "Grounded")}
           </span>
         </div>
 
         {/* Tactical Location Posture Decision Box */}
-        <div className="p-3.5 rounded-xl bg-black/40 border border-[var(--border-subtle)] mb-3">
+        <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] mb-3">
           <div className="flex justify-between items-center mb-2.5">
-            <span className="text-sm font-bold text-white tracking-tight">
+            <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
               {location.displayName.split(",")[0]}
             </span>
             <span
@@ -93,32 +95,32 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
           <div className="grid grid-cols-3 gap-1.5 pt-1">
             <div
               className={`h-2 rounded-full transition-all duration-200 ${
-                !isConfirmed && !isElevated ? "bg-emerald-400 shadow-sm shadow-emerald-950" : "bg-white/10"
+                !isConfirmed && !isElevated ? "bg-emerald-400 shadow-sm shadow-emerald-950" : "bg-[var(--surface-3)]"
               }`}
             />
             <div
               className={`h-2 rounded-full transition-all duration-200 ${
-                isElevated ? "bg-amber-400 shadow-sm shadow-amber-950" : "bg-white/10"
+                isElevated ? "bg-amber-400 shadow-sm shadow-amber-950" : "bg-[var(--surface-3)]"
               }`}
             />
             <div
               className={`h-2 rounded-full transition-all duration-200 ${
-                isConfirmed ? "bg-red-500 shadow-sm shadow-red-950" : "bg-white/10"
+                isConfirmed ? "bg-red-500 shadow-sm shadow-red-950" : "bg-[var(--surface-3)]"
               }`}
             />
           </div>
           <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] pt-1.5">
-            <span>Normal</span>
-            <span>Advisory</span>
-            <span>Warning</span>
+            <span>{t("impact.normal", "Normal")}</span>
+            <span>{t("impact.advisory", "Advisory")}</span>
+            <span>{t("impact.warning", "Warning")}</span>
           </div>
         </div>
 
         {/* Hazard assessment readout */}
         {impact?.actualHazardImpact && (
-          <div className="p-3 rounded-xl text-xs leading-relaxed bg-black/30 border border-[var(--border-subtle)] text-[var(--text-secondary)] mb-2.5">
+          <div className="p-3 rounded-xl text-xs leading-relaxed bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] mb-2.5">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
-              Hazard Assessment
+              {t("impact.hazard_assessment", "Hazard Assessment")}
             </div>
             {impact.actualHazardImpact}
           </div>
@@ -128,7 +130,7 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
         {impact?.advisory && (
           <div className="p-3 rounded-xl text-xs leading-relaxed bg-[var(--accent-surface)] border border-[var(--accent-border)] text-[var(--accent)]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] opacity-80 mb-1">
-              Actionable Advisory
+              {t("impact.actionable_advisory", "Actionable Advisory")}
             </div>
             {impact.advisory}
           </div>

@@ -102,10 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const defaultFallbackSession = createDefaultGuestSession();
+
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    return {
+      session: defaultFallbackSession,
+      status: "unauthenticated",
+      isGuest: true,
+      isFarmer: false,
+      signInWithGoogle: async () => {},
+      continueAsGuest: () => {},
+      setRole: () => {},
+      signOut: () => {},
+    };
   }
   return context;
 }

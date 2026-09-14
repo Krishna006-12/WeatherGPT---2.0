@@ -24,18 +24,23 @@ export function isCurrentHour(timestamp: string | number | Date, timezone: strin
   return getHourKey(timestamp, timezone) === getHourKey(now, timezone);
 }
 
-export function formatTime(timestamp: string | number | Date, timezone: string): string {
+export function formatTime(timestamp: string | number | Date, timezone: string, locale: string = "en-US"): string {
   const date = new Date(timestamp);
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     hour: "numeric",
     hour12: true,
   }).format(date);
 }
 
-export function formatDayName(timestamp: string | number | Date, timezone: string, style: "short" | "long" | "narrow" = "short"): string {
+export function formatDayName(
+  timestamp: string | number | Date,
+  timezone: string,
+  style: "short" | "long" | "narrow" = "short",
+  locale: string = "en-US"
+): string {
   const date = new Date(timestamp);
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     weekday: style,
   }).format(date);

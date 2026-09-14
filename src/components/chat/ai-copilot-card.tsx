@@ -292,7 +292,7 @@ export function AICopilotCard({
               >
                 <div className="flex items-center gap-2 text-[13px] font-bold tracking-tight" style={{ color: "var(--accent)" }}>
                   <Sparkles size={16} />
-                  <span>{t("copilot.title", "AI Meteorological Copilot")}</span>
+                  <span>{t("copilot.welcome_title", "AI Meteorological Copilot")}</span>
                 </div>
                 <p className="text-[13px] leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>
                   {isFarmer
@@ -524,7 +524,7 @@ export function AICopilotCard({
                 <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
               <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                {t("copilot.analyzing", "WeatherGPT is thinking...")}
+                {t("copilot.analyzing", "Analyzing verified weather and event data...")}
               </span>
             </div>
           )}

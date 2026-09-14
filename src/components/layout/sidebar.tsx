@@ -28,37 +28,37 @@ export function Sidebar() {
   const navItems: NavItem[] = [
     {
       href: "/dashboard",
-      label: t("nav.overview", "Dashboard Overview"),
+      label: t("sidebar.overview", "Dashboard Overview"),
       icon: <Grid size={20} />,
     },
     {
       href: "/weather",
-      label: t("nav.weather", "Weather & Observations"),
+      label: t("sidebar.weather", "Weather & Observations"),
       icon: <Globe size={20} />,
     },
     {
       href: "/intelligence",
-      label: t("nav.intelligence", "Live Disaster Intelligence"),
+      label: t("sidebar.intelligence", "Live Disaster Intelligence"),
       icon: <AlertTriangle size={20} />,
     },
     {
       href: "/impact",
-      label: t("nav.impact", "Regional Risk & Impact"),
+      label: t("sidebar.impact", "Regional Risk & Impact"),
       icon: <Shield size={20} />,
     },
     {
       href: "/chat",
-      label: t("nav.copilot", "WeatherGPT AI Copilot"),
+      label: t("sidebar.copilot", "WeatherGPT AI Copilot"),
       icon: <MessageSquare size={20} />,
     },
     {
       href: "/motion",
-      label: t("nav.motion", "Antigravity Motion Lab"),
+      label: t("sidebar.motion", "Antigravity Motion Lab"),
       icon: <Sparkles size={20} />,
     },
     {
       href: "/history",
-      label: t("nav.history", "Forecast & Meteorological Timeline"),
+      label: t("sidebar.history", "Forecast & Meteorological Timeline"),
       icon: <History size={20} />,
     },
   ];
@@ -109,7 +109,7 @@ export function Sidebar() {
         <NavLink
           href="/settings"
           icon={<Settings size={20} />}
-          label={t("nav.settings", "System Intelligence Settings")}
+          label={t("sidebar.settings", "System Intelligence Settings")}
           active={pathname === "/settings" || pathname.startsWith("/settings/")}
         />
       </div>

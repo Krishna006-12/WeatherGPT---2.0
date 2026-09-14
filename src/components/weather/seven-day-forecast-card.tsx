@@ -17,7 +17,8 @@ function getWeatherIcon(condition: string) {
 }
 
 export function SevenDayForecastCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
   if (isLoading || !weather) return <div className="wg-skeleton h-64 w-full" />;
 
   const timezone = weather.location.timezone;
@@ -46,7 +47,7 @@ export function SevenDayForecastCard({ weather, isLoading }: { weather?: Weather
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2.5">
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-            {t("timeline.7_day_forecast", "7-Day Meteorological Outlook")}
+            {t("timeline.7_day_forecast", "7-Day Forecast")}
           </h3>
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[var(--text-tertiary)] border border-[var(--border-subtle)]">
             {t("timeline.weekly_cycle", "Weekly Cycle")}
@@ -59,7 +60,7 @@ export function SevenDayForecastCard({ weather, isLoading }: { weather?: Weather
 
       <div className="flex flex-col flex-1 justify-between divide-y divide-[var(--border-subtle)]">
         {days.map((day, i) => {
-          const label = i === 0 ? t("timeline.today", "Today") : formatDayName(day.date, timezone, "long");
+          const label = i === 0 ? t("timeline.today", "Today") : formatDayName(day.date, timezone, "short", locale);
 
           // Proportional range bar calculation
           const leftPct = ((day.temperatureLow - globalMin) / range) * 100;

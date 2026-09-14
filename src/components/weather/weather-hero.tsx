@@ -199,7 +199,8 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 }
 
 export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
 
   if (isLoading || !weather) {
     return <div className="wg-skeleton w-full min-h-[360px] rounded-3xl" />;
@@ -347,7 +348,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                   ? t("timeline.today", "Today")
                   : i === 1
                   ? t("hero.tomorrow", "Tomorrow")
-                  : dayDate.toLocaleDateString("en-US", { weekday: "short" });
+                  : dayDate.toLocaleDateString(locale, { weekday: "short" });
 
               return (
                 <div
