@@ -49,11 +49,11 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
             {t("timeline.sun_cycle", "Sunrise & Sunset")}
           </h3>
-          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
             Celestial Arc
           </span>
         </div>
-        <span className="text-[11px] font-bold text-amber-300">
+        <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
           {hours}h {mins}m {t("timeline.daylight", "Daylight")}
         </span>
       </div>
@@ -90,7 +90,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
           />
 
           {/* High-visibility horizon baseline */}
-          <line x1="10" y1="80" x2="270" y2="80" stroke="rgba(255, 255, 255, 0.22)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <line x1="10" y1="80" x2="270" y2="80" stroke="rgba(245, 158, 11, 0.25)" strokeWidth="1.5" strokeDasharray="3 3" />
 
           {/* Complete parabolic trajectory (Visible even at night) */}
           <path
@@ -126,21 +126,21 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
           )}
 
           {/* Zenith / Peak Indicator */}
-          <text x="140" y="32" textAnchor="middle" fill="#FBBF24" fontSize="9" fontWeight="700" letterSpacing="0.08em" opacity="0.8">
+          <text x="140" y="32" textAnchor="middle" fill="#D97706" className="dark:fill-[#FDE047]" fontSize="9" fontWeight="700" letterSpacing="0.08em" opacity="0.95">
             {t("timeline.solar_noon", "ZENITH • NOON")}
           </text>
         </svg>
       </div>
 
       {/* Sunrise & Sunset Anchors */}
-      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-amber-500/15">
+      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-amber-500/20">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
-            <Sunrise size={17} className="text-amber-300" />
+            <Sunrise size={17} className="text-amber-600 dark:text-amber-300" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[11px] font-medium text-neutral-400">{t("timeline.sunrise", "Sunrise")}</span>
-            <span className="text-sm sm:text-base font-bold text-white tracking-tight">
+            <span className="text-[11px] font-medium text-[var(--text-secondary)]">{t("timeline.sunrise", "Sunrise")}</span>
+            <span className="text-sm sm:text-base font-bold text-[var(--text-primary)] tracking-tight">
               {formatTime(today.sunrise)}
             </span>
           </div>
@@ -148,13 +148,13 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
 
         <div className="flex items-center justify-end gap-2.5 text-right">
           <div className="flex flex-col">
-            <span className="text-[11px] font-medium text-neutral-400">{t("timeline.sunset", "Sunset")}</span>
-            <span className="text-sm sm:text-base font-bold text-white tracking-tight">
+            <span className="text-[11px] font-medium text-[var(--text-secondary)]">{t("timeline.sunset", "Sunset")}</span>
+            <span className="text-sm sm:text-base font-bold text-[var(--text-primary)] tracking-tight">
               {formatTime(today.sunset)}
             </span>
           </div>
           <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
-            <Sunset size={17} className="text-amber-300" />
+            <Sunset size={17} className="text-amber-600 dark:text-amber-300" />
           </div>
         </div>
       </div>

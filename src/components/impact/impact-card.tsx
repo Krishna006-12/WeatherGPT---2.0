@@ -24,9 +24,9 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
     return (
       <div className="wg-surface-decision flex flex-col justify-center items-center min-h-[180px] p-6 text-center">
         <ShieldCheck size={24} className="text-[var(--text-tertiary)] mb-2 opacity-60" />
-        <p className="text-sm font-medium text-[var(--text-secondary)]">No active events</p>
+        <p className="text-sm font-medium text-[var(--text-secondary)]">{t("impact.no_active", "No active events")}</p>
         <p className="text-xs text-[var(--text-tertiary)] mt-1">
-          Regional impact assessment is clear.
+          {t("impact.clear_assessment", "Regional impact assessment is clear.")}
         </p>
       </div>
     );

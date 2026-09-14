@@ -217,6 +217,41 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "impact.warning": "Warning",
     "impact.hazard_assessment": "Hazard Assessment",
     "impact.actionable_advisory": "Actionable Advisory",
+
+    // Dashboard & Welcome
+    "dashboard.immediate_horizon": "Immediate Horizon & Risk Intelligence",
+    "dashboard.regional_analysis": "Environmental & Regional Analysis",
+    "welcome.title": "Welcome to WeatherGPT 2.0",
+    "welcome.subtitle": "Search for a city above to begin your weather intelligence experience.",
+    "metric.wind": "Wind",
+
+    // Events & Hazard Feeds
+    "events.category": "Category",
+    "events.all_categories": "All Categories",
+    "events.refresh": "Refresh",
+    "events.sync_feeds": "Sync Live Feeds",
+    "events.syncing": "Syncing...",
+    "events.confidence": "Confidence",
+    "events.updated": "Updated",
+    "events.locations": "Locations",
+    "events.sources": "Sources",
+    "events.no_active": "No active live events",
+    "events.monitoring_subcontinent": "Global meteorological monitoring active. Subcontinent clear.",
+    "events.multiple_regions": "Multiple regions",
+
+    // Disaster Categories
+    "category.flood": "Flood",
+    "category.flash_flood": "Flash Flood",
+    "category.cyclone": "Cyclone",
+    "category.heavy_rain": "Heavy Rain",
+    "category.thunderstorm": "Thunderstorm",
+    "category.heatwave": "Heatwave",
+    "category.landslide": "Landslide",
+    "category.earthquake": "Earthquake",
+    "category.wildfire": "Wildfire",
+    "category.other": "Other",
+    "impact.no_active": "No active events",
+    "impact.clear_assessment": "Regional impact assessment is clear.",
   },
 
   hi: {
@@ -430,6 +465,41 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "impact.warning": "चेतावनी",
     "impact.hazard_assessment": "आपदा मूल्यांकन",
     "impact.actionable_advisory": "कार्रवाई योग्य सलाह",
+
+    // Dashboard & Welcome
+    "dashboard.immediate_horizon": "तात्कालिक क्षितिज व जोखिम इंटेलिजेंस",
+    "dashboard.regional_analysis": "पर्यावरणीय व क्षेत्रीय विश्लेषण",
+    "welcome.title": "WeatherGPT 2.0 में आपका स्वागत है",
+    "welcome.subtitle": "मौसम की सटीक जानकारी प्राप्त करने के लिए ऊपर किसी शहर को खोजें।",
+    "metric.wind": "हवा",
+
+    // Events & Hazard Feeds
+    "events.category": "श्रेणी",
+    "events.all_categories": "सभी श्रेणियां",
+    "events.refresh": "ताज़ा करें",
+    "events.sync_feeds": "लाइव फीड्स सिंक करें",
+    "events.syncing": "सिंक हो रहा है...",
+    "events.confidence": "विश्वसनीयता",
+    "events.updated": "अपडेट किया गया",
+    "events.locations": "स्थान",
+    "events.sources": "स्रोत",
+    "events.no_active": "कोई सक्रिय लाइव आपदा नहीं",
+    "events.monitoring_subcontinent": "वैश्विक मौसम निगरानी सक्रिय है। उपमहाद्वीप शांत है।",
+    "events.multiple_regions": "विभिन्न क्षेत्र",
+
+    // Disaster Categories
+    "category.flood": "बाढ़",
+    "category.flash_flood": "अचानक बाढ़ (फ्लैश फ्लड)",
+    "category.cyclone": "चक्रवात",
+    "category.heavy_rain": "भारी बारिश",
+    "category.thunderstorm": "गरज के साथ तूफान",
+    "category.heatwave": "लू / भीषण गर्मी",
+    "category.landslide": "भूस्खलन",
+    "category.earthquake": "भूकंप",
+    "category.wildfire": "जंगल की आग",
+    "category.other": "अन्य",
+    "impact.no_active": "कोई सक्रिय आपदा नहीं",
+    "impact.clear_assessment": "क्षेत्रीय प्रभाव मूल्यांकन सामान्य व स्पष्ट है।",
   },
 
   pa: {
@@ -643,5 +713,40 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "impact.warning": "ਚੇਤਾਵਨੀ",
     "impact.hazard_assessment": "ਆਫ਼ਤ ਮੁਲਾਂਕਣ",
     "impact.actionable_advisory": "ਕਾਰਵਾਈ ਯੋਗ ਸਲਾਹ",
+
+    // Dashboard & Welcome
+    "dashboard.immediate_horizon": "ਤਤਕਾਲੀ ਦ੍ਰਿਸ਼ਟੀ ਅਤੇ ਜੋਖਮ ਇੰਟੈਲੀਜੈਂਸ",
+    "dashboard.regional_analysis": "ਵਾਤਾਵਰਣ ਅਤੇ ਖੇਤਰੀ ਵਿਸ਼ਲੇਸ਼ਣ",
+    "welcome.title": "WeatherGPT 2.0 ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ",
+    "welcome.subtitle": "ਮੌਸਮ ਜਾਣਕਾਰੀ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਉੱਪਰ ਕਿਸੇ ਸ਼ਹਿਰ ਦੀ ਖੋਜ ਕਰੋ।",
+    "metric.wind": "ਹਵਾ",
+
+    // Events & Hazard Feeds
+    "events.category": "ਸ਼੍ਰੇਣੀ",
+    "events.all_categories": "ਸਾਰੀਆਂ ਸ਼੍ਰੇਣੀਆਂ",
+    "events.refresh": "ਤਾਜ਼ਾ ਕਰੋ",
+    "events.sync_feeds": "ਲਾਈਵ ਫੀਡਸ ਸਿੰਕ ਕਰੋ",
+    "events.syncing": "ਸਿੰਕ ਹੋ ਰਿਹਾ ਹੈ...",
+    "events.confidence": "ਭਰੋਸੇਯੋਗਤਾ",
+    "events.updated": "ਅੱਪਡੇਟ ਕੀਤਾ",
+    "events.locations": "ਸਥਾਨ",
+    "events.sources": "ਸਰੋਤ",
+    "events.no_active": "ਕੋਈ ਸਰਗਰਮ ਆਫ਼ਤ ਨਹੀਂ",
+    "events.monitoring_subcontinent": "ਗਲੋਬਲ ਮੌਸਮ ਨਿਗਰਾਨੀ ਸਰਗਰਮ ਹੈ। ਉਪ-ਮਹਾਂਦੀਪ ਸ਼ਾਂਤ ਹੈ।",
+    "events.multiple_regions": "ਕਈ ਖੇਤਰ",
+
+    // Disaster Categories
+    "category.flood": "ਹੜ੍ਹ",
+    "category.flash_flood": "ਅਚਾਨਕ ਹੜ੍ਹ",
+    "category.cyclone": "ਤੂਫਾਨ / ਚੱਕਰਵਾਤ",
+    "category.heavy_rain": "ਭਾਰੀ ਮੀਂਹ",
+    "category.thunderstorm": "ਗਰਜ-ਤੂਫਾਨ",
+    "category.heatwave": "ਲੂ / ਭਾਰੀ ਗਰਮੀ",
+    "category.landslide": "ਜ਼ਮੀਨ ਖਿਸਕਣਾ",
+    "category.earthquake": "ਭੂਚਾਲ",
+    "category.wildfire": "ਜੰਗਲ ਦੀ ਅੱਗ",
+    "category.other": "ਹੋਰ",
+    "impact.no_active": "ਕੋਈ ਸਰਗਰਮ ਆਫ਼ਤ ਨਹੀਂ",
+    "impact.clear_assessment": "ਖੇਤਰੀ ਅਸਰ ਮੁਲਾਂਕਣ ਸਾਫ਼ ਹੈ।",
   },
 };

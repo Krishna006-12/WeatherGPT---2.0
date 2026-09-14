@@ -15,17 +15,17 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default:
-    'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900',
+    'bg-[var(--surface-3)] text-[var(--text-primary)] border border-[var(--border-subtle)]',
   secondary:
-    'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100',
+    'bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border-subtle)]',
   success:
-    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30',
   warning:
-    'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100',
+    'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30',
   destructive:
-    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+    'bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30',
   outline:
-    'border border-neutral-300 bg-transparent dark:border-neutral-700',
+    'border border-[var(--border-default)] bg-transparent text-[var(--text-secondary)]',
 };
 
 function Badge({ className, variant = 'default', ...props }: BadgeProps) {

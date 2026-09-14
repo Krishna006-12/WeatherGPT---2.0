@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { LocationSearch } from "@/components/weather/location-search";
 import { UserMenu } from "@/components/auth/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface TopbarProps {
@@ -12,6 +15,8 @@ interface TopbarProps {
 }
 
 export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
+  const { t } = useLanguage();
+
   return (
     <header
       className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 backdrop-blur-xl z-20 sticky top-0"
@@ -29,11 +34,11 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
       <div className="hidden lg:flex items-center gap-4 px-4 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
         <div className="flex items-center gap-1.5 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-pulse" />
-          <span>Synoptic Grid Active</span>
+          <span>{t("topbar.synoptic_grid", "Synoptic Grid Active")}</span>
         </div>
         <span className="text-[var(--border-default)]">•</span>
         <span className="text-[11px] text-[var(--text-tertiary)] font-mono">
-          Model: ECMWF / GFS Blend
+          {t("topbar.model_blend", "Model: ECMWF / GFS Blend")}
         </span>
       </div>
 

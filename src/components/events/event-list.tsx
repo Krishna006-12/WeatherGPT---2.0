@@ -6,10 +6,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/context/language-context";
 import type { WeatherEvent } from "@/types/events";
 
 export function EventList() {
   const queryClient = useQueryClient();
+  const { t, language } = useLanguage();
+  const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const {
@@ -52,27 +55,29 @@ export function EventList() {
       {/* Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <label htmlFor="category-select" className="text-xs text-neutral-500 font-medium">Category:</label>
+          <label htmlFor="category-select" className="text-xs text-[var(--text-secondary)] font-medium">
+            {t("events.category", "Category")}:
+          </label>
           <select
             id="category-select"
-            className="rounded border border-neutral-300 bg-transparent px-2 py-1 text-xs dark:border-neutral-700"
+            className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-2)] text-[var(--text-primary)] px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
-            <option value="">All Categories</option>
-            <option value="flood">Flood</option>
-            <option value="flash_flood">Flash Flood</option>
-            <option value="cyclone">Cyclone</option>
-            <option value="heavy_rain">Heavy Rain</option>
-            <option value="thunderstorm">Thunderstorm</option>
-            <option value="heatwave">Heatwave</option>
-            <option value="landslide">Landslide</option>
-            <option value="earthquake">Earthquake</option>
-            <option value="wildfire">Wildfire</option>
-            <option value="other">Other</option>
+            <option value="">{t("events.all_categories", "All Categories")}</option>
+            <option value="flood">{t("category.flood", "Flood")}</option>
+            <option value="flash_flood">{t("category.flash_flood", "Flash Flood")}</option>
+            <option value="cyclone">{t("category.cyclone", "Cyclone")}</option>
+            <option value="heavy_rain">{t("category.heavy_rain", "Heavy Rain")}</option>
+            <option value="thunderstorm">{t("category.thunderstorm", "Thunderstorm")}</option>
+            <option value="heatwave">{t("category.heatwave", "Heatwave")}</option>
+            <option value="landslide">{t("category.landslide", "Landslide")}</option>
+            <option value="earthquake">{t("category.earthquake", "Earthquake")}</option>
+            <option value="wildfire">{t("category.wildfire", "Wildfire")}</option>
+            <option value="other">{t("category.other", "Other")}</option>
           </select>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Refresh
+            {t("events.refresh", "Refresh")}
           </Button>
         </div>
 
@@ -82,7 +87,7 @@ export function EventList() {
           disabled={syncMutation.isPending}
           onClick={() => syncMutation.mutate()}
         >
-          {syncMutation.isPending ? "Syncing..." : "Sync Live Feeds"}
+          {syncMutation.isPending ? t("events.syncing", "Syncing...") : t("events.sync_feeds", "Sync Live Feeds")}
         </Button>
       </div>
 
@@ -127,7 +132,7 @@ export function EventList() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="default" className="capitalize">
-                    {evt.category.replace(/_/g, " ")}
+                    {t(`category.${evt.category}`, evt.category.replace(/_/g, " "))}
                   </Badge>
                   <Badge
                     variant={
@@ -142,7 +147,7 @@ export function EventList() {
                     {evt.severity}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    Confidence: {Math.round(evt.confidence * 100)}%
+                    {t("events.confidence", "Confidence")}: {Math.round(evt.confidence * 100)}%
                   </Badge>
                   {evt.freshness && (
                     <Badge variant="secondary" className="text-xs">
@@ -153,24 +158,24 @@ export function EventList() {
                     {evt.status}
                   </Badge>
                 </div>
-                <div className="text-xs text-neutral-400">
-                  Updated: {new Date(evt.lastUpdatedAt).toLocaleDateString()}
+                <div className="text-xs text-[var(--text-tertiary)]">
+                  {t("events.updated", "Updated")}: {new Date(evt.lastUpdatedAt).toLocaleDateString(locale)}
                 </div>
               </div>
-              <CardTitle className="mt-2 text-lg font-bold">{evt.title}</CardTitle>
+              <CardTitle className="mt-2 text-lg font-bold text-[var(--text-primary)]">{evt.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xs text-neutral-600 dark:text-neutral-300">
+              <div className="text-xs leading-relaxed text-[var(--text-secondary)]">
                 {evt.description}
               </div>
 
               {/* Locations */}
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
-                <span className="font-medium">Locations:</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+                <span className="font-semibold text-[var(--text-secondary)]">{t("events.locations", "Locations")}:</span>
                 {evt.locations.map((loc) => (
                   <span
                     key={`${loc.name}_${loc.country}`}
-                    className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    className="rounded-lg bg-[var(--surface-2)] border border-[var(--border-subtle)] px-2 py-0.5 text-xs text-[var(--text-secondary)]"
                   >
                     {loc.name}, {loc.country}
                   </span>
@@ -178,15 +183,15 @@ export function EventList() {
               </div>
 
               {/* Source citations */}
-              <div className="mt-4 border-t border-neutral-100 pt-2 dark:border-neutral-800">
-                <div className="mb-1 text-[11px] font-semibold text-neutral-400">
-                  Sources ({evt.sources.length}):
+              <div className="mt-4 border-t border-[var(--border-subtle)] pt-2.5">
+                <div className="mb-1 text-[11px] font-semibold text-[var(--text-tertiary)]">
+                  {t("events.sources", "Sources")} ({evt.sources.length}):
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {evt.sources.map((src, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400"
+                      className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]"
                     >
                       <span className="font-medium">{src.name}</span>
                       <Badge variant="secondary" className="text-[10px] py-0 px-1">
@@ -197,7 +202,7 @@ export function EventList() {
                           href={src.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline"
+                          className="text-[var(--accent)] hover:underline"
                         >
                           link
                         </a>

@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@variant dark (&:where(.dark, .dark *));
+
 /*
  * ============================================================
  * WeatherGPT 2.0 — Design System Foundation

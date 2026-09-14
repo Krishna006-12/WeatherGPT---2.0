@@ -44,9 +44,9 @@ export function LiveEventCard() {
     return (
       <div className="wg-surface-intelligence flex flex-col justify-center items-center min-h-[180px] p-6 text-center">
         <Activity size={22} className="text-[var(--text-tertiary)] mb-2 opacity-50" />
-        <p className="text-sm font-medium text-[var(--text-secondary)]">No active live events</p>
+        <p className="text-sm font-medium text-[var(--text-secondary)]">{t("events.no_active", "No active live events")}</p>
         <p className="text-xs text-[var(--text-tertiary)] mt-1">
-          Global meteorological monitoring active. Subcontinent clear.
+          {t("events.monitoring_subcontinent", "Global meteorological monitoring active. Subcontinent clear.")}
         </p>
       </div>
     );
@@ -55,7 +55,7 @@ export function LiveEventCard() {
   const event = data.events[0];
   if (!event) return null;
 
-  const locationText = event.locations && event.locations[0] ? `${event.locations[0].name}` : "Multiple regions";
+  const locationText = event.locations && event.locations[0] ? `${event.locations[0].name}` : t("events.multiple_regions", "Multiple regions");
   const indiaRelevance = getEventIndiaRelevance(event);
   const isHighSeverity = event.severity === "extreme" || event.severity === "high" || event.severity === "critical";
 

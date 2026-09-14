@@ -23,10 +23,10 @@ export function LanguageSwitcher() {
           key={opt.code}
           type="button"
           onClick={() => setLanguage(opt.code)}
-          className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
             language === opt.code
-              ? "bg-[var(--surface-3)] text-white font-semibold shadow-sm"
-              : "text-[var(--text-tertiary)] hover:text-white"
+              ? "bg-[var(--surface-1)] text-[var(--accent)] shadow-sm border border-[var(--border-subtle)] scale-[1.02]"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)]"
           }`}
           title={opt.label}
         >
