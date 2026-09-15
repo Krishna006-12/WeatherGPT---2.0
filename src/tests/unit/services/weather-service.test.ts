@@ -147,4 +147,58 @@ describe("WeatherService", () => {
 
     expect(provider.getWeather).toHaveBeenCalledWith(coords, "Asia/Kolkata");
   });
+
+  it("fetches fresh data when time-bucket advances", async () => {
+    vi.useFakeTimers();
+    try {
+      const mockData = createMockSnapshot();
+      const provider = createMockProvider(mockData);
+      const service = new WeatherService(provider, { cacheTtlMs: 300_000 }); // 5 minutes
+
+      const coords = { latitude: 28.6139, longitude: 77.209 };
+      await service.getWeather(coords, "Asia/Kolkata");
+      expect(provider.getWeather).toHaveBeenCalledTimes(1);
+
+      // Advance time by 6 minutes into a new time bucket
+      vi.advanceTimersByTime(360_000);
+
+      await service.getWeather(coords, "Asia/Kolkata");
+      expect(provider.getWeather).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("returns current conditions via getCurrentConditions", async () => {
+    const mockData = createMockSnapshot();
+    const provider = createMockProvider(mockData);
+    const service = new WeatherService(provider);
+
+    const result = await service.getCurrentConditions({
+      latitude: 28.6139,
+      longitude: 77.209,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.temperature).toBe(18);
+      expect(result.data.condition).toBe("clear");
+    }
+  });
+
+  it("returns forecast via getForecast", async () => {
+    const mockData = createMockSnapshot();
+    const provider = createMockProvider(mockData);
+    const service = new WeatherService(provider);
+
+    const result = await service.getForecast(
+      { latitude: 28.6139, longitude: 77.209 },
+      { days: 7 }
+    );
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.location.name).toBe("Delhi");
+    }
+  });
 });

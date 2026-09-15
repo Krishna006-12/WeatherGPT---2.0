@@ -10,7 +10,7 @@
  */
 
 import type { Coordinates, Result } from '@/types/common';
-import type { WeatherSnapshot } from '@/types/weather';
+import type { CurrentWeather, WeatherSnapshot } from '@/types/weather';
 
 /**
  * Configuration for a weather provider adapter.
@@ -19,6 +19,30 @@ export interface WeatherProviderConfig {
   apiKey?: string;
   baseUrl?: string;
   timeout?: number;
+}
+
+/**
+ * Query options for fetching current weather conditions.
+ */
+export interface CurrentWeatherQuery {
+  timezone?: string;
+}
+
+/**
+ * Time range parameters for forecast queries.
+ */
+export interface ForecastTimeRange {
+  startDate?: string;
+  endDate?: string;
+  days?: number;
+}
+
+/**
+ * Query options for fetching weather forecast.
+ */
+export interface ForecastWeatherQuery extends ForecastTimeRange {
+  timezone?: string;
+  hourly?: boolean;
 }
 
 /**
@@ -39,5 +63,21 @@ export interface WeatherProvider {
   getWeather(
     coordinates: Coordinates,
     timezone?: string
+  ): Promise<WeatherSnapshot | Result<WeatherSnapshot>>;
+
+  /**
+   * Fetch current weather conditions for the given coordinates.
+   */
+  getCurrentConditions?(
+    coordinates: Coordinates,
+    query?: CurrentWeatherQuery
+  ): Promise<CurrentWeather | Result<CurrentWeather>>;
+
+  /**
+   * Fetch weather forecast for the given coordinates parameterized by time range.
+   */
+  getForecast?(
+    coordinates: Coordinates,
+    query?: ForecastWeatherQuery
   ): Promise<WeatherSnapshot | Result<WeatherSnapshot>>;
 }

@@ -7,8 +7,13 @@
  */
 
 import type { Coordinates } from "@/types/common";
-import type { WeatherSnapshot, HourlyWeather, DailyWeather } from "@/types/weather";
-import type { WeatherProvider, WeatherProviderConfig } from "./weather-provider";
+import type { WeatherSnapshot, HourlyWeather, DailyWeather, CurrentWeather } from "@/types/weather";
+import type {
+  WeatherProvider,
+  WeatherProviderConfig,
+  CurrentWeatherQuery,
+  ForecastWeatherQuery,
+} from "./weather-provider";
 import { openMeteoForecastResponseSchema } from "@/schemas/open-meteo";
 import { mapWmoCode } from "@/lib/wmo-codes";
 import { AppError } from "@/lib/errors";
@@ -19,16 +24,50 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 export class OpenMeteoProvider implements WeatherProvider {
   readonly name = "open-meteo";
   private baseUrl: string;
+  private apiKey?: string;
   private timeout: number;
 
   constructor(config: WeatherProviderConfig = {}) {
     this.baseUrl = config.baseUrl || process.env.OPEN_METEO_BASE_URL || DEFAULT_BASE_URL;
+    this.apiKey = config.apiKey || process.env.OPEN_METEO_API_KEY;
     this.timeout = config.timeout || DEFAULT_TIMEOUT_MS;
   }
 
   async getWeather(
     coordinates: Coordinates,
     timezone?: string
+  ): Promise<WeatherSnapshot> {
+    return this.fetchSnapshot(coordinates, { timezone, forecastDays: 7 });
+  }
+
+  async getCurrentConditions(
+    coordinates: Coordinates,
+    query?: CurrentWeatherQuery
+  ): Promise<CurrentWeather> {
+    const snapshot = await this.getWeather(coordinates, query?.timezone);
+    return snapshot.current;
+  }
+
+  async getForecast(
+    coordinates: Coordinates,
+    query?: ForecastWeatherQuery
+  ): Promise<WeatherSnapshot> {
+    return this.fetchSnapshot(coordinates, {
+      timezone: query?.timezone,
+      forecastDays: query?.days ?? 7,
+      startDate: query?.startDate,
+      endDate: query?.endDate,
+    });
+  }
+
+  private async fetchSnapshot(
+    coordinates: Coordinates,
+    options: {
+      timezone?: string;
+      forecastDays?: number;
+      startDate?: string;
+      endDate?: string;
+    } = {}
   ): Promise<WeatherSnapshot> {
     const params = new URLSearchParams({
       latitude: coordinates.latitude.toString(),
@@ -61,9 +100,19 @@ export class OpenMeteoProvider implements WeatherProvider {
         "sunrise",
         "sunset",
       ].join(","),
-      timezone: timezone || "auto",
-      forecast_days: "7",
+      timezone: options.timezone || "auto",
     });
+
+    if (options.startDate && options.endDate) {
+      params.set("start_date", options.startDate);
+      params.set("end_date", options.endDate);
+    } else {
+      params.set("forecast_days", (options.forecastDays ?? 7).toString());
+    }
+
+    if (this.apiKey) {
+      params.set("apikey", this.apiKey);
+    }
 
     const url = `${this.baseUrl}/v1/forecast?${params.toString()}`;
     const retrievedAt = new Date().toISOString();
@@ -199,6 +248,11 @@ export class OpenMeteoProvider implements WeatherProvider {
       }
     }
 
+    const observedTimeMs = new Date(data.current.time).getTime();
+    const dataAgeSeconds = isNaN(observedTimeMs)
+      ? 0
+      : Math.max(0, Math.floor((Date.now() - observedTimeMs) / 1000));
+
     const snapshot: WeatherSnapshot = {
       location: {
         name: `${coordinates.latitude.toFixed(2)}, ${coordinates.longitude.toFixed(2)}`,
@@ -231,12 +285,22 @@ export class OpenMeteoProvider implements WeatherProvider {
       provenance: [
         {
           provider: this.name,
+          dataSource: this.name,
           retrievedAt,
           observedAt: data.current.time,
           timezone: data.timezone,
           dataType: "current",
+          dataAgeSeconds,
+          confidence: 0.95,
         },
       ],
+      forecastHorizon: {
+        hours: hourly.length,
+        days: daily.length,
+      },
+      dataSource: this.name,
+      dataAgeSeconds,
+      confidence: 0.95,
     };
 
     return snapshot;

@@ -35,6 +35,44 @@ describe("OpenMeteoProvider", () => {
     expect(snapshot.daily.length).toBeGreaterThan(0);
     expect(snapshot.provenance[0]?.provider).toBe("open-meteo");
     expect(snapshot.provenance[0]?.timezone).toBe("Asia/Kolkata");
+    expect(snapshot.forecastHorizon?.hours).toBe(snapshot.hourly.length);
+    expect(snapshot.forecastHorizon?.days).toBe(snapshot.daily.length);
+    expect(snapshot.dataSource).toBe("open-meteo");
+    expect(typeof snapshot.dataAgeSeconds).toBe("number");
+    expect(snapshot.confidence).toBe(0.95);
+  });
+
+  it("fetches current conditions via getCurrentConditions", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(openMeteoWeatherFixture),
+    });
+
+    const provider = new OpenMeteoProvider();
+    const current = await provider.getCurrentConditions({ latitude: 26.46, longitude: 80.35 });
+
+    expect(current.temperature).toBe(26.1);
+    expect(current.humidity).toBe(99);
+    expect(current.condition).toBe("drizzle");
+  });
+
+  it("fetches forecast via getForecast with custom time range", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(openMeteoWeatherFixture),
+    });
+
+    const provider = new OpenMeteoProvider();
+    const forecast = await provider.getForecast(
+      { latitude: 26.46, longitude: 80.35 },
+      { days: 3, startDate: "2024-01-15", endDate: "2024-01-18" }
+    );
+
+    expect(forecast.daily.length).toBeGreaterThan(0);
+    expect(forecast.location.timezone).toBe("Asia/Kolkata");
+    expect(forecast.dataSource).toBe("open-meteo");
   });
 
   it("handles rate limiting (429)", async () => {

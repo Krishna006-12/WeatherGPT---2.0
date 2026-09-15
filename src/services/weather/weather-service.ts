@@ -12,9 +12,13 @@
  */
 
 import type { Coordinates, Result } from "@/types/common";
-import type { WeatherSnapshot } from "@/types/weather";
+import type { CurrentWeather, WeatherSnapshot } from "@/types/weather";
 import { weatherSnapshotSchema } from "@/schemas/weather";
-import type { WeatherProvider } from "./weather-provider";
+import type {
+  WeatherProvider,
+  CurrentWeatherQuery,
+  ForecastWeatherQuery,
+} from "./weather-provider";
 import { MemoryCache } from "@/lib/cache";
 import { AppError } from "@/lib/errors";
 
@@ -27,13 +31,31 @@ export interface WeatherServiceOptions {
 export class WeatherService {
   private provider: WeatherProvider;
   private cache: MemoryCache<WeatherSnapshot>;
+  private cacheTtlMs: number;
 
   constructor(provider: WeatherProvider, options: WeatherServiceOptions = {}) {
     this.provider = provider;
+    this.cacheTtlMs = options.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
     this.cache = new MemoryCache<WeatherSnapshot>({
-      defaultTtlMs: options.cacheTtlMs || DEFAULT_CACHE_TTL_MS,
+      defaultTtlMs: this.cacheTtlMs,
       maxEntries: 100,
     });
+  }
+
+  /**
+   * Builds an in-memory/edge cache key indexed by spatial coordinates and a time bucket.
+   * Prevents hammering rate limits and ensures automatic time-window invalidation.
+   */
+  private getCacheKey(
+    coordinates: Coordinates,
+    prefix: string = "weather",
+    extra: string = "auto"
+  ): string {
+    const bucketDuration = this.cacheTtlMs > 0 ? this.cacheTtlMs : DEFAULT_CACHE_TTL_MS;
+    const timeBucket = Math.floor(Date.now() / bucketDuration);
+    const lat = coordinates.latitude.toFixed(2);
+    const lon = coordinates.longitude.toFixed(2);
+    return `${prefix}:${lat}_${lon}:${extra}:b${timeBucket}`;
   }
 
   /**
@@ -63,7 +85,7 @@ export class WeatherService {
     }
 
     const tz = timezone || "auto";
-    const cacheKey = `${coordinates.latitude.toFixed(2)}_${coordinates.longitude.toFixed(2)}_${tz}`;
+    const cacheKey = this.getCacheKey(coordinates, "weather", tz);
     const cached = this.cache.get(cacheKey);
 
     if (cached) {
@@ -129,6 +151,70 @@ export class WeatherService {
         ),
       };
     }
+  }
+
+  /**
+   * Fetch current conditions for the given coordinates.
+   */
+  async getCurrentConditions(
+    coordinates: Coordinates,
+    query?: CurrentWeatherQuery
+  ): Promise<Result<CurrentWeather>> {
+    const weatherResult = await this.getWeather(coordinates, query?.timezone);
+    if (!weatherResult.success) {
+      return weatherResult;
+    }
+    return { success: true, data: weatherResult.data.current };
+  }
+
+  /**
+   * Fetch forecast for the given coordinates and time range options.
+   */
+  async getForecast(
+    coordinates: Coordinates,
+    query?: ForecastWeatherQuery
+  ): Promise<Result<WeatherSnapshot>> {
+    if (this.provider.getForecast) {
+      try {
+        const raw = await this.provider.getForecast(coordinates, query);
+        let candidate: unknown = raw;
+        if ("success" in raw) {
+          if (!raw.success) {
+            return {
+              success: false,
+              error:
+                raw.error instanceof AppError
+                  ? raw.error
+                  : new AppError("WEATHER_PROVIDER_UNAVAILABLE", raw.error.message, 502),
+            };
+          }
+          candidate = raw.data;
+        }
+        const parsed = weatherSnapshotSchema.safeParse(candidate);
+        if (!parsed.success) {
+          return {
+            success: false,
+            error: new AppError(
+              "WEATHER_RESPONSE_INVALID",
+              `Forecast validation failed: ${parsed.error.message}`,
+              502
+            ),
+          };
+        }
+        return { success: true, data: parsed.data as WeatherSnapshot };
+      } catch (err) {
+        if (err instanceof AppError) return { success: false, error: err };
+        return {
+          success: false,
+          error: new AppError(
+            "WEATHER_PROVIDER_UNAVAILABLE",
+            err instanceof Error ? err.message : "Error fetching forecast",
+            502
+          ),
+        };
+      }
+    }
+    return this.getWeather(coordinates, query?.timezone);
   }
 
   /**

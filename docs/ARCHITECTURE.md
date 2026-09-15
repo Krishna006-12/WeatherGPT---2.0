@@ -61,47 +61,65 @@ Database is optional in the earliest weather-core phase. Supabase/Postgres shoul
 
 ## 3. Core boundary: one weather service
 
-Frontend code must not call weather providers directly.
+Frontend code must not call weather providers directly. All access goes through a single weather service behind a provider-adapter interface.
 
 ```text
-UI
+UI (React / Client Components)
  ↓
-/api/weather
+/api/weather (Next.js Route Handler — Lat/Lon/Timezone validation)
  ↓
-Weather Service
+Weather Service (Time-bucketed Memory Cache & Zod validation boundary)
  ↓
-Provider Adapter
+Weather Provider Adapter (Open-Meteo Adapter, implements WeatherProvider)
  ↓
-Normalized object
+Normalized WeatherSnapshot contract (strict Zod schema validation)
 ```
 
 All consumers use the same normalized object:
 
-- Dashboard
-- Forecast
-- AI
-- Alerts
-- Activity intelligence
-- Agriculture
+- Dashboard & Charts
+- Forecast (hourly & 7-day)
+- AI Orchestrator & Copilots
+- Severe Risk & Alerts
+- Activity Intelligence
+- Agriculture Intelligence
 - Live-event impact analysis
+
+### Caching Architecture
+
+Requests are cached in-memory using a coordinate and time-bucket index:
+`weather:${lat.toFixed(2)}_${lon.toFixed(2)}:${timezone}:b${Math.floor(Date.now() / bucketTtlMs)}`
+This provides fast sub-millisecond local responses, smooth edge caching compatibility, and protects upstream providers against rate-limit exhaustion.
 
 ## 4. Weather contract
 
-Suggested conceptual shape:
+The normalized internal weather contract is strictly validated with Zod (`weatherSnapshotSchema`) at the service boundary before data leaves the weather service:
 
 ```ts
-interface WeatherSnapshot {
+export interface WeatherSnapshot {
   location: LocationInfo;
-  observedAt: string;
+  observedAt: ISOTimestamp;
   current: CurrentWeather;
   hourly: HourlyWeather[];
   daily: DailyWeather[];
   alerts: WeatherAlert[];
   provenance: DataProvenance[];
+  forecastHorizon?: ForecastHorizon;
+  dataSource?: string;
+  dataAgeSeconds?: number;
+  confidence?: number;
 }
 ```
 
-The exact contract will be finalized before Phase 2 implementation.
+The adapter interface (`WeatherProvider`) exposes:
+```ts
+export interface WeatherProvider {
+  readonly name: string;
+  getWeather(coordinates: Coordinates, timezone?: string): Promise<WeatherSnapshot | Result<WeatherSnapshot>>;
+  getCurrentConditions?(coordinates: Coordinates, query?: CurrentWeatherQuery): Promise<CurrentWeather | Result<CurrentWeather>>;
+  getForecast?(coordinates: Coordinates, query?: ForecastWeatherQuery): Promise<WeatherSnapshot | Result<WeatherSnapshot>>;
+}
+```
 
 ## 5. Live event contract
 

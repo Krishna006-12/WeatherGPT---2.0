@@ -117,4 +117,58 @@ describe('weatherSnapshotSchema', () => {
     const result = weatherSnapshotSchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
+
+  it('accepts valid snapshot with forecastHorizon and confidence-relevant metadata', () => {
+    const enriched = {
+      ...validSnapshot,
+      forecastHorizon: { hours: 24, days: 7 },
+      dataSource: 'open-meteo',
+      dataAgeSeconds: 120,
+      confidence: 0.95,
+      provenance: [
+        {
+          provider: 'open-meteo',
+          dataSource: 'open-meteo',
+          retrievedAt: '2024-01-15T10:30:00Z',
+          observedAt: '2024-01-15T10:28:00Z',
+          dataAgeSeconds: 120,
+          confidence: 0.95,
+        },
+      ],
+    };
+    const result = weatherSnapshotSchema.safeParse(enriched);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.forecastHorizon?.hours).toBe(24);
+      expect(result.data.dataAgeSeconds).toBe(120);
+      expect(result.data.confidence).toBe(0.95);
+    }
+  });
+
+  it('rejects invalid confidence outside 0-1', () => {
+    const invalid = {
+      ...validSnapshot,
+      confidence: 1.5,
+    };
+    const result = weatherSnapshotSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative dataAgeSeconds', () => {
+    const invalid = {
+      ...validSnapshot,
+      dataAgeSeconds: -5,
+    };
+    const result = weatherSnapshotSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative windSpeed in current weather', () => {
+    const invalid = {
+      ...validSnapshot,
+      current: { ...validSnapshot.current, windSpeed: -10 },
+    };
+    const result = weatherSnapshotSchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
 });

@@ -26,12 +26,15 @@ const isoDateStringSchema = z.string().regex(isoDateTimeRegex, 'Invalid ISO date
 
 const dataProvenanceSchema = z.object({
   provider: z.string().min(1),
+  dataSource: z.string().optional(),
   retrievedAt: isoDateStringSchema,
   expiresAt: isoDateStringSchema.optional(),
   observedAt: isoDateStringSchema.optional(),
   modelRunAt: isoDateStringSchema.optional(),
   timezone: z.string().optional(),
   dataType: z.enum(['observation', 'current', 'forecast']).optional(),
+  dataAgeSeconds: z.number().nonnegative().optional(),
+  confidence: z.number().min(0).max(1).optional(),
 });
 
 const weatherConditionSchema = z.enum([
@@ -110,6 +113,11 @@ const weatherAlertSchema = z.object({
   expiresAt: isoDateStringSchema,
 });
 
+const forecastHorizonSchema = z.object({
+  hours: z.number().int().nonnegative().optional(),
+  days: z.number().int().nonnegative().optional(),
+});
+
 export const weatherSnapshotSchema = z.object({
   location: locationInfoSchema,
   observedAt: isoDateStringSchema,
@@ -118,6 +126,10 @@ export const weatherSnapshotSchema = z.object({
   daily: z.array(dailyWeatherSchema),
   alerts: z.array(weatherAlertSchema),
   provenance: z.array(dataProvenanceSchema).min(1),
+  forecastHorizon: forecastHorizonSchema.optional(),
+  dataSource: z.string().optional(),
+  dataAgeSeconds: z.number().nonnegative().optional(),
+  confidence: z.number().min(0).max(1).optional(),
 });
 
 export type WeatherSnapshotInput = z.input<typeof weatherSnapshotSchema>;
@@ -132,4 +144,5 @@ export {
   dailyWeatherSchema,
   alertSeveritySchema,
   weatherAlertSchema,
+  forecastHorizonSchema,
 };

@@ -25,12 +25,15 @@ export interface LocationInfo {
  */
 export interface DataProvenance {
   provider: string;
+  dataSource?: string;
   retrievedAt: ISOTimestamp;
   expiresAt?: ISOTimestamp;
   observedAt?: ISOTimestamp;
   modelRunAt?: ISOTimestamp;
   timezone?: string;
   dataType?: 'observation' | 'current' | 'forecast';
+  dataAgeSeconds?: number;
+  confidence?: number;
 }
 
 /** Weather condition code — extensible union. */
@@ -123,6 +126,14 @@ export interface WeatherAlert {
 }
 
 /**
+ * Forecast horizon metadata (e.g. 168 hours / 7 days).
+ */
+export interface ForecastHorizon {
+  hours?: number;
+  days?: number;
+}
+
+/**
  * The normalized weather snapshot — the single contract
  * that the entire application consumes.
  */
@@ -134,4 +145,8 @@ export interface WeatherSnapshot {
   daily: DailyWeather[];
   alerts: WeatherAlert[];
   provenance: DataProvenance[];
+  forecastHorizon?: ForecastHorizon;
+  dataSource?: string;
+  dataAgeSeconds?: number;
+  confidence?: number;
 }
