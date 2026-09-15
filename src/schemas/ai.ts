@@ -31,6 +31,15 @@ export const aiCitationSchema = z.object({
   publishedAt: z.string().optional(),
 });
 
+export const promptChannelSchema = z.enum(["chat", "voice"]);
+
+export const conversationTurnSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1),
+  timestamp: z.string().optional(),
+  intent: intentCategorySchema.optional(),
+});
+
 export const conversationContextSchema = z.object({
   lastResolvedLocation: z
     .object({
@@ -51,6 +60,8 @@ export const conversationContextSchema = z.object({
   lastTemporalTarget: z.string().optional(),
   lastEventId: z.string().optional(),
   lastEventTitle: z.string().optional(),
+  turns: z.array(conversationTurnSchema).optional(),
+  olderTurnsSummary: z.string().optional(),
 });
 
 export const aiResponseMetadataSchema = z.object({
@@ -105,6 +116,7 @@ export const chatRequestSchema = z.object({
   location: chatLocationSchema.optional(),
   context: conversationContextSchema.optional(),
   sessionId: z.string().optional(),
+  channel: promptChannelSchema.optional(),
 });
 
 

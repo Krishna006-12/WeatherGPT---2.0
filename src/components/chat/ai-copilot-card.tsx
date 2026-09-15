@@ -98,7 +98,7 @@ export function AICopilotCard({
   } = useVoiceAssistant({
     onFinalTranscript: (spokenText) => {
       setQuery(spokenText);
-      handleSendQuery(spokenText);
+      handleSendQuery(spokenText, "voice");
     },
   });
 
@@ -114,7 +114,7 @@ export function AICopilotCard({
     }
   }, [messages, loading]);
 
-  const handleSendQuery = async (userMessageText: string) => {
+  const handleSendQuery = async (userMessageText: string, channel: "chat" | "voice" = "chat") => {
     const trimmed = userMessageText.trim();
     if (!trimmed || loading) return;
 
@@ -146,6 +146,7 @@ export function AICopilotCard({
               }
             : undefined,
           context: lastContext,
+          channel,
         }),
       });
 

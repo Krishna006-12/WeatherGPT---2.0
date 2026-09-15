@@ -40,6 +40,17 @@ export interface AICitation {
   publishedAt?: ISOTimestamp;
 }
 
+/** Delivery channel: interactive visual chat vs text-to-speech voice */
+export type PromptChannel = "chat" | "voice";
+
+/** Single conversation turn in multi-turn chat sessions. */
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: ISOTimestamp;
+  intent?: IntentCategory;
+}
+
 /** Structured short-term conversation context for follow-up reasoning. */
 export interface ConversationContext {
   lastResolvedLocation?: EventLocation;
@@ -47,6 +58,8 @@ export interface ConversationContext {
   lastTemporalTarget?: string;
   lastEventId?: string;
   lastEventTitle?: string;
+  turns?: ConversationTurn[];
+  olderTurnsSummary?: string;
 }
 
 /** Structured agricultural intelligence assessment and activity suitability result. */
@@ -116,6 +129,9 @@ export interface AIResponse {
 export interface GroundedContext {
   userQuery: string;
   intent: IntentCategory;
+  channel?: PromptChannel;
+  recentTurns?: ConversationTurn[];
+  olderTurnsSummary?: string;
   targetLocation?: EventLocation;
   weather?: WeatherSnapshot;
   events?: WeatherEvent[];
@@ -156,4 +172,5 @@ export interface ChatRequest {
   };
   context?: ConversationContext;
   sessionId?: string;
+  channel?: PromptChannel;
 }

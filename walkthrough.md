@@ -82,3 +82,30 @@ Run the following commands in your PowerShell terminal to verify Phase 3:
 npx vitest run src/tests/unit/services/agriculture-expansion.test.ts src/tests/unit/services/severe-risk-expansion.test.ts src/tests/unit/lib/offline-cache.test.ts src/tests/unit/lib/translations.test.ts src/tests/unit/services/historical-weather-provider.test.ts
 npm run typecheck
 ```
+
+---
+
+### Phase 4 — System Prompt Modularization & 10-Turn Context Wiring
+1. **Instruction Conflict Audit & Domain Decoupling**:
+   - Decomposed monolithic system prompt into modular components inside [`src/services/ai/prompts/`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/):
+     - [`core-prompt.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/core-prompt.ts): Layers 0–4 (Intake, Grounding Gate, Natural Response Composition, Self-Correction, Escalation & Fallback) and anti-injection defense. Single source of truth.
+     - [`agriculture-prompt.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/agriculture-prompt.ts): Defines internal agronomic data verification (crop, weather metrics, risk rating, field operation status, physical mechanism, citations). Defers user-facing prose strictly to Core Layer 2 (no raw field labels like `Crop:` or `Recommendation:` in text output).
+     - [`risk-prompt.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/risk-prompt.ts): Defines internal hazard verification and severe alert handoff per Core Layer 4.4. Defers user-facing prose to Core Layer 2.
+     - [`activity-prompt.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/activity-prompt.ts): Defines internal activity suitability validation without formula labels in user text.
+2. **Channel Separation (Voice vs. Chat)**:
+   - [`voice-addendum.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/voice-addendum.ts): `VOICE_TONE_ADDENDUM` strictly forbidding markdown, bullet lists, numbered lists, headings, and visual tables. Optimizes cadence (<20 words/sentence) and mandates phonetic unit expansion for TTS.
+   - [`chat-formatting.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/chat-formatting.ts): `CHAT_FORMATTING_RULES` providing clean markdown styling in text UI.
+   - Code path routing: `channel = request.channel || (classification.isVoiceQuery ? "voice" : "chat")`. Voice requests receive `VOICE_TONE_ADDENDUM` and exclude chat rules; chat requests receive `CHAT_FORMATTING_RULES` and exclude voice rules.
+3. **Conditional Prompt Composition & Token Guard**:
+   - [`prompt-composer.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/prompts/prompt-composer.ts): Implemented `buildSystemPrompt({ intent, channel, hasActiveSevereAlert })`.
+   - Core rules always included; domain blocks included strictly when intent matches or severe alerts are active.
+   - Measured general prompt size at 2,572 tokens (Layers 0–4 core plus chat guidelines); eliminates domain bloat by excluding Agriculture, Risk, Activity, and Voice blocks on general queries (saving ~1,300+ tokens).
+   - Observable dev-mode token logging and a 4,000 token ceiling fail-fast check in development.
+4. **10-Turn Context Retention & Older-Turn Summarization**:
+   - Added `ConversationTurn`, `PromptChannel`, and updated context types in [`src/types/ai.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/types/ai.ts) and [`src/schemas/ai.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/schemas/ai.ts).
+   - Created [`context-summarizer.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/context-summarizer.ts) with `summarizeOlderTurns(olderTurns)`.
+   - Wired session turns tracking in [`AIOrchestrator`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/ai-orchestrator.ts) and formatted `<conversation_history>` (with `<older_turns_summary>` and `<recent_turns>`) in [`ContextBuilder`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/services/ai/context-builder.ts).
+5. **Comprehensive Verification**:
+   - [`src/tests/unit/ai/prompt-composer.test.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/tests/unit/ai/prompt-composer.test.ts) (8 test scenarios).
+   - [`src/tests/unit/ai/conversation-context-history.test.ts`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/src/tests/unit/ai/conversation-context-history.test.ts) (12-turn session summarization and stateful session recording).
+   - Complete changes documented in [`CHANGES.md`](file:///c:/Users/HP/OneDrive/Desktop/WeatherGPT%202.0/CHANGES.md).

@@ -20,6 +20,8 @@ import type {
   GroundingStatus,
   AICitation,
   ConversationContext,
+  ConversationTurn,
+  PromptChannel,
 } from "@/types/ai";
 import type { EventLocation, WeatherEvent } from "@/types/events";
 import type { WeatherSnapshot } from "@/types/weather";
@@ -33,6 +35,7 @@ import { AppError } from "@/lib/errors";
 import { aiResponseSchema } from "@/schemas/ai";
 import { generateDeterministicHash } from "@/lib/deduplicator";
 import { globalVoiceService } from "@/services/voice/voice-service";
+import { summarizeOlderTurns } from "./context-summarizer";
 
 import { IntentRouter, globalIntentRouter, type IntentClassification } from "./intent-router";
 import { ContextBuilder, globalContextBuilder } from "./context-builder";
@@ -45,11 +48,8 @@ import { globalEventRepository } from "@/services/storage/in-memory-repositories
 import { ImpactEngine, globalImpactEngine } from "@/services/impact/impact-engine";
 import { TemporalResolver, globalTemporalResolver, type TemporalResolution } from "./temporal-resolver";
 import { WeatherToolRegistry } from "./tools/tool-registry";
-import type { NormalizedForecastData } from "./tools/get-forecast-tool";
-import type { WeatherRiskAssessment } from "./tools/get-weather-risk-tool";
-import type { GetRiskToolOutput } from "./tools/get-risk-tool";
-
-export type WeatherRiskData = WeatherRiskAssessment | GetRiskToolOutput;
+import type { NormalizedForecastData } from "@/types/forecast";
+import type { WeatherRiskData } from "@/types/risk";
 
 export interface ResolvedLocationState {
   resolvedLocation: EventLocation | undefined;
@@ -83,6 +83,8 @@ export class AIOrchestrator {
   // Short-term in-memory conversation context (per instance & by sessionId)
   private sessionContextMap: Map<string, ConversationContext> = new Map();
   private lastSessionContext?: ConversationContext;
+  private sessionTurnsMap: Map<string, ConversationTurn[]> = new Map();
+  private lastSessionTurns: ConversationTurn[] = [];
 
   constructor(config: AIOrchestratorConfig = {}) {
     this.aiProvider = config.aiProvider || new GeminiProvider();
@@ -111,15 +113,39 @@ export class AIOrchestrator {
       const generatedAt = new Date().toISOString();
       const message = request.message.trim();
 
-      // Retrieve incoming conversation context (from request payload, sessionId, or instance memory)
+      // Retrieve incoming conversation context & turns (from request payload, sessionId, or instance memory)
       const currentContext: ConversationContext | undefined =
         request.context ||
         (request.sessionId ? this.sessionContextMap.get(request.sessionId) : undefined) ||
         this.lastSessionContext;
 
+      const incomingTurns: ConversationTurn[] =
+        request.context?.turns ||
+        (request.sessionId ? this.sessionTurnsMap.get(request.sessionId) : undefined) ||
+        this.lastSessionTurns ||
+        [];
+
+      // 10-turn window management & summarization of older turns (>10 turns)
+      const MAX_RECENT_TURNS = 10;
+      let recentTurns: ConversationTurn[] = [];
+      let olderTurnsSummary: string | undefined = request.context?.olderTurnsSummary;
+
+      if (incomingTurns.length > MAX_RECENT_TURNS) {
+        const splitIndex = incomingTurns.length - MAX_RECENT_TURNS;
+        const olderTurns = incomingTurns.slice(0, splitIndex);
+        recentTurns = incomingTurns.slice(splitIndex);
+        olderTurnsSummary = summarizeOlderTurns(olderTurns);
+      } else {
+        recentTurns = [...incomingTurns];
+      }
+
       // 1. Intent Classification
       const classification = this.intentRouter.classify(message);
       let intent: IntentCategory = classification.intent;
+
+      // Determine request channel (voice vs chat)
+      const channel: PromptChannel =
+        request.channel || (classification.isVoiceQuery ? "voice" : "chat");
 
       // 2. Resolve Target Location (Explicit Query > Follow-up Context > Dashboard Selected)
       const locationState = await this.resolveLocation(request, classification, currentContext);
@@ -292,6 +318,9 @@ export class AIOrchestrator {
       const groundedContext: GroundedContext = {
         userQuery: message,
         intent,
+        channel,
+        recentTurns,
+        olderTurnsSummary,
         targetLocation,
         weather,
         events: events.length > 0 ? events : undefined,
@@ -299,7 +328,7 @@ export class AIOrchestrator {
         agricultureAssessment,
         modelConsensus,
         activitySuitability,
-        isVoiceQuery: classification.isVoiceQuery,
+        isVoiceQuery: channel === "voice",
         temporalResolution: {
           target: temporalResolution.target,
           label: temporalResolution.label,
@@ -322,23 +351,11 @@ export class AIOrchestrator {
       const { systemInstruction, prompt, citations, initialGroundingStatus } =
         this.contextBuilder.buildPrompt(groundedContext);
 
-      // 6. Compute Short-Term Conversation Context
-      const updatedContext: ConversationContext = {
-        lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
-        lastIntent: intent,
-        lastTemporalTarget: temporalResolution.target,
-        lastEventId: events[0]?.id,
-        lastEventTitle: events[0]?.title,
-      };
-      this.lastSessionContext = updatedContext;
-      if (request.sessionId) {
-        this.sessionContextMap.set(request.sessionId, updatedContext);
-      }
-
       // 7. LLM Completion Generation with Resilient Fallback Handlers
       let rawAnswerText = "";
       let modelGroundingStatus = initialGroundingStatus;
       let uncertaintyNote: string | undefined;
+      let updatedContext: ConversationContext;
 
       try {
         const rawCompletion = await this.aiProvider.generateCompletion(
@@ -353,6 +370,39 @@ export class AIOrchestrator {
           modelGroundingStatus = parsed.groundingStatus;
         }
         uncertaintyNote = parsed.uncertainty || undefined;
+
+        // 6. Compute Short-Term Conversation Context & Record Session Turns
+        const userTurn: ConversationTurn = {
+          role: "user",
+          content: message,
+          timestamp: generatedAt,
+          intent,
+        };
+        const assistantTurn: ConversationTurn = {
+          role: "assistant",
+          content: rawAnswerText,
+          timestamp: generatedAt,
+          intent,
+        };
+        const updatedTurns = [...incomingTurns, userTurn, assistantTurn];
+        this.lastSessionTurns = updatedTurns;
+        if (request.sessionId) {
+          this.sessionTurnsMap.set(request.sessionId, updatedTurns);
+        }
+
+        updatedContext = {
+          lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
+          lastIntent: intent,
+          lastTemporalTarget: temporalResolution.target,
+          lastEventId: events[0]?.id,
+          lastEventTitle: events[0]?.title,
+          turns: updatedTurns,
+          olderTurnsSummary,
+        };
+        this.lastSessionContext = updatedContext;
+        if (request.sessionId) {
+          this.sessionContextMap.set(request.sessionId, updatedContext);
+        }
       } catch (providerError: unknown) {
         console.error("[AIOrchestrator] Provider error during completion:", providerError);
 
@@ -363,6 +413,22 @@ export class AIOrchestrator {
             providerError.code === "AI_RATE_LIMITED" ||
             providerError.code === "AI_RESPONSE_INVALID")
         ) {
+          const userTurn: ConversationTurn = {
+            role: "user",
+            content: message,
+            timestamp: generatedAt,
+            intent,
+          };
+          const fallbackContext: ConversationContext = {
+            lastResolvedLocation: targetLocation?.coordinates ? targetLocation : currentContext?.lastResolvedLocation,
+            lastIntent: intent,
+            lastTemporalTarget: temporalResolution.target,
+            lastEventId: events[0]?.id,
+            lastEventTitle: events[0]?.title,
+            turns: [...incomingTurns, userTurn],
+            olderTurnsSummary,
+          };
+
           return this.generateDeterministicFallback({
             userQuery: message,
             intent,
@@ -384,7 +450,7 @@ export class AIOrchestrator {
             initialGroundingStatus,
             generatedAt,
             fallbackReason: providerError.message,
-            conversationContext: updatedContext,
+            conversationContext: fallbackContext,
           });
         }
         throw providerError;
@@ -961,6 +1027,17 @@ export class AIOrchestrator {
           language: lang,
         });
       }
+    }
+
+    if (context.conversationContext?.turns) {
+      context.conversationContext.turns.push({
+        role: "assistant",
+        content: answer,
+        timestamp: context.generatedAt,
+        intent: context.intent,
+      });
+      this.lastSessionTurns = context.conversationContext.turns;
+      this.lastSessionContext = context.conversationContext;
     }
 
     return {
