@@ -13,6 +13,8 @@ import { AgricultureCard } from "@/components/agriculture/agriculture-card";
 import { WeatherRiskCenterCard } from "@/components/risk/weather-risk-center-card";
 import { ModelConsensusCard } from "@/components/weather/model-consensus-card";
 import { ActivitySuitabilityCard } from "@/components/activity/activity-suitability-card";
+import { DecisionSupportCard } from "@/components/persona/decision-support-card";
+import { ScreenReaderAnnouncer } from "@/components/common/screen-reader-announcer";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 
 export default function DashboardPage() {
@@ -49,6 +51,11 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5 sm:gap-6 lg:gap-7 pb-16">
+      <ScreenReaderAnnouncer
+        alerts={weather?.alerts}
+        isDegraded={weather?.isDegraded}
+        staleWarning={weather?.staleWarning}
+      />
       {/* 1. PRIMARY: Dominant Weather Hero Centerpiece (Reference Matched) */}
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
 
@@ -91,14 +98,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. DECISION INTELLIGENCE: Activity Weather Suitability */}
+      {/* 4. DECISION INTELLIGENCE: Activity & Role Decision Support */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
             {t("activity.title", "Activity Suitability & Decision Intelligence")}
           </h2>
         </div>
-        <div className="w-full">
+        <div className="flex flex-col gap-5 lg:gap-6">
+          <DecisionSupportCard location={selectedLocation} />
           <ActivitySuitabilityCard location={selectedLocation} />
         </div>
       </div>

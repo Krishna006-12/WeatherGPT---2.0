@@ -130,6 +130,9 @@ export const weatherSnapshotSchema = z.object({
   dataSource: z.string().optional(),
   dataAgeSeconds: z.number().nonnegative().optional(),
   confidence: z.number().min(0).max(1).optional(),
+  isDegraded: z.boolean().optional(),
+  staleSince: isoDateStringSchema.optional(),
+  staleWarning: z.string().optional(),
 });
 
 export type WeatherSnapshotInput = z.input<typeof weatherSnapshotSchema>;

@@ -8,7 +8,7 @@
 
 import type { AlertCategory, Alert } from "./alert";
 
-export type PersonaId = "general_public" | "farmer";
+export type PersonaId = "general_public" | "farmer" | "disaster_manager";
 
 export interface PersonaUnits {
   temperature: "celsius" | "fahrenheit";

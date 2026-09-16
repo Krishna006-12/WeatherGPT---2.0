@@ -32,6 +32,7 @@ export class WeatherService {
   private provider: WeatherProvider;
   private cache: MemoryCache<WeatherSnapshot>;
   private cacheTtlMs: number;
+  private lastKnownGoodSnapshots = new Map<string, { snapshot: WeatherSnapshot; savedAt: number }>();
 
   constructor(provider: WeatherProvider, options: WeatherServiceOptions = {}) {
     this.provider = provider;
@@ -40,6 +41,34 @@ export class WeatherService {
       defaultTtlMs: this.cacheTtlMs,
       maxEntries: 100,
     });
+  }
+
+  /**
+   * Persists the last successfully validated snapshot for coordinate-based degraded fallback.
+   */
+  private saveLastKnownGood(coordinates: Coordinates, snapshot: WeatherSnapshot): void {
+    const key = `${coordinates.latitude.toFixed(2)}_${coordinates.longitude.toFixed(2)}`;
+    this.lastKnownGoodSnapshots.set(key, { snapshot, savedAt: Date.now() });
+  }
+
+  /**
+   * Recovers the last known good snapshot for the given coordinates (exact or nearby spatial proximity).
+   */
+  getLastKnownGood(coordinates: Coordinates): { snapshot: WeatherSnapshot; savedAt: number } | undefined {
+    const key = `${coordinates.latitude.toFixed(2)}_${coordinates.longitude.toFixed(2)}`;
+    const exact = this.lastKnownGoodSnapshots.get(key);
+    if (exact) return exact;
+
+    // Spatial proximity search (within ~0.5 degree)
+    for (const [storedKey, entry] of this.lastKnownGoodSnapshots.entries()) {
+      const [latStr, lonStr] = storedKey.split("_");
+      const lat = parseFloat(latStr || "0");
+      const lon = parseFloat(lonStr || "0");
+      if (Math.abs(lat - coordinates.latitude) <= 0.5 && Math.abs(lon - coordinates.longitude) <= 0.5) {
+        return entry;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -62,6 +91,7 @@ export class WeatherService {
    * Fetch and validate weather data for the given coordinates and timezone.
    * Provider output is validated through Zod — external data
    * is never trusted directly.
+   * If provider fails or is unreachable, serves the last known good cached forecast in degraded mode.
    */
   async getWeather(
     coordinates: Coordinates,
@@ -99,6 +129,18 @@ export class WeatherService {
       let candidate: unknown = rawResult;
       if ("success" in rawResult) {
         if (!rawResult.success) {
+          // Attempt degraded fallback before returning failure
+          const fallback = this.getLastKnownGood(coordinates);
+          if (fallback) {
+            const degradedSnapshot: WeatherSnapshot = {
+              ...fallback.snapshot,
+              isDegraded: true,
+              staleSince: new Date(fallback.savedAt).toISOString(),
+              staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+            };
+            return { success: true, data: degradedSnapshot };
+          }
+
           return {
             success: false,
             error:
@@ -124,6 +166,17 @@ export class WeatherService {
       const parsed = weatherSnapshotSchema.safeParse(candidate);
 
       if (!parsed.success) {
+        const fallback = this.getLastKnownGood(coordinates);
+        if (fallback) {
+          const degradedSnapshot: WeatherSnapshot = {
+            ...fallback.snapshot,
+            isDegraded: true,
+            staleSince: new Date(fallback.savedAt).toISOString(),
+            staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+          };
+          return { success: true, data: degradedSnapshot };
+        }
+
         return {
           success: false,
           error: new AppError(
@@ -136,9 +189,22 @@ export class WeatherService {
 
       const snapshot = parsed.data as WeatherSnapshot;
       this.cache.set(cacheKey, snapshot);
+      this.saveLastKnownGood(coordinates, snapshot);
 
       return { success: true, data: snapshot };
     } catch (error) {
+      // Degraded-mode fallback on thrown provider network error or timeout
+      const fallback = this.getLastKnownGood(coordinates);
+      if (fallback) {
+        const degradedSnapshot: WeatherSnapshot = {
+          ...fallback.snapshot,
+          isDegraded: true,
+          staleSince: new Date(fallback.savedAt).toISOString(),
+          staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+        };
+        return { success: true, data: degradedSnapshot };
+      }
+
       if (error instanceof AppError) {
         return { success: false, error };
       }
@@ -180,6 +246,17 @@ export class WeatherService {
         let candidate: unknown = raw;
         if ("success" in raw) {
           if (!raw.success) {
+            const fallback = this.getLastKnownGood(coordinates);
+            if (fallback) {
+              const degradedSnapshot: WeatherSnapshot = {
+                ...fallback.snapshot,
+                isDegraded: true,
+                staleSince: new Date(fallback.savedAt).toISOString(),
+                staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+              };
+              return { success: true, data: degradedSnapshot };
+            }
+
             return {
               success: false,
               error:
@@ -192,6 +269,17 @@ export class WeatherService {
         }
         const parsed = weatherSnapshotSchema.safeParse(candidate);
         if (!parsed.success) {
+          const fallback = this.getLastKnownGood(coordinates);
+          if (fallback) {
+            const degradedSnapshot: WeatherSnapshot = {
+              ...fallback.snapshot,
+              isDegraded: true,
+              staleSince: new Date(fallback.savedAt).toISOString(),
+              staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+            };
+            return { success: true, data: degradedSnapshot };
+          }
+
           return {
             success: false,
             error: new AppError(
@@ -201,8 +289,21 @@ export class WeatherService {
             ),
           };
         }
-        return { success: true, data: parsed.data as WeatherSnapshot };
+        const snapshot = parsed.data as WeatherSnapshot;
+        this.saveLastKnownGood(coordinates, snapshot);
+        return { success: true, data: snapshot };
       } catch (err) {
+        const fallback = this.getLastKnownGood(coordinates);
+        if (fallback) {
+          const degradedSnapshot: WeatherSnapshot = {
+            ...fallback.snapshot,
+            isDegraded: true,
+            staleSince: new Date(fallback.savedAt).toISOString(),
+            staleWarning: `Data may be stale, last updated ${new Date(fallback.savedAt).toLocaleTimeString()}`,
+          };
+          return { success: true, data: degradedSnapshot };
+        }
+
         if (err instanceof AppError) return { success: false, error: err };
         return {
           success: false,
@@ -222,5 +323,12 @@ export class WeatherService {
    */
   clearCache(): void {
     this.cache.clear();
+  }
+
+  /**
+   * Clear the long-lived fallback cache (primarily for deterministic unit testing).
+   */
+  clearLastKnownGood(): void {
+    this.lastKnownGoodSnapshots.clear();
   }
 }

@@ -149,4 +149,7 @@ export interface WeatherSnapshot {
   dataSource?: string;
   dataAgeSeconds?: number;
   confidence?: number;
+  isDegraded?: boolean;
+  staleSince?: ISOTimestamp;
+  staleWarning?: string;
 }

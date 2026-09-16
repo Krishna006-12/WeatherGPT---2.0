@@ -281,7 +281,13 @@ export function AICopilotCard({
         </div>
 
         {/* Message Thread */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 wg-hide-scroll">
+        <div
+          ref={scrollRef}
+          role="log"
+          aria-live="polite"
+          aria-label="Conversation message history"
+          className="flex-1 overflow-y-auto px-6 py-6 space-y-6 wg-hide-scroll"
+        >
           {messages.length === 0 && !loading && (
             <div className="space-y-6 animate-in fade-in duration-300">
               <div
@@ -537,6 +543,7 @@ export function AICopilotCard({
             <input
               ref={inputRef}
               type="text"
+              aria-label="Ask WeatherGPT query"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={loading}

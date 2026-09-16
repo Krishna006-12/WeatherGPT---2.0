@@ -111,9 +111,56 @@ export const FARMER_PERSONA: PersonaProfile = {
   },
 };
 
+export const DISASTER_MANAGER_PERSONA: PersonaProfile = {
+  id: "disaster_manager",
+  name: "Disaster & Emergency Manager",
+  description: "Incident command decision support: multi-agency coordination, shelter operations, evacuation triggers, and public alert sirens.",
+  detailLevel: "technical",
+  units: {
+    temperature: "celsius",
+    windSpeed: "kmh",
+    precipitation: "mm",
+  },
+  prioritizedAlertCategories: ["cyclone", "flood", "heavy_rain", "thunderstorm", "heat", "cold_wave"],
+  advisoryFocus: [
+    "emergency shelter activation",
+    "drainage culvert inspections",
+    "early evacuation triggers",
+    "inter-agency incident notifications",
+    "critical infrastructure protection",
+  ],
+  instructionAddendum: `// ============================================================
+// ACTIVE PERSONA: DISASTER & EMERGENCY MANAGER (Incident Command)
+// ============================================================
+- Audience: Disaster response coordinators, civil protection officers, and municipal emergency planners.
+- Tone: Decisive, authoritative, structured, and action-oriented.
+- Priorities:
+  1. Life safety: immediate hazards to populations in vulnerable flood plains, low-lying coastal regions, or structural wind risk zones.
+  2. Coordination checklists: clear status on sirens, evacuation warnings, emergency shelters, and emergency service dispatch.
+  3. Actionable thresholds: cite exact meteorological trigger metrics (mm/h rain rate, wind gusts in km/h, atmospheric pressure in hPa).
+- Style: Bulleted, structured, prioritized checklist format with transparent evidence thresholds.`,
+  formatAdvisory(ctx: PersonaAdvisoryContext): string {
+    const hasCyclone = ctx.alerts?.some((a) => a.category === "cyclone");
+    const hasFlood = ctx.alerts?.some((a) => a.category === "flood" || a.category === "heavy_rain");
+    const hasHeat = ctx.alerts?.some((a) => a.category === "heat" && (a.severity === "extreme" || a.severity === "severe"));
+
+    if (hasCyclone) {
+      return `Incident Command Advisory: Active Cyclone Warning for ${ctx.locationName}. Initiate Tier-1 multi-agency response, inspect coastal barriers, and prepare emergency shelter evacuation centers.`;
+    }
+    if (hasFlood || (ctx.rainfallMm ?? 0) >= 30) {
+      return `Incident Command Advisory: Severe flood risk detected (${ctx.rainfallMm ?? 0} mm rain). Verify clear storm culverts, notify low-lying sector wardens, and place water rescue units on standby.`;
+    }
+    if (hasHeat || ctx.temperature >= 42) {
+      return `Incident Command Advisory: Extreme heat hazard (${ctx.temperature}°C). Open municipal cooling stations and coordinate public health alerts with medical services.`;
+    }
+    return `Incident Command Advisory: Normal operational posture. Regional telemetry in ${ctx.locationName} shows no active threshold excursions.`;
+  },
+};
+
 export const PERSONA_REGISTRY: Record<PersonaId, PersonaProfile> = {
   general_public: GENERAL_PUBLIC_PERSONA,
   farmer: FARMER_PERSONA,
+  disaster_manager: DISASTER_MANAGER_PERSONA,
 };
 
 /**
@@ -122,6 +169,9 @@ export const PERSONA_REGISTRY: Record<PersonaId, PersonaProfile> = {
 export function getPersonaProfile(id?: string | null): PersonaProfile {
   if (id === "farmer") {
     return FARMER_PERSONA;
+  }
+  if (id === "disaster_manager") {
+    return DISASTER_MANAGER_PERSONA;
   }
   return GENERAL_PUBLIC_PERSONA;
 }

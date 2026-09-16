@@ -13,6 +13,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 
 interface NavItem {
@@ -50,6 +51,11 @@ export function Sidebar() {
       href: "/chat",
       label: t("sidebar.copilot", "WeatherGPT AI Copilot"),
       icon: <MessageSquare size={20} />,
+    },
+    {
+      href: "/evaluation",
+      label: t("sidebar.evaluation", "Pilot & Evaluation Metrics"),
+      icon: <BarChart3 size={20} />,
     },
     {
       href: "/motion",

@@ -8,6 +8,7 @@ import {
   Sun,
   CloudRain,
   Cloud,
+  AlertTriangle,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
@@ -243,6 +244,34 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
       {/* Main Container */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto">
+        {/* Degraded Mode Indicator */}
+        {weather.isDegraded && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="w-full mb-3 px-4 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-center gap-2 text-xs font-semibold shadow-xs"
+          >
+            <AlertTriangle size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              {weather.staleWarning ||
+                `Data may be stale, last updated ${
+                  weather.staleSince
+                    ? new Date(weather.staleSince).toLocaleTimeString()
+                    : new Date(weather.observedAt).toLocaleTimeString()
+                }`}
+            </span>
+          </div>
+        )}
+
+        {/* Screen Reader Alert Announcements */}
+        {weather.alerts && weather.alerts.length > 0 && (
+          <div role="status" aria-live="assertive" className="sr-only">
+            {weather.alerts
+              .map((a) => `${a.severity} weather alert: ${a.title}. ${a.description}`)
+              .join(". ")}
+          </div>
+        )}
+
         {/* Floating Badges (Left and Right, inspired by the reference image) */}
         <div className="w-full flex items-center justify-between pointer-events-none mb-1">
           {/* Left Floating Temp Tag */}

@@ -264,6 +264,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "persona.title": "Profile Persona",
     "persona.general_public": "General Public",
     "persona.farmer": "Agricultural Producer / Farmer",
+    "persona.disaster_manager": "Disaster & Emergency Manager",
+
+    // Decision Support System
+    "decision.title": "Role-Based Decision Support",
+    "decision.traceability": "Source Evidence & Rule Traceability",
+    "decision.checklist": "Evidence-Based Action Checklist",
 
     // Notification System
     "notif.title": "Weather Notifications",
@@ -271,7 +277,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "notif.browser": "Browser Notifications",
     "notif.sms": "SMS Alerts",
     "notif.push": "Web Push",
-    "notif.clear": "Clear Notifications",
+    // Evaluation & Metrics Reporting
+    "evaluation.title": "Pilot & Evaluation Metrics",
+    "evaluation.subtitle": "Quantitative performance reporting, latency tracking, and forecast verification",
+    "evaluation.export_csv": "Export CSV",
+    "evaluation.export_json": "Export JSON",
+    "sidebar.evaluation": "Pilot & Evaluation Metrics",
   },
 
   hi: {
@@ -532,6 +543,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "persona.title": "उपयोगकर्ता प्रोफ़ाइल",
     "persona.general_public": "आम नागरिक",
     "persona.farmer": "किसान / कृषि उत्पादक",
+    "persona.disaster_manager": "आपदा और आपातकालीन प्रबंधक",
+
+    // Decision Support System
+    "decision.title": "भूमिका आधारित निर्णय सहायता",
+    "decision.traceability": "स्रोत साक्ष्य और नियम पता लगाने की क्षमता",
+    "decision.checklist": "साक्ष्य-आधारित कार्य चेकलिस्ट",
 
     // Notification System
     "notif.title": "मौसम सूचनाएं",
@@ -539,7 +556,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "notif.browser": "ब्राउज़र सूचनाएं",
     "notif.sms": "एसएमएस अलर्ट",
     "notif.push": "वेब पुश",
-    "notif.clear": "सूचनाएं साफ करें",
+    // Evaluation & Metrics Reporting
+    "evaluation.title": "पायलट और मूल्यांकन मेट्रिक्स",
+    "evaluation.subtitle": "प्रदर्शन रिपोर्टिंग, विलंबता ट्रैकिंग, और पूर्वानुमान सत्यापन",
+    "evaluation.export_csv": "सीएसवी निर्यात करें",
+    "evaluation.export_json": "जेएसओएन निर्यात करें",
+    "sidebar.evaluation": "पायलट और मूल्यांकन मेट्रिक्स",
   },
 
   pa: {
@@ -800,6 +822,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "persona.title": "ਉਪਭੋਗਤਾ ਪ੍ਰੋਫਾਈਲ",
     "persona.general_public": "ਆਮ ਜਨਤਾ",
     "persona.farmer": "ਕਿਸਾਨ / ਖੇਤੀ ਉਤਪਾਦਕ",
+    "persona.disaster_manager": "ਆਫ਼ਤ ਅਤੇ ਐਮਰਜੈਂਸੀ ਪ੍ਰਬੰਧਕ",
+
+    // Decision Support System
+    "decision.title": "ਭੂਮਿਕਾ ਅਧਾਰਤ ਫੈਸਲਾ ਸਹਾਇਤਾ",
+    "decision.traceability": "ਸਰੋਤ ਸਬੂਤ ਅਤੇ ਨਿਯਮ ਨਿਗਰਾਨੀ",
+    "decision.checklist": "ਸਬੂਤ-ਅਧਾਰਤ ਕਾਰਜ ਚੈੱਕਲਿਸਟ",
 
     // Notification System
     "notif.title": "ਮੌਸਮ ਸੂਚਨਾਵਾਂ",
@@ -807,6 +835,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "notif.browser": "ਬ੍ਰਾਊਜ਼ਰ ਸੂਚਨਾਵਾਂ",
     "notif.sms": "ਐਸਐਮਐਸ ਅਲਰਟ",
     "notif.push": "ਵੈੱਬ ਪੁਸ਼",
-    "notif.clear": "ਸੂਚਨਾਵਾਂ ਸਾਫ਼ ਕਰੋ",
+    // Evaluation & Metrics Reporting
+    "evaluation.title": "ਪਾਇਲਟ ਅਤੇ ਮੁਲਾਂਕਣ ਮੈਟ੍ਰਿਕਸ",
+    "evaluation.subtitle": "ਪ੍ਰਦਰਸ਼ਨ ਰਿਪੋਰਟਿੰਗ, ਲੇਟੈਂਸੀ ਟਰੈਕਿੰਗ, ਅਤੇ ਭਵਿੱਖਬਾਣੀ ਪੁਸ਼ਟੀ",
+    "evaluation.export_csv": "ਸੀਐਸਵੀ ਨਿਰਯਾਤ ਕਰੋ",
+    "evaluation.export_json": "ਜੇਸਨ ਨਿਰਯਾਤ ਕਰੋ",
+    "sidebar.evaluation": "ਪਾਇਲਟ ਅਤੇ ਮੁਲਾਂਕਣ ਮੈਟ੍ਰਿਕਸ",
   },
 };
