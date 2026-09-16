@@ -5,6 +5,8 @@ export type AppErrorCode =
   | "EVENT_NOT_FOUND"
   | "WEATHER_PROVIDER_UNAVAILABLE"
   | "WEATHER_RESPONSE_INVALID"
+  | "NEWS_PROVIDER_UNAVAILABLE"
+  | "NEWS_RESPONSE_INVALID"
   | "FEED_SYNC_FAILED"
   | "SYNC_UNAUTHORIZED"
   | "SYNC_FORBIDDEN"
@@ -44,12 +46,14 @@ export class AppError extends Error {
       case "EVENT_NOT_FOUND":
         return 404;
       case "WEATHER_RESPONSE_INVALID":
+      case "NEWS_RESPONSE_INVALID":
       case "AI_RESPONSE_INVALID":
         return 422;
       case "RATE_LIMITED":
       case "AI_RATE_LIMITED":
         return 429;
       case "WEATHER_PROVIDER_UNAVAILABLE":
+      case "NEWS_PROVIDER_UNAVAILABLE":
       case "FEED_SYNC_FAILED":
       case "AI_PROVIDER_UNAVAILABLE":
       case "NWP_UPSTREAM_ERROR":

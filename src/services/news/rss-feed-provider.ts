@@ -88,8 +88,8 @@ export class RssFeedProvider implements NewsProvider {
   private timeout: number;
 
   constructor(config: NewsProviderConfig) {
-    this.name = config.name;
-    this.feedUrl = config.feedUrl;
+    this.name = config.name || "rss-feed-provider";
+    this.feedUrl = config.feedUrl || "";
     this.timeout = config.timeout || DEFAULT_TIMEOUT_MS;
   }
 

@@ -320,7 +320,7 @@ ${actSnippets.join("\n\n")}
 
     const hasActiveSevereAlert = Boolean(
       (context.events && context.events.some((e) => e.severity === "severe" || e.severity === "extreme")) ||
-      (context.weather?.alerts && context.weather.alerts.some((a) => a.severity === "severe" || a.severity === "extreme" || a.severity === "warning"))
+      (context.weather?.alerts && context.weather.alerts.some((a) => a.severity === "severe" || a.severity === "extreme"))
     );
 
     const systemInstruction = buildSystemPrompt({

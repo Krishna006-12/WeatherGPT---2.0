@@ -48,8 +48,9 @@ import { globalEventRepository } from "@/services/storage/in-memory-repositories
 import { ImpactEngine, globalImpactEngine } from "@/services/impact/impact-engine";
 import { TemporalResolver, globalTemporalResolver, type TemporalResolution } from "./temporal-resolver";
 import { WeatherToolRegistry } from "./tools/tool-registry";
-import type { NormalizedForecastData } from "@/types/forecast";
-import type { WeatherRiskData } from "@/types/risk";
+import type { NormalizedForecastData } from "./tools/get-forecast-tool";
+import type { GetRiskToolOutput } from "./tools/get-risk-tool";
+import type { RiskAssessment } from "@/types/risk";
 
 export interface ResolvedLocationState {
   resolvedLocation: EventLocation | undefined;
@@ -163,7 +164,7 @@ export class AIOrchestrator {
       // 4. Deterministic Tool Execution (Determine required data based on intent & query)
       let weather: WeatherSnapshot | undefined;
       let forecastData: NormalizedForecastData | undefined;
-      let weatherRisk: WeatherRiskData | undefined;
+      let weatherRisk: GetRiskToolOutput | undefined;
       let events: WeatherEvent[] = [];
       let impactAssessment: ImpactAssessment | undefined;
       let agricultureAssessment: AgricultureAssessment | undefined;
@@ -866,7 +867,7 @@ export class AIOrchestrator {
     crop?: string;
     weather?: WeatherSnapshot;
     forecastData?: NormalizedForecastData;
-    weatherRisk?: WeatherRiskData;
+    weatherRisk?: GetRiskToolOutput;
     events?: WeatherEvent[];
     impactAssessment?: ImpactAssessment;
     agricultureAssessment?: AgricultureAssessment;
@@ -943,7 +944,7 @@ export class AIOrchestrator {
           "\n\nRisk Breakdown:\n" +
           wr.assessments
             .map(
-              (a) =>
+              (a: RiskAssessment) =>
                 `• ${a.type.replace(/_/g, " ").toUpperCase()}: ${a.severity.toUpperCase()} (${a.confidence} confidence) — ${a.recommendation}`
             )
             .join("\n");

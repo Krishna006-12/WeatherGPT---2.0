@@ -63,7 +63,7 @@ export class FeedRegistry {
 
     const results = await Promise.allSettled(
       providerList.map(async (provider) => {
-        const fetched = await provider.getArticles(query);
+        const fetched = provider.getArticles ? await provider.getArticles(query) : [];
         return { providerName: provider.name, articles: fetched };
       })
     );

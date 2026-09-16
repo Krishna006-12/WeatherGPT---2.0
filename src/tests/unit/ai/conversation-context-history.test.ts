@@ -136,7 +136,8 @@ describe("10-Turn Context Retention & Older-Turns Summarization", () => {
       sessionId,
     });
     expect(res1.success).toBe(true);
-    expect(res1.data?.metadata?.conversationContext?.turns?.length).toBe(2); // 1 user + 1 assistant
+    if (!res1.success) throw new Error("Expected res1 to succeed");
+    expect(res1.data.metadata?.conversationContext?.turns?.length).toBe(2); // 1 user + 1 assistant
 
     // Second call with same sessionId (no explicit context payload required)
     const res2 = await orchestrator.processQuery({
@@ -144,6 +145,7 @@ describe("10-Turn Context Retention & Older-Turns Summarization", () => {
       sessionId,
     });
     expect(res2.success).toBe(true);
-    expect(res2.data?.metadata?.conversationContext?.turns?.length).toBe(4); // 2 previous + 1 user + 1 assistant
+    if (!res2.success) throw new Error("Expected res2 to succeed");
+    expect(res2.data.metadata?.conversationContext?.turns?.length).toBe(4); // 2 previous + 1 user + 1 assistant
   });
 });

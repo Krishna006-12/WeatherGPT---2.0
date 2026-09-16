@@ -22,6 +22,12 @@ export class NewsService {
    */
   async getArticles(query: NewsQuery): Promise<Result<NewsArticle[]>> {
     try {
+      if (!this.provider.getArticles) {
+        return {
+          success: false,
+          error: new Error(`Provider ${this.provider.name} does not support getArticles`),
+        };
+      }
       const articles = await this.provider.getArticles(query);
       return { success: true, data: articles };
     } catch (error) {
