@@ -26,7 +26,7 @@ export function PilotOnboardingModal({
   onClose,
   onComplete,
 }: PilotOnboardingModalProps) {
-  const { language, setLanguage } = useLanguage();
+  const { setLanguage } = useLanguage();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedCohort, setSelectedCohort] = useState<PersonaId>("farmer");
