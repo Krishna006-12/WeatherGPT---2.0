@@ -3,7 +3,7 @@
  * Default session provides zero-barrier Guest access with farmer capabilities.
  */
 
-import type { UserSession, AuthUser, UserRole } from "@/types/auth";
+import type { UserSession, AuthUser } from "@/types/auth";
 
 export const STORAGE_KEY_AUTH = "weathergpt_auth_session";
 

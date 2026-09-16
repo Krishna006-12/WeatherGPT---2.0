@@ -3,7 +3,7 @@
  * Derived from Phase 9 specifications.
  */
 
-import type { Coordinates, ISOTimestamp } from "./common";
+import type { ISOTimestamp } from "./common";
 import type { LocationInfo, DataProvenance } from "./weather";
 
 /** The 6 initial deterministic weather risk categories. */

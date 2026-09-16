@@ -3,7 +3,7 @@
  * 100% evidence-based calculations without hallucination or LLM guessing.
  */
 
-import type { HourlyWeather, WeatherCondition } from "@/types/weather";
+import type { HourlyWeather } from "@/types/weather";
 import type {
   ActivityType,
   ActivitySafetyLevel,

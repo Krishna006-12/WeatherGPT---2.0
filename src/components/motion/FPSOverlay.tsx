@@ -21,7 +21,7 @@ export function FPSOverlay() {
   const { tier, isReducedMotion } = useDeviceTier();
 
   const historyRef = useRef<number[]>([]);
-  const lastTimeRef = useRef(performance.now());
+  const lastTimeRef = useRef(0);
   const droppedCountRef = useRef(0);
 
   useEffect(() => {

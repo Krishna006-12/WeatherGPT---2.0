@@ -7,11 +7,7 @@ import {
   Wind,
   Sun,
   CloudRain,
-  CloudLightning,
   Cloud,
-  Eye,
-  Gauge,
-  Sparkles,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";

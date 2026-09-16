@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useConsensus } from "@/hooks/use-consensus";
 import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
-import type { ConsensusConfidence, NwpModelId } from "@/types/nwp";
+import type { ConsensusConfidence } from "@/types/nwp";
 import {
   Layers,
   ShieldCheck,

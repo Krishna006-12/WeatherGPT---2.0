@@ -6,7 +6,6 @@
  */
 
 import type { Coordinates, Result } from "@/types/common";
-import { AppError } from "@/lib/errors";
 
 export interface HistoricalArchiveRecord {
   date: string;

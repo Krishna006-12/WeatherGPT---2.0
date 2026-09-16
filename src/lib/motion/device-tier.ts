@@ -57,7 +57,6 @@ export const TIER_CAPABILITIES: Record<DeviceTier, TierCapabilities> = {
 
 // Cached client-side detection result to prevent re-probing
 let cachedTier: DeviceTier | null = null;
-let cachedReducedMotion: boolean | null = null;
 
 /**
  * Checks if the user has requested reduced motion at the OS/browser level.

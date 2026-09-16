@@ -3,7 +3,6 @@ import {
   deduplicateContextEvents,
   scoreAndFilterContextEvents,
   calculateDistanceWeight,
-  calculateRecencyWeight,
   calculateSourceTrustWeight,
 } from "@/services/news/context-event-scorer";
 import { contextEventSchema } from "@/schemas/context-event";

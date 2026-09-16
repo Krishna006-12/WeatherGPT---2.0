@@ -9,7 +9,7 @@
  *   Deterministic Deduplication → Distance & Relevance Scoring → In-Memory Cache
  */
 
-import type { Coordinates, Result } from "@/types/common";
+import type { Result } from "@/types/common";
 import type { ContextEvent } from "@/types/context-event";
 import { contextEventSchema } from "@/schemas/context-event";
 import type { NewsProvider, ContextNewsQuery } from "./news-provider";

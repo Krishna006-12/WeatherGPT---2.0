@@ -13,6 +13,9 @@ import { RISK_PROMPT_BLOCK } from "./risk-prompt";
 import { ACTIVITY_PROMPT_BLOCK } from "./activity-prompt";
 import { VOICE_TONE_ADDENDUM } from "./voice-addendum";
 import { CHAT_FORMATTING_RULES } from "./chat-formatting";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
+import type { PersonaId } from "@/types/persona";
+import { getPersonaProfile } from "@/config/personas";
 
 export type PromptChannel = "chat" | "voice";
 
@@ -23,6 +26,10 @@ export interface BuildSystemPromptOptions {
   channel?: PromptChannel;
   /** Whether verified data contains an active severe or extreme alert */
   hasActiveSevereAlert?: boolean;
+  /** Target response language */
+  language?: SupportedLanguage;
+  /** Active persona profile */
+  persona?: PersonaId;
 }
 
 /**
@@ -54,11 +61,15 @@ export function buildSystemPrompt(
   let intent: string | undefined;
   let channel: PromptChannel = "chat";
   let hasActiveSevereAlert = false;
+  let language: SupportedLanguage | undefined;
+  let persona: PersonaId | undefined;
 
   if (typeof intentOrOptions === "object" && intentOrOptions !== null) {
     intent = intentOrOptions.intent;
     channel = intentOrOptions.channel || "chat";
     hasActiveSevereAlert = Boolean(intentOrOptions.hasActiveSevereAlert);
+    language = intentOrOptions.language;
+    persona = intentOrOptions.persona;
   } else {
     intent = intentOrOptions;
     channel = channelParam || "chat";
@@ -81,7 +92,39 @@ export function buildSystemPrompt(
     sections.push(ACTIVITY_PROMPT_BLOCK);
   }
 
-  // 4. Channel Separation: Voice vs Chat
+  // 4. Role-Based Persona Addendum (Configuration-driven)
+  const personaProfile = getPersonaProfile(persona);
+  sections.push(personaProfile.instructionAddendum);
+
+  // 5. Explicit Language Directive (Enforces target response language)
+  if (language === "hi") {
+    sections.push(
+      `// ============================================================
+// MANDATORY LANGUAGE DIRECTIVE: HINDI (हिन्दी)
+// ============================================================
+- You MUST formulate your entire response in clear, natural, and fluent Hindi (Devanagari script: हिन्दी).
+- Do NOT respond in English.
+- Grounded numbers, temperatures (°C), and metrics remain strictly unchanged, but all descriptive explanations, advisories, and summaries must be presented in Hindi.`
+    );
+  } else if (language === "pa") {
+    sections.push(
+      `// ============================================================
+// MANDATORY LANGUAGE DIRECTIVE: PUNJABI (ਪੰਜਾਬੀ)
+// ============================================================
+- You MUST formulate your entire response in clear, natural Punjabi (Gurmukhi script: ਪੰਜਾਬੀ).
+- Do NOT respond in English.
+- Grounded numbers and metrics remain strictly accurate, but all explanations and advisories must be in Punjabi.`
+    );
+  } else {
+    sections.push(
+      `// ============================================================
+// MANDATORY LANGUAGE DIRECTIVE: ENGLISH
+// ============================================================
+- You MUST formulate your entire response in clear, natural English.`
+    );
+  }
+
+  // 6. Channel Separation: Voice vs Chat
   if (channel === "voice") {
     sections.push(VOICE_TONE_ADDENDUM);
   } else {

@@ -148,12 +148,12 @@ function createMockWeatherSnapshot(
 }
 
 describe("Phase 10 — Agriculture Intelligence Integration (/api/chat)", () => {
-  let locationSpy: ReturnType<typeof vi.spyOn>;
+  let _locationSpy: ReturnType<typeof vi.spyOn>;
   let weatherSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Mock LocationService search at prototype level to verify realistic geocoding
-    locationSpy = vi.spyOn(LocationService.prototype, "search").mockImplementation(
+    _locationSpy = vi.spyOn(LocationService.prototype, "search").mockImplementation(
       async (query: string): Promise<Result<NormalizedLocation[]>> => {
         const clean = query.trim().toLowerCase();
         if (clean.includes("kanpur")) {

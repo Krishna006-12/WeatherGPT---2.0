@@ -51,6 +51,10 @@ import { WeatherToolRegistry } from "./tools/tool-registry";
 import type { NormalizedForecastData } from "./tools/get-forecast-tool";
 import type { GetRiskToolOutput } from "./tools/get-risk-tool";
 import type { RiskAssessment } from "@/types/risk";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
+import type { PersonaId } from "@/types/persona";
+import { getPersonaProfile } from "@/config/personas";
+import { globalAlertRulesEngine } from "@/services/alerts/alert-rules-engine";
 
 export interface ResolvedLocationState {
   resolvedLocation: EventLocation | undefined;
@@ -181,6 +185,8 @@ export class AIOrchestrator {
           queryLocationName: locationState.queryLocationName,
           locationNotFound: true,
           crop: classification.extractedCrop,
+          language: request.language,
+          persona: request.persona,
           temporalResolution,
           citations: [],
           initialGroundingStatus: "insufficient_evidence",
@@ -320,6 +326,8 @@ export class AIOrchestrator {
         userQuery: message,
         intent,
         channel,
+        language: request.language,
+        persona: request.persona,
         recentTurns,
         olderTurnsSummary,
         targetLocation,
@@ -446,6 +454,8 @@ export class AIOrchestrator {
             agricultureAssessment,
             modelConsensus,
             activitySuitability,
+            language: request.language,
+            persona: request.persona,
             temporalResolution,
             citations,
             initialGroundingStatus,
@@ -874,6 +884,8 @@ export class AIOrchestrator {
     modelConsensus?: ModelConsensusReport;
     activitySuitability?: ActivitySuitabilityReport;
     voice?: VoiceAssistantReport;
+    language?: SupportedLanguage;
+    persona?: PersonaId;
     temporalResolution?: TemporalResolution;
     citations: AICitation[];
     initialGroundingStatus: GroundingStatus;
@@ -970,6 +982,40 @@ export class AIOrchestrator {
       answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
     } else {
       answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
+    }
+
+    // Append persona-specific advisory and handle multilingual language formatting
+    const personaProfile = getPersonaProfile(context.persona);
+    if (context.weather) {
+      const deterministicAlerts = globalAlertRulesEngine.evaluate(context.weather, {
+        locationName: locName,
+      });
+      const personaAdvisory = personaProfile.formatAdvisory({
+        locationName: locName,
+        temperature: context.weather.current.temperature,
+        condition: context.weather.current.condition,
+        alerts: deterministicAlerts,
+        crop: context.crop,
+        rainfallMm: context.weather.daily?.[0]?.precipitationSum ?? context.weather.current.precipitation,
+        windSpeedKmh: context.weather.current.windSpeed,
+      });
+
+      if (context.language === "hi") {
+        const c = context.weather.current;
+        if (isGreeting) {
+          answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ। ${locName} के लिए वर्तमान मौसम: ${c.temperature}°C, ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
+        } else {
+          answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
+        }
+      } else {
+        answer += `\n\n${personaAdvisory}`;
+      }
+    } else if (context.language === "hi") {
+      if (isGreeting) {
+        answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ, आपका मौसम और आपदा खुफिया सहायक। आप मुझसे मौसम, पूर्वानुमान या क्षेत्रीय आपदा प्रभाव के बारे में पूछ सकते हैं।`;
+      } else if (context.locationNotFound) {
+        answer = `"${locName}" के लिए सत्यापित भौगोलिक स्थान या मौसम अवलोकन नहीं मिल सका। कृपया स्थान के नाम की पुष्टि करें और पुनः प्रयास करें।`;
+      }
     }
 
     const groundingStatus: GroundingStatus =

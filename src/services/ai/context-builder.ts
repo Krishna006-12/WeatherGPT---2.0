@@ -327,6 +327,8 @@ ${actSnippets.join("\n\n")}
       intent: context.intent,
       channel,
       hasActiveSevereAlert,
+      language: context.language,
+      persona: context.persona,
     });
 
     let conversationHistorySection = "";

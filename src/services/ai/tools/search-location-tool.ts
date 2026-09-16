@@ -55,15 +55,32 @@ export class SearchLocationTool implements WeatherIntelligenceTool<SearchLocatio
       return { success: true, data: [] };
     }
 
-    const locService = this.locationService as any;
-    let res: any;
+    const locService = this.locationService as unknown as Record<string, unknown>;
+    let res: Result<NormalizedLocation[]> | NormalizedLocation[];
     if (typeof locService.search === "function") {
-      res = await locService.search(parsed.data.query, parsed.data.count);
+      res = await (
+        locService.search as (
+          q: string,
+          c?: number
+        ) => Promise<Result<NormalizedLocation[]> | NormalizedLocation[]>
+      )(parsed.data.query, parsed.data.count);
     } else if (typeof locService.searchLocations === "function") {
-      res = await locService.searchLocations(parsed.data.query, parsed.data.count);
+      res = await (
+        locService.searchLocations as (
+          q: string,
+          c?: number
+        ) => Promise<Result<NormalizedLocation[]> | NormalizedLocation[]>
+      )(parsed.data.query, parsed.data.count);
     } else if (typeof locService.resolveLocation === "function") {
-      const single = await locService.resolveLocation(parsed.data.query);
-      res = single?.data ? { success: true, data: [single.data] } : single;
+      const single = await (
+        locService.resolveLocation as (
+          q: string
+        ) => Promise<Result<NormalizedLocation> | { data?: NormalizedLocation }>
+      )(parsed.data.query);
+      res =
+        single && "data" in single && single.data
+          ? { success: true, data: [single.data] }
+          : (single as unknown as Result<NormalizedLocation[]>);
     } else {
       res = { success: true, data: [] };
     }

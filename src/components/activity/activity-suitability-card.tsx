@@ -12,7 +12,6 @@ import {
   Bike,
   Users,
   AlertTriangle,
-  CheckCircle2,
   Clock,
   Calendar,
   ChevronDown,

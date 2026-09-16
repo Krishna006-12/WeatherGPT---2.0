@@ -2,7 +2,7 @@
  * Data contracts and types for Phase 10 NWP Model Intelligence & Model Consensus.
  */
 
-import type { Coordinates, ISOTimestamp } from "./common";
+import type { ISOTimestamp } from "./common";
 import type { LocationInfo, DataProvenance, WeatherCondition } from "./weather";
 
 /** Identifier of supported global Numerical Weather Prediction (NWP) models. */

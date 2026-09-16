@@ -7,7 +7,6 @@ import { WeatherService } from "@/services/weather/weather-service";
 import type { WeatherProvider } from "@/services/weather/weather-provider";
 import { LocationService } from "@/services/location/location-service";
 import { WeatherToolRegistry } from "@/services/ai/tools/tool-registry";
-import { GetActivitySuitabilityTool } from "@/services/ai/tools/get-activity-suitability-tool";
 import { ActivityService } from "@/services/activity/activity-service";
 import { globalEventRepository } from "@/services/storage/in-memory-repositories";
 import { globalImpactEngine } from "@/services/impact/impact-engine";

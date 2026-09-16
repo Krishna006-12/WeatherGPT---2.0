@@ -13,6 +13,8 @@ import type { RiskAssessment, WeatherRiskReport } from "./risk";
 import type { ModelConsensusReport } from "./nwp";
 import type { ActivitySuitabilityReport } from "./activity";
 import type { VoiceAssistantReport } from "./voice";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
+import type { PersonaId } from "./persona";
 
 /** Supported high-level user intents. */
 export type IntentCategory =
@@ -154,6 +156,8 @@ export interface GroundedContext {
   modelConsensus?: ModelConsensusReport;
   activitySuitability?: ActivitySuitabilityReport;
   isVoiceQuery?: boolean;
+  language?: SupportedLanguage;
+  persona?: PersonaId;
   untrustedSourceDelimiters: string;
   builtAt: ISOTimestamp;
 }
@@ -173,4 +177,6 @@ export interface ChatRequest {
   context?: ConversationContext;
   sessionId?: string;
   channel?: PromptChannel;
+  language?: SupportedLanguage;
+  persona?: PersonaId;
 }

@@ -249,9 +249,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "category.landslide": "Landslide",
     "category.earthquake": "Earthquake",
     "category.wildfire": "Wildfire",
-    "category.other": "Other",
     "impact.no_active": "No active events",
     "impact.clear_assessment": "Regional impact assessment is clear.",
+
+    // Alert System
+    "alert.extreme": "Extreme Warning",
+    "alert.severe": "Severe Advisory",
+    "alert.moderate": "Moderate Watch",
+    "alert.minor": "Minor Advisory",
+    "alert.rules_engine": "Deterministic Physics Rules Engine",
+    "alert.no_active": "No active severe alerts detected",
+
+    // Persona System
+    "persona.title": "Profile Persona",
+    "persona.general_public": "General Public",
+    "persona.farmer": "Agricultural Producer / Farmer",
+
+    // Notification System
+    "notif.title": "Weather Notifications",
+    "notif.in_app": "In-App Alerts",
+    "notif.browser": "Browser Notifications",
+    "notif.sms": "SMS Alerts",
+    "notif.push": "Web Push",
+    "notif.clear": "Clear Notifications",
   },
 
   hi: {
@@ -497,9 +517,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "category.landslide": "भूस्खलन",
     "category.earthquake": "भूकंप",
     "category.wildfire": "जंगल की आग",
-    "category.other": "अन्य",
     "impact.no_active": "कोई सक्रिय आपदा नहीं",
     "impact.clear_assessment": "क्षेत्रीय प्रभाव मूल्यांकन सामान्य व स्पष्ट है।",
+
+    // Alert System
+    "alert.extreme": "अत्यधिक चेतावनी",
+    "alert.severe": "गंभीर परामर्श",
+    "alert.moderate": "मध्यम सतर्कता",
+    "alert.minor": "मामूली परामर्श",
+    "alert.rules_engine": "भौतिकी नियम इंजन",
+    "alert.no_active": "कोई सक्रिय गंभीर चेतावनी नहीं",
+
+    // Persona System
+    "persona.title": "उपयोगकर्ता प्रोफ़ाइल",
+    "persona.general_public": "आम नागरिक",
+    "persona.farmer": "किसान / कृषि उत्पादक",
+
+    // Notification System
+    "notif.title": "मौसम सूचनाएं",
+    "notif.in_app": "इन-ऐप अलर्ट",
+    "notif.browser": "ब्राउज़र सूचनाएं",
+    "notif.sms": "एसएमएस अलर्ट",
+    "notif.push": "वेब पुश",
+    "notif.clear": "सूचनाएं साफ करें",
   },
 
   pa: {
@@ -745,8 +785,28 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "category.landslide": "ਜ਼ਮੀਨ ਖਿਸਕਣਾ",
     "category.earthquake": "ਭੂਚਾਲ",
     "category.wildfire": "ਜੰਗਲ ਦੀ ਅੱਗ",
-    "category.other": "ਹੋਰ",
     "impact.no_active": "ਕੋਈ ਸਰਗਰਮ ਆਫ਼ਤ ਨਹੀਂ",
     "impact.clear_assessment": "ਖੇਤਰੀ ਅਸਰ ਮੁਲਾਂਕਣ ਸਾਫ਼ ਹੈ।",
+
+    // Alert System
+    "alert.extreme": "ਬਹੁਤ ਗੰਭੀਰ ਚੇਤਾਵਨੀ",
+    "alert.severe": "ਗੰਭੀਰ ਸਲਾਹ",
+    "alert.moderate": "ਦਰਮਿਆਨੀ ਚੇਤਾਵਨੀ",
+    "alert.minor": "ਮਾਮੂਲੀ ਸਲਾਹ",
+    "alert.rules_engine": "ਭੌਤਿਕ ਨਿਯਮ ਇੰਜਣ",
+    "alert.no_active": "ਕੋਈ ਸਰਗਰਮ ਗੰਭੀਰ ਚੇਤਾਵਨੀ ਨਹੀਂ",
+
+    // Persona System
+    "persona.title": "ਉਪਭੋਗਤਾ ਪ੍ਰੋਫਾਈਲ",
+    "persona.general_public": "ਆਮ ਜਨਤਾ",
+    "persona.farmer": "ਕਿਸਾਨ / ਖੇਤੀ ਉਤਪਾਦਕ",
+
+    // Notification System
+    "notif.title": "ਮੌਸਮ ਸੂਚਨਾਵਾਂ",
+    "notif.in_app": "ਇਨ-ਐਪ ਅਲਰਟ",
+    "notif.browser": "ਬ੍ਰਾਊਜ਼ਰ ਸੂਚਨਾਵਾਂ",
+    "notif.sms": "ਐਸਐਮਐਸ ਅਲਰਟ",
+    "notif.push": "ਵੈੱਬ ਪੁਸ਼",
+    "notif.clear": "ਸੂਚਨਾਵਾਂ ਸਾਫ਼ ਕਰੋ",
   },
 };

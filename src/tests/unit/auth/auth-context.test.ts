@@ -7,7 +7,6 @@ import {
   clearStoredSession,
   STORAGE_KEY_AUTH,
 } from "@/lib/storage/auth-storage";
-import type { UserSession } from "@/types/auth";
 
 class MockStorage implements Storage {
   private store = new Map<string, string>();

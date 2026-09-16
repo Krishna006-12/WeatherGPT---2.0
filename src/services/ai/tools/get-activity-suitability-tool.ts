@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import type { Coordinates, Result } from "@/types/common";
+import type { Result } from "@/types/common";
 import type { ActivitySuitabilityReport, ActivityType } from "@/types/activity";
 import { ActivityService, globalActivityService } from "@/services/activity/activity-service";
 import type { WeatherIntelligenceTool } from "./tool-interface";

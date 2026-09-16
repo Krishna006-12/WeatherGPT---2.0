@@ -31,7 +31,6 @@ describe("10-Turn Context Retention & Older-Turns Summarization", () => {
 
   it("AIOrchestrator: Given a mocked 12-turn session, the prompt sent to the model contains content referencing turn 2 via the summary, not just turns 3–12 verbatim", async () => {
     let capturedPrompt = "";
-    let capturedSystemInstruction = "";
 
     const mockAiProvider = new MockAIProvider({
       responseGenerator: (prompt) => {
@@ -46,9 +45,8 @@ describe("10-Turn Context Retention & Older-Turns Summarization", () => {
     });
 
     const generateCompletionSpy = vi.spyOn(mockAiProvider, "generateCompletion")
-      .mockImplementation(async (prompt, systemInstruction) => {
+      .mockImplementation(async (prompt, _systemInstruction) => {
         capturedPrompt = prompt;
-        capturedSystemInstruction = systemInstruction || "";
         return JSON.stringify({
           answer: "Based on our conversation, there is no flash flood threat in Patna, and tomorrow looks clear.",
           groundingStatus: "grounded",

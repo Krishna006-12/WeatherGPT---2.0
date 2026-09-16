@@ -9,7 +9,6 @@ import {
   saveSelectedLocation,
   MAX_RECENT_LOCATIONS,
   STORAGE_KEY_RECENTS,
-  STORAGE_KEY_SELECTED,
 } from "@/lib/storage/location-storage";
 import type { NormalizedLocation } from "@/services/location/location-service";
 

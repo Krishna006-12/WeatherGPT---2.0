@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import type { Coordinates, Result } from "@/types/common";
+import type { Result } from "@/types/common";
 import type { ModelConsensusReport, NwpModelId } from "@/types/nwp";
 import { NwpService, globalNwpService } from "@/services/nwp/nwp-service";
 import type { WeatherIntelligenceTool } from "./tool-interface";

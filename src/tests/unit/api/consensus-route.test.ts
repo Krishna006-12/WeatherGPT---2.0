@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET } from "@/app/api/consensus/route";
-import { NwpService, globalNwpService } from "@/services/nwp/nwp-service";
+import { globalNwpService } from "@/services/nwp/nwp-service";
 import { modelConsensusReportSchema } from "@/schemas/nwp";
 import { AppError } from "@/lib/errors";
 import type { ModelConsensusReport } from "@/types/nwp";

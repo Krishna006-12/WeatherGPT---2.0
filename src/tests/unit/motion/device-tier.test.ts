@@ -7,7 +7,6 @@ import {
 
 describe("Adaptive Device Tier Detection", () => {
   const originalMatchMedia = window.matchMedia;
-  const originalNavigator = window.navigator;
 
   beforeEach(() => {
     // Default mock: reduced-motion is OFF

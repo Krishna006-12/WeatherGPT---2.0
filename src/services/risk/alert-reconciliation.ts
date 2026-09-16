@@ -25,7 +25,7 @@ export interface ReconciledAlert {
 export function reconcileAlerts(
   events: WeatherEvent[],
   riskAssessments: RiskAssessment[],
-  weather: WeatherSnapshot
+  _weather: WeatherSnapshot
 ): ReconciledAlert[] {
   const reconciled: ReconciledAlert[] = [];
 
