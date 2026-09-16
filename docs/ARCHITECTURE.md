@@ -165,35 +165,53 @@ interface WeatherEvent {
 }
 ```
 
-## 6. Live-event pipeline
+## 6. Live-event & Context News pipeline
 
 ```text
-Source fetch
+Source fetch (GDACS / Authoritative Feed)
   ↓
-Parse
+Parse & Boundary Validation (contextEventSchema)
   ↓
-Normalize article/update
+Deterministic Deduplication (token Jaccard similarity & temporal clustering)
   ↓
-Weather relevance filter
+Deterministic Location-Relevance Scoring (Haversine distance, proximity tiers, recency, source trust)
   ↓
-Entity + location extraction
+Context News Service (Time-bucketed Memory Cache)
   ↓
-Deduplicate
-  ↓
-Cluster into event
-  ↓
-Severity/evidence analysis
-  ↓
-Impact engine
-  ↓
-AI summary from evidence
-  ↓
-Persist/cache
-  ↓
-API/UI
+/api/news & AI Orchestrator / Impact Engine
 ```
 
-The LLM should not be responsible for all pipeline stages. Deterministic parsing, schemas, source metadata, geospatial rules, and validation should surround any AI-assisted extraction.
+The LLM is NOT responsible for deduplication, distance calculations, or relevance filtering. All scoring and deduplication are deterministic TypeScript functions.
+
+### News Provider Adapter Contract
+
+Analogous to `WeatherProvider`, the `NewsProvider` interface decouples external news/event APIs:
+
+```ts
+export interface NewsProvider {
+  readonly name: string;
+  getContextEvents?(query?: ContextNewsQuery): Promise<ContextEvent[] | Result<ContextEvent[]>>;
+  getArticles?(query?: NewsQuery): Promise<NewsArticle[]>;
+}
+```
+
+The normalized `ContextEvent` contract:
+
+```ts
+export interface ContextEvent {
+  id: string;
+  headline: string;
+  summary?: string;
+  source: NewsSource;
+  timestamp: ISOTimestamp;
+  category: ContextEventCategory;
+  location: ContextEventLocation;
+  locationRelevance?: LocationRelevance;
+  score?: number;
+  url?: string;
+  provenance: DataProvenance;
+}
+```
 
 ## 7. Impact engine
 
