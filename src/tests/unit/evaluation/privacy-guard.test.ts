@@ -46,6 +46,20 @@ describe("PrivacyGuard — Telemetry PII Scrubber & Coordinate Coarsening", () =
       expect(scrubbed).toContain("Will wind exceed 15 km/h for wheat spray?");
       expect(scrubbed).not.toContain("9123456780");
     });
+
+    it("redacts natural language embedded personal names while preserving location and agriculture keywords", () => {
+      const query1 = "My name is Ramesh Kumar, when should I irrigate wheat in Ludhiana?";
+      const scrubbed1 = PrivacyGuard.scrubText(query1);
+      expect(scrubbed1).not.toContain("Ramesh Kumar");
+      expect(scrubbed1).toContain("[REDACTED_NAME]");
+      expect(scrubbed1).toContain("irrigate wheat in Ludhiana");
+
+      const query2 = "Officer Priya Sharma requesting cyclone alert threshold for Balasore";
+      const scrubbed2 = PrivacyGuard.scrubText(query2);
+      expect(scrubbed2).not.toContain("Priya Sharma");
+      expect(scrubbed2).toContain("[REDACTED_NAME]");
+      expect(scrubbed2).toContain("cyclone alert threshold for Balasore");
+    });
   });
 
   describe("3. Zero-PII Structural Invariant Assertions", () => {
@@ -84,6 +98,27 @@ describe("PrivacyGuard — Telemetry PII Scrubber & Coordinate Coarsening", () =
       expect(() => PrivacyGuard.assertZeroPii(dirtyRecord1)).toThrow(/forbidden PII/);
       expect(() => PrivacyGuard.assertZeroPii(dirtyRecord2)).toThrow(/forbidden PII/);
       expect(() => PrivacyGuard.assertZeroPii(dirtyRecord3)).toThrow(/forbidden PII/);
+    });
+  });
+
+  describe("4. GPS Coarsening & Physical Calculation Independence", () => {
+    it("ensures physical accuracy computations maintain full floating precision while telemetry export is coarsened to 1 decimal place", () => {
+      const internalFineCoords = { latitude: 30.900965, longitude: 75.857277 };
+      const result = PrivacyGuard.processTelemetryAccuracy({
+        internalCoords: internalFineCoords,
+        forecastTemp: 28.2,
+        observedTemp: 29.05,
+        locationName: "PAU Ludhiana Experimental Station",
+      });
+
+      // Verification of independence
+      expect(result.calculationPrecision).toBe("full_internal_precision");
+      expect(result.tempErrorAbs).toBe(0.9); // |29.05 - 28.2| rounded to 1 decimal
+
+      // Telemetry export coordinates are coarsened to ~11km (1 decimal place)
+      expect(result.telemetryExport.coarsenedCoords.latitude).toBe(30.9);
+      expect(result.telemetryExport.coarsenedCoords.longitude).toBe(75.9);
+      expect(result.telemetryExport.locationName).toBe("PAU Ludhiana Experimental Station");
     });
   });
 });

@@ -1,0 +1,194 @@
+diff --git a/src/components/onboarding/pilot-onboarding-modal.tsx b/src/components/onboarding/pilot-onboarding-modal.tsx
+index 2221ae3..a640b67 100644
+--- a/src/components/onboarding/pilot-onboarding-modal.tsx
++++ b/src/components/onboarding/pilot-onboarding-modal.tsx
+@@ -26,7 +26,7 @@ export function PilotOnboardingModal({
+   onClose,
+   onComplete,
+ }: PilotOnboardingModalProps) {
+-  const { language, setLanguage } = useLanguage();
++  const { setLanguage } = useLanguage();
+   const [internalIsOpen, setInternalIsOpen] = useState(false);
+   const [step, setStep] = useState<1 | 2 | 3>(1);
+   const [selectedCohort, setSelectedCohort] = useState<PersonaId>("farmer");
+diff --git a/src/lib/privacy-guard.ts b/src/lib/privacy-guard.ts
+index bf21758..b47f974 100644
+--- a/src/lib/privacy-guard.ts
++++ b/src/lib/privacy-guard.ts
+@@ -58,12 +58,26 @@ export class PrivacyGuard {
+       .replace(this.PHONE_REGEX, "[REDACTED_PHONE]")
+       .replace(this.AADHAAR_REGEX, "[REDACTED_ID]");
+ 
++    // Case-sensitive verification: the NL_NAME_REGEXES above carry the "i" flag
++    // so their trigger keywords ("contact", "for", "Farmer", ...) match
++    // regardless of case, but that same flag also lets [A-Z] in the name-capture
++    // group match lowercase letters — so an ordinary lowercase phrase like
++    // "for wheat spray" gets mis-parsed as a capitalized name. Guard against
++    // this by re-checking the actual captured text is genuinely Title Case
++    // before redacting it.
++    const isActuallyTitleCase = (value: string): boolean =>
++      /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+$/.test(value);
++
+     for (const regex of this.NL_NAME_REGEXES) {
+       scrubbed = scrubbed.replace(regex, (match, capturedName) => {
+-        if (capturedName && typeof capturedName === "string") {
++        if (
++          capturedName &&
++          typeof capturedName === "string" &&
++          isActuallyTitleCase(capturedName)
++        ) {
+           return match.replace(capturedName, "[REDACTED_NAME]");
+         }
+-        return "[REDACTED_NAME]";
++        return match;
+       });
+     }
+ 
+diff --git a/src/services/evaluation/evaluation-metrics-service.ts b/src/services/evaluation/evaluation-metrics-service.ts
+index aae97e4..1690a09 100644
+--- a/src/services/evaluation/evaluation-metrics-service.ts
++++ b/src/services/evaluation/evaluation-metrics-service.ts
+@@ -36,15 +36,21 @@ export class EvaluationMetricsService {
+   private accuracyRecords: ForecastAccuracyRecord[] = [];
+   private readonly maxRecords: number;
+ 
+-  constructor(options: { maxRecords?: number; autoSeed?: boolean; seedLivePilotData?: boolean } = {}) {
++  constructor(options: { maxRecords?: number; autoSeed?: boolean; seedDemoWalkthroughData?: boolean } = {}) {
+     this.maxRecords = options.maxRecords || 2000;
+ 
+-    if (options.autoSeed !== true) {
++    // Both seeding paths are opt-in only. Defaulting either to "on" would mean
++    // every fresh instance — including the production singleton below — starts
++    // pre-populated with fabricated records, which risks being mistaken for
++    // real pilot telemetry. Callers that want demo/walkthrough data (e.g. local
++    // dev, a UI screenshot) must explicitly pass `autoSeed: true` /
++    // `seedDemoWalkthroughData: true`.
++    if (options.autoSeed === true) {
+       this.seedSampleSession();
+     }
+ 
+-    if (options.seedLivePilotData !== false) {
+-      this.recordAuthenticLivePilotSessions();
++    if (options.seedDemoWalkthroughData === true) {
++      this.seedDemoWalkthroughData();
+     }
+   }
+ 
+@@ -500,10 +506,14 @@ export class EvaluationMetricsService {
+   }
+ 
+   /**
+-   * Records authentic live pilot sessions conducted across Punjab farmers and Odisha/Bihar DDMA officers
+-   * tagged strictly with source: "live".
++   * Generates illustrative demo/walkthrough records shaped like a Punjab-farmer
++   * and Odisha/Bihar-DDMA pilot session, for local development and UI
++   * screenshots only. This data is entirely synthetic — no such pilot has
++   * actually run — so every record here is tagged source: "seed", never
++   * "live", and this must stay opt-in (never called by default) so it can
++   * never be mistaken for or mixed into real pilot results.
+    */
+-  private recordAuthenticLivePilotSessions(): void {
++  private seedDemoWalkthroughData(): void {
+     const baseTime = Date.now() - 28 * 24 * 3600 * 1000; // 4-week pilot duration
+ 
+     // 1. Cohort A: 35 Punjab & Western UP Farmers (140 live field queries)
+@@ -536,7 +546,7 @@ export class EvaluationMetricsService {
+           language: profile.lang,
+           timestamp: new Date(baseTime + day * 86400000 + session * 3600000).toISOString(),
+           cacheHit: session % 2 === 0,
+-          source: "live",
++          source: "seed",
+         });
+       }
+     }
+@@ -565,7 +575,7 @@ export class EvaluationMetricsService {
+           language: profile.lang,
+           timestamp: new Date(baseTime + day * 86400000 + (session + 8) * 3600000).toISOString(),
+           cacheHit: session % 2 === 0,
+-          source: "live",
++          source: "seed",
+         });
+       }
+     }
+@@ -594,7 +604,7 @@ export class EvaluationMetricsService {
+           windSpeed: sample.fcstW,
+         },
+         forecastGeneratedTime: new Date(baseTime + (14 * 86400000) - (sample.lead * 3600000)).toISOString(),
+-        source: "live",
++        source: "seed",
+       });
+ 
+       this.recordObservation(
+diff --git a/src/tests/unit/evaluation/evaluation-metrics.test.ts b/src/tests/unit/evaluation/evaluation-metrics.test.ts
+index 8c16910..db7f92d 100644
+--- a/src/tests/unit/evaluation/evaluation-metrics.test.ts
++++ b/src/tests/unit/evaluation/evaluation-metrics.test.ts
+@@ -154,9 +154,9 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
+ 
+       expect(lines.length).toBe(2);
+       expect(lines[0]).toBe(
+-        "Trace ID,Endpoint,Latency (ms),Status Code,Task Completion,Persona,Language,Cache Hit,Timestamp"
++        "Trace ID,Endpoint,Latency (ms),Status Code,Task Completion,Persona,Language,Cache Hit,Source,Timestamp"
+       );
+-      expect(lines[1]).toContain("/api/weather,195,200,direct_answer,farmer,pa,true");
++      expect(lines[1]).toContain("/api/weather,195,200,direct_answer,farmer,pa,true,live");
+     });
+ 
+     it("exports forecast accuracy dataset conforming to CSV standards", () => {
+@@ -176,8 +176,8 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
+       const lines = csv.split("\n");
+ 
+       expect(lines.length).toBe(2);
+-      expect(lines[0]).toContain("Record ID,Location Name,Lead Time (Hours),Forecast Temp (C),Observed Temp (C)");
+-      expect(lines[1]).toContain('"Bathinda Agronomy Plot",48,33,34.2,1.2,5,4.5');
++      expect(lines[0]).toContain("Record ID,Location Name,Coarsened Coords (Lat/Lon),Lead Time (Hours),Forecast Temp (C),Observed Temp (C)");
++      expect(lines[1]).toContain('"Bathinda Agronomy Plot","N/A",48,33,34.2,1.2,5,4.5');
+     });
+ 
+     it("exports complete structured JSON payload", () => {
+@@ -191,12 +191,16 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
+     });
+   });
+ 
+-  describe("6. Real Baseline Pilot Session Seeding", () => {
+-    it("seeds realistic pilot session data when autoSeed is enabled", () => {
+-      const autoSeededService = new EvaluationMetricsService({ autoSeed: true });
+-      const summary = autoSeededService.getSummary();
++  describe("6. Demo Walkthrough Data Seeding (synthetic, always tagged 'seed')", () => {
++    it("seeds illustrative demo session data only when explicitly requested, tagged as seed not live", () => {
++      const autoSeededService = new EvaluationMetricsService({
++        autoSeed: true,
++        seedDemoWalkthroughData: true,
++      });
++      const summaryIncludingSeed = autoSeededService.getSummary({ includeSeed: true });
+ 
+-      expect(summary.totalQueries).toBeGreaterThan(15);
++      expect(summaryIncludingSeed.totalQueries).toBeGreaterThan(15);
++      const summary = summaryIncludingSeed;
+       expect(summary.totalSessions).toBeGreaterThan(0);
+       expect(summary.latency.p50).toBeGreaterThan(0);
+       expect(summary.personaDistribution.farmer).toBeGreaterThan(0);
+@@ -204,5 +208,23 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
+       expect(summary.accuracy.totalEvaluated).toBeGreaterThan(0);
+       expect(summary.accuracy.temperatureMae).toBeGreaterThan(0);
+     });
++
++    it("never surfaces demo/seed data in the default live-only view, even when seeded", () => {
++      const autoSeededService = new EvaluationMetricsService({
++        autoSeed: true,
++        seedDemoWalkthroughData: true,
++      });
++
++      // Default call — no options — must reflect zero real usage, since nothing
++      // live has actually happened. This is what /api/metrics and the
++      // /evaluation dashboard call by default; if this ever returns non-zero
++      // with no real traffic, fabricated data is leaking into "live" numbers.
++      const defaultSummary = autoSeededService.getSummary();
++      expect(defaultSummary.totalQueries).toBe(0);
++      expect(defaultSummary.sourceFilter).toBe("live_only");
++
++      const defaultCsv = autoSeededService.exportLatencyCsv();
++      expect(defaultCsv.split("\n").length).toBe(1); // header only, no data rows
++    });
+   });
+ });

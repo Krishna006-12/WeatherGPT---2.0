@@ -154,9 +154,9 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
 
       expect(lines.length).toBe(2);
       expect(lines[0]).toBe(
-        "Trace ID,Endpoint,Latency (ms),Status Code,Task Completion,Persona,Language,Cache Hit,Timestamp"
+        "Trace ID,Endpoint,Latency (ms),Status Code,Task Completion,Persona,Language,Cache Hit,Source,Timestamp"
       );
-      expect(lines[1]).toContain("/api/weather,195,200,direct_answer,farmer,pa,true");
+      expect(lines[1]).toContain("/api/weather,195,200,direct_answer,farmer,pa,true,live");
     });
 
     it("exports forecast accuracy dataset conforming to CSV standards", () => {
@@ -176,8 +176,8 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
       const lines = csv.split("\n");
 
       expect(lines.length).toBe(2);
-      expect(lines[0]).toContain("Record ID,Location Name,Lead Time (Hours),Forecast Temp (C),Observed Temp (C)");
-      expect(lines[1]).toContain('"Bathinda Agronomy Plot",48,33,34.2,1.2,5,4.5');
+      expect(lines[0]).toContain("Record ID,Location Name,Coarsened Coords (Lat/Lon),Lead Time (Hours),Forecast Temp (C),Observed Temp (C)");
+      expect(lines[1]).toContain('"Bathinda Agronomy Plot","N/A",48,33,34.2,1.2,5,4.5');
     });
 
     it("exports complete structured JSON payload", () => {
@@ -191,10 +191,79 @@ describe("EvaluationMetricsService — Performance, Task Completion & Accuracy P
     });
   });
 
-  describe("6. Real Baseline Pilot Session Seeding", () => {
+  describe("6. Seed vs. Live Telemetry Separation & Default Filtering", () => {
+    it("filters out seed demo telemetry by default and includes it when requested", () => {
+      // Record 3 live queries
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 200, source: "live" });
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 210, source: "live" });
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 220, source: "live" });
+
+      // Record 2 seed demo queries
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 300, source: "seed" });
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 350, source: "seed" });
+
+      // Default should be live-only (3 queries)
+      const liveSummary = service.getSummary();
+      expect(liveSummary.totalQueries).toBe(3);
+      expect(liveSummary.sourceFilter).toBe("live_only");
+      expect(liveSummary.liveRecordCount).toBe(3);
+      expect(liveSummary.seedRecordCount).toBe(2);
+
+      // Explicitly include seed records (5 queries)
+      const allSummary = service.getSummary({ includeSeed: true });
+      expect(allSummary.totalQueries).toBe(5);
+      expect(allSummary.sourceFilter).toBe("all_including_seed");
+
+      // Verify CSV export obeys filter
+      const liveCsv = service.exportLatencyCsv({ includeSeed: false });
+      expect(liveCsv.split("\n").length).toBe(4); // 1 header + 3 records
+
+      const allCsv = service.exportLatencyCsv({ includeSeed: true });
+      expect(allCsv.split("\n").length).toBe(6); // 1 header + 5 records
+    });
+  });
+
+  describe("7. Operational SLA Monitoring & Alerts", () => {
+    it("reports healthy status when p95 latency is within 1,200ms target", () => {
+      for (let i = 0; i < 20; i++) {
+        service.logQueryLatency({
+          endpoint: "/api/weather",
+          latencyMs: 200 + i * 10, // 200ms to 390ms
+          taskCompletion: "direct_answer",
+        });
+      }
+
+      const status = service.getOperationalStatus();
+      expect(status.status).toBe("healthy");
+      expect(status.slaTargetExceeded).toBe(false);
+      expect(status.p95LatencyMs).toBeLessThanOrEqual(1200);
+      expect(status.activeAlerts.length).toBe(0);
+    });
+
+    it("triggers degraded SLA alert when p95 latency exceeds 1,200ms target", () => {
+      // 18 normal queries
+      for (let i = 0; i < 18; i++) {
+        service.logQueryLatency({
+          endpoint: "/api/weather",
+          latencyMs: 200,
+        });
+      }
+      // 2 very slow queries that drive p95 above 1,200ms
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 1400 });
+      service.logQueryLatency({ endpoint: "/api/weather", latencyMs: 1800 });
+
+      const status = service.getOperationalStatus();
+      expect(status.slaTargetExceeded).toBe(true);
+      expect(status.p95LatencyMs).toBeGreaterThan(1200);
+      expect(status.status).toBe("warning");
+      expect(status.activeAlerts.some((a) => a.includes("p95 query latency"))).toBe(true);
+    });
+  });
+
+  describe("8. Real Baseline Pilot Session Seeding", () => {
     it("seeds realistic pilot session data when autoSeed is enabled", () => {
-      const autoSeededService = new EvaluationMetricsService({ autoSeed: true });
-      const summary = autoSeededService.getSummary();
+      const autoSeededService = new EvaluationMetricsService({ autoSeed: true, seedLivePilotData: true });
+      const summary = autoSeededService.getSummary({ includeSeed: true });
 
       expect(summary.totalQueries).toBeGreaterThan(15);
       expect(summary.totalSessions).toBeGreaterThan(0);

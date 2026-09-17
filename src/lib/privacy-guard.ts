@@ -27,12 +27,12 @@ export class PrivacyGuard {
     /\b\d{4}\s?\d{4}\s?\d{4}\b/g;
 
   // Natural language name introduction patterns
-  // Catches: "my name is Ramesh Kumar", "I am Officer Priya Sharma", "Farmer Gurpreet Singh", "Mr. Rajesh Verma"
+  // Catches: "my name is Ramesh Kumar", "I am Officer Priya Sharma", "Farmer Gurpreet Singh", "Mr. Rajesh Verma", "Farmer Ramesh"
   private static readonly NL_NAME_REGEXES = [
-    /(?:my name is|i am called|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/gi,
-    /(?:i am|i'm)\s+(?:farmer|officer|dr\.|mr\.|mrs\.|ms\.)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/gi,
-    /(?:contact|reach|ask|for)\s+(?:farmer|officer|dr\.|mr\.|mrs\.|ms\.)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/gi,
-    /\b(?:Farmer|Officer|Mr\.|Mrs\.|Ms\.|Dr\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/gi,
+    /(?:my name is|i am called|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi,
+    /(?:i am|i'm)\s+(?:farmer|officer|dr\.|mr\.|mrs\.|ms\.)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+    /(?:contact|reach)\s+(?:farmer|officer|dr\.|mr\.|mrs\.|ms\.)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g,
+    /\b(?:Farmer|Officer|Mr\.|Mrs\.|Ms\.|Dr\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g,
   ];
 
   /**

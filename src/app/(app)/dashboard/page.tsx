@@ -16,10 +16,13 @@ import { ActivitySuitabilityCard } from "@/components/activity/activity-suitabil
 import { DecisionSupportCard } from "@/components/persona/decision-support-card";
 import { ScreenReaderAnnouncer } from "@/components/common/screen-reader-announcer";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
+import { PilotOnboardingModal } from "@/components/onboarding/pilot-onboarding-modal";
+import { useState } from "react";
 
 export default function DashboardPage() {
   const { selectedLocation } = useLocation();
   const { t } = useLanguage();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const {
     data: weather,
@@ -56,6 +59,24 @@ export default function DashboardPage() {
         isDegraded={weather?.isDegraded}
         staleWarning={weather?.staleWarning}
       />
+      <PilotOnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
+
+      {/* Pilot Quick-Launch Banner */}
+      <div className="flex items-center justify-between p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs">
+        <span className="text-[var(--text-secondary)]">
+          <strong>Stakeholder Pilot Active:</strong> Punjab/UP Farmers & DDMA Emergency Officers.
+        </span>
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="px-3 py-1.5 rounded-xl font-semibold bg-[var(--accent-surface)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white border border-[var(--accent-border)] transition-colors"
+        >
+          Stakeholder Onboarding Guide
+        </button>
+      </div>
+
       {/* 1. PRIMARY: Dominant Weather Hero Centerpiece (Reference Matched) */}
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
 

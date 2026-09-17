@@ -3,6 +3,7 @@
  *
  * Provides:
  * - GET: Evaluation summary or CSV / JSON export for the evaluation report deliverable.
+ *        Defaults to live-only telemetry; pass ?includeSeed=true to include demo records.
  * - POST: Privacy-validated telemetry ingestion for query latency and task completion.
  */
 
@@ -15,14 +16,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const format = searchParams.get("format") || "summary";
     const type = searchParams.get("type") || "latency";
+    const includeSeed = searchParams.get("includeSeed") === "true";
 
     if (format === "csv") {
       const csvContent =
         type === "accuracy"
-          ? globalEvaluationMetricsService.exportAccuracyCsv()
-          : globalEvaluationMetricsService.exportLatencyCsv();
+          ? globalEvaluationMetricsService.exportAccuracyCsv({ includeSeed })
+          : globalEvaluationMetricsService.exportLatencyCsv({ includeSeed });
 
-      const filename = `weathergpt_evaluation_${type}_${new Date().toISOString().slice(0, 10)}.csv`;
+      const filename = `weathergpt_evaluation_${type}_${includeSeed ? "all_" : "live_"}${new Date().toISOString().slice(0, 10)}.csv`;
 
       return new NextResponse(csvContent, {
         status: 200,
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (format === "json") {
-      const fullDataset = globalEvaluationMetricsService.exportJson();
+      const fullDataset = globalEvaluationMetricsService.exportJson({ includeSeed });
       return NextResponse.json(fullDataset, {
         status: 200,
         headers: {
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: Return statistical evaluation summary
-    const summary = globalEvaluationMetricsService.getSummary();
+    const summary = globalEvaluationMetricsService.getSummary({ includeSeed });
     return NextResponse.json(summary, {
       status: 200,
       headers: {
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { endpoint, latencyMs, statusCode, taskCompletion, persona, language, cacheHit } =
+    const { endpoint, latencyMs, statusCode, taskCompletion, persona, language, cacheHit, source } =
       parsed.data;
 
     const record = globalEvaluationMetricsService.logQueryLatency({
@@ -89,6 +91,7 @@ export async function POST(request: NextRequest) {
       persona,
       language,
       cacheHit,
+      source: source || "live",
     });
 
     return NextResponse.json({ success: true, traceId: record.traceId }, { status: 201 });

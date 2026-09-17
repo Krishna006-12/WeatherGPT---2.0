@@ -107,11 +107,10 @@ export function PilotOnboardingModal({
                   setSelectedCohort("farmer");
                   setSelectedLanguage("pa"); // default Punjabi for wheat/mustard cohort
                 }}
-                className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${
-                  selectedCohort === "farmer"
-                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 shadow-sm"
-                    : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
-                }`}
+                className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${selectedCohort === "farmer"
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 shadow-sm"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
               >
                 <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
                   <Sprout size={20} />
@@ -133,11 +132,10 @@ export function PilotOnboardingModal({
                   setSelectedCohort("disaster_manager");
                   setSelectedLanguage("en");
                 }}
-                className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${
-                  selectedCohort === "disaster_manager"
-                    ? "border-red-500 bg-red-500/10 text-red-950 dark:text-red-100 shadow-sm"
-                    : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
-                }`}
+                className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${selectedCohort === "disaster_manager"
+                  ? "border-red-500 bg-red-500/10 text-red-950 dark:text-red-100 shadow-sm"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
               >
                 <div className="p-2.5 rounded-xl bg-red-500/20 text-red-600 dark:text-red-400 shrink-0 mt-0.5">
                   <ShieldAlert size={20} />
@@ -182,11 +180,10 @@ export function PilotOnboardingModal({
             <div className="grid grid-cols-1 gap-2.5 pt-2">
               <button
                 onClick={() => setSelectedLanguage("pa")}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${
-                  selectedLanguage === "pa"
-                    ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
-                    : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
-                }`}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${selectedLanguage === "pa"
+                  ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
               >
                 <span>ਪੰਜਾਬੀ (Punjabi — Recommended for Punjab Farmers)</span>
                 {selectedLanguage === "pa" && <CheckCircle2 size={18} />}
@@ -194,11 +191,10 @@ export function PilotOnboardingModal({
 
               <button
                 onClick={() => setSelectedLanguage("hi")}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${
-                  selectedLanguage === "hi"
-                    ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
-                    : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
-                }`}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${selectedLanguage === "hi"
+                  ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
               >
                 <span>हिन्दी (Hindi — Recommended for UP / Bihar Responders)</span>
                 {selectedLanguage === "hi" && <CheckCircle2 size={18} />}
@@ -206,11 +202,10 @@ export function PilotOnboardingModal({
 
               <button
                 onClick={() => setSelectedLanguage("en")}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${
-                  selectedLanguage === "en"
-                    ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
-                    : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
-                }`}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${selectedLanguage === "en"
+                  ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
               >
                 <span>English (Recommended for DDMA Command & Analysis)</span>
                 {selectedLanguage === "en" && <CheckCircle2 size={18} />}

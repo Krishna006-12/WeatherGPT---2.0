@@ -43,7 +43,8 @@ export class EvaluationMetricsService {
       this.seedSampleSession();
     }
 
-    if (options.seedLivePilotData !== false) {
+    const shouldSeedLive = options.seedLivePilotData ?? (options.autoSeed !== false);
+    if (shouldSeedLive) {
       this.recordAuthenticLivePilotSessions();
     }
   }
