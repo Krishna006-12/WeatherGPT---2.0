@@ -10,6 +10,16 @@ export default defineConfig({
     setupFiles: ['./src/tests/setup.ts'],
     testTimeout: 15000,
     include: ['src/tests/**/*.test.{ts,tsx}'],
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true,
+        maxThreads: 1,
+        minThreads: 1,
+      },
+    },
+    maxWorkers: 1,
+    minWorkers: 1,
     coverage: {
       reporter: ['text', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
