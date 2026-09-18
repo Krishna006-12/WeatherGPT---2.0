@@ -8,10 +8,14 @@
  *   UI / API routes → LocationService → Open-Meteo Geocoding API
  */
 
-import { openMeteoGeocodingResponseSchema } from "@/schemas/open-meteo";
+import {
+  openMeteoGeocodingResponseSchema,
+  type OpenMeteoGeocodingResult,
+} from "@/schemas/open-meteo";
 import { AppError } from "@/lib/errors";
 import { MemoryCache } from "@/lib/cache";
 import type { Result } from "@/types/common";
+import { getCityCorrection } from "./city-corrections";
 
 const DEFAULT_GEOCODING_URL = "https://geocoding-api.open-meteo.com";
 const DEFAULT_TIMEOUT_MS = 8_000;
@@ -26,6 +30,7 @@ export interface NormalizedLocation {
   region?: string;
   timezone: string;
   displayName: string;
+  population?: number;
 }
 
 export interface LocationServiceConfig {
@@ -52,36 +57,25 @@ export class LocationService {
   }
 
   /**
-   * Search for locations matching the given query string.
-   * Handles empty queries, whitespace, normalization, and caching.
+   * Internal helper to fetch raw location candidates from Open-Meteo Geocoding API.
    */
-  async search(query: string, count: number = 5): Promise<Result<NormalizedLocation[]>> {
-    const trimmed = query.trim();
-    if (!trimmed || trimmed.length < 2) {
-      return { success: true, data: [] };
-    }
-
-    const cacheKey = `${trimmed.toLowerCase()}_${count}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached) {
-      return { success: true, data: cached };
-    }
-
-    const safeCount = Math.min(Math.max(1, count), 10);
+  private async fetchRawLocations(
+    name: string,
+    count: number,
+    signal?: AbortSignal
+  ): Promise<Result<OpenMeteoGeocodingResult[], AppError>> {
     const params = new URLSearchParams({
-      name: trimmed,
-      count: safeCount.toString(),
+      name,
+      count: count.toString(),
       language: "en",
       format: "json",
     });
 
     const url = `${this.baseUrl}/v1/search?${params.toString()}`;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeout);
 
     try {
       const response = await fetch(url, {
-        signal: controller.signal,
+        signal,
         headers: {
           Accept: "application/json",
         },
@@ -122,26 +116,7 @@ export class LocationService {
         };
       }
 
-      const rawResults = parseResult.data.results || [];
-      const normalized: NormalizedLocation[] = rawResults.map((item) => {
-        const parts: string[] = [item.name];
-        if (item.admin1) parts.push(item.admin1);
-        if (item.country) parts.push(item.country);
-
-        return {
-          id: item.id,
-          name: item.name,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          country: item.country || "",
-          region: item.admin1,
-          timezone: item.timezone || "UTC",
-          displayName: parts.join(", "),
-        };
-      });
-
-      this.cache.set(cacheKey, normalized);
-      return { success: true, data: normalized };
+      return { success: true, data: parseResult.data.results || [] };
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         return {
@@ -165,6 +140,102 @@ export class LocationService {
                 502
               ),
       };
+    }
+  }
+
+  /**
+   * Search for locations matching the given query string.
+   * Handles empty queries, whitespace normalization, typo correction (e.g. 'duabi' -> 'Dubai'),
+   * population-weighted ranking, and caching.
+   */
+  async search(query: string, count: number = 5): Promise<Result<NormalizedLocation[]>> {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const cacheKey = `${trimmed.toLowerCase()}_${count}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      return { success: true, data: cached };
+    }
+
+    const safeCount = Math.min(Math.max(1, count), 10);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const correction = getCityCorrection(trimmed);
+      const hasCorrection =
+        correction !== null &&
+        correction.toLowerCase() !== trimmed.toLowerCase();
+
+      // If a spell correction or alias exists (e.g. 'duabi' -> 'Dubai'),
+      // fetch both the corrected canonical name and the original input.
+      const searchTargets = hasCorrection ? [correction, trimmed] : [trimmed];
+
+      const fetchResults = await Promise.all(
+        searchTargets.map((target) =>
+          this.fetchRawLocations(target, safeCount, controller.signal)
+        )
+      );
+
+      // Collect successful matches
+      const allRawItems: OpenMeteoGeocodingResult[] = [];
+      let firstError: AppError | undefined;
+
+      for (const res of fetchResults) {
+        if (res.success) {
+          allRawItems.push(...res.data);
+        } else if (!firstError) {
+          firstError = res.error;
+        }
+      }
+
+      if (allRawItems.length === 0 && firstError) {
+        return { success: false, error: firstError };
+      }
+
+      // Deduplicate results by unique location ID
+      const uniqueItems: OpenMeteoGeocodingResult[] = [];
+      const seenIds = new Set<number>();
+      for (const item of allRawItems) {
+        if (!seenIds.has(item.id)) {
+          seenIds.add(item.id);
+          uniqueItems.push(item);
+        }
+      }
+
+      // Rank results with population weighting so major metropolitan hubs
+      // are prioritized over sparsely-populated villages.
+      uniqueItems.sort((a, b) => {
+        const popA = a.population ?? 0;
+        const popB = b.population ?? 0;
+        return popB - popA;
+      });
+
+      const limitedItems = uniqueItems.slice(0, safeCount);
+
+      const normalized: NormalizedLocation[] = limitedItems.map((item) => {
+        const parts: string[] = [item.name];
+        if (item.admin1) parts.push(item.admin1);
+        if (item.country) parts.push(item.country);
+
+        return {
+          id: item.id,
+          name: item.name,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          country: item.country || "",
+          region: item.admin1,
+          timezone: item.timezone || "UTC",
+          displayName: parts.join(", "),
+          population: item.population,
+        };
+      });
+
+      this.cache.set(cacheKey, normalized);
+      return { success: true, data: normalized };
     } finally {
       clearTimeout(timer);
     }

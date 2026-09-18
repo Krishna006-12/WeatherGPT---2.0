@@ -90,4 +90,64 @@ describe("LocationService", () => {
       expect(result.error.message).toContain("Geocoding failed");
     }
   });
+
+  it("corrects 'duabi' misspelling and prioritizes Dubai UAE over small unpopulated villages", async () => {
+    // Mock fetch to simulate Open-Meteo returning Dubai UAE for 'Dubai' and small villages for 'duabi'
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("name=Dubai")) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              results: [
+                {
+                  id: 292223,
+                  name: "Dubai",
+                  latitude: 25.07725,
+                  longitude: 55.30927,
+                  country: "United Arab Emirates",
+                  admin1: "Dubai",
+                  timezone: "Asia/Dubai",
+                  population: 3790000,
+                },
+              ],
+            }),
+        });
+      }
+      // Return unpopulated Afghan village for literal 'duabi'
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            results: [
+              {
+                id: 1142949,
+                name: "Dūābī",
+                latitude: 36.00984,
+                longitude: 69.1249,
+                country: "Afghanistan",
+                admin1: "Baghlan",
+                timezone: "Asia/Kabul",
+                population: undefined,
+              },
+            ],
+          }),
+      });
+    });
+
+    const service = new LocationService();
+    const result = await service.search("duabi", 5);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.length).toBeGreaterThanOrEqual(1);
+      // Top result MUST be Dubai, UAE because of population weighting
+      expect(result.data[0]?.name).toBe("Dubai");
+      expect(result.data[0]?.country).toBe("United Arab Emirates");
+      expect(result.data[0]?.population).toBe(3790000);
+      expect(result.data[0]?.displayName).toBe("Dubai, Dubai, United Arab Emirates");
+    }
+  });
 });
