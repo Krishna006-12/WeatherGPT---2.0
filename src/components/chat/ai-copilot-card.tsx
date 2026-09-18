@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, AlertCircle, CheckCircle2, Info, AlertTriangle, RotateCcw, Sparkles, Sprout, Mic, MicOff, Volume2, VolumeX, Database } from "lucide-react";
+import Link from "next/link";
+import { MessageSquare, X, Send, AlertCircle, CheckCircle2, Info, AlertTriangle, RotateCcw, Sparkles, Sprout, Mic, MicOff, Volume2, VolumeX, Database, ExternalLink } from "lucide-react";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { AIResponse, GroundingStatus, ConversationContext } from "@/types/ai";
 import { useVoiceAssistant } from "@/hooks/use-voice-assistant";
@@ -51,11 +52,15 @@ export function AICopilotCard({
   initialExpanded = false,
   fullHeight = false,
   hideCollapse = false,
+  isFloating = false,
+  onClose,
 }: {
   location?: NormalizedLocation | null;
   initialExpanded?: boolean;
   fullHeight?: boolean;
   hideCollapse?: boolean;
+  isFloating?: boolean;
+  onClose?: () => void;
 }) {
   const { t, language } = useLanguage();
   const { isFarmer } = useAuth();
@@ -222,32 +227,32 @@ export function AICopilotCard({
   if (expanded) {
     return (
       <div
-        className="flex flex-col relative rounded-[32px] overflow-hidden"
+        className={isFloating ? "flex flex-col relative w-full h-full overflow-hidden bg-transparent" : "flex flex-col relative rounded-[32px] overflow-hidden"}
         style={{
-          background: "var(--surface-1)",
-          border: "1px solid var(--accent-border)",
-          height: fullHeight ? "calc(100vh - 10rem)" : "520px",
-          minHeight: fullHeight ? "560px" : undefined,
-          boxShadow: "0 24px 64px -12px hsla(192, 85%, 56%, 0.1)",
+          background: isFloating ? "transparent" : "var(--surface-1)",
+          border: isFloating ? "none" : "1px solid var(--accent-border)",
+          height: isFloating ? "100%" : fullHeight ? "calc(100vh - 10rem)" : "520px",
+          minHeight: isFloating ? 0 : fullHeight ? "560px" : undefined,
+          boxShadow: isFloating ? "none" : "0 24px 64px -12px hsla(192, 85%, 56%, 0.1)",
         }}
       >
         {/* Header */}
         <div
-          className="flex justify-between items-center px-6 py-5 z-10"
+          className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 z-10 shrink-0"
           style={{ background: "hsla(var(--surface-1-hsl), 0.8)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border-subtle)" }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0"
               style={{ background: "var(--accent-surface)", color: "var(--accent)" }}
             >
               <MessageSquare size={16} />
             </div>
-            <div>
-              <h3 className="font-bold text-[15px] flex items-center gap-2 tracking-tight" style={{ color: "var(--accent)" }}>
+            <div className="min-w-0">
+              <h3 className="font-bold text-[14px] sm:text-[15px] flex items-center gap-1.5 sm:gap-2 tracking-tight truncate" style={{ color: "var(--accent)" }}>
                 {t("copilot.title", "Copilot")}
                 <span
-                  className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider"
+                  className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider shrink-0"
                   style={{
                     background: "var(--accent-surface)",
                     color: "var(--accent)",
@@ -256,31 +261,43 @@ export function AICopilotCard({
                   Live
                 </span>
               </h3>
-              <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-[11px] sm:text-xs font-medium truncate" style={{ color: "var(--text-tertiary)" }}>
                 {isFarmer ? t("user.farmer_mode", "Farmer Intelligence") : "Intelligence"} for {locationLabel}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {messages.length > 0 && (
               <button
                 onClick={clearSession}
                 title={t("copilot.clear_chat", "Clear conversation")}
                 aria-label={t("copilot.clear_chat", "Clear conversation")}
-                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+                className="p-1.5 sm:p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
               >
                 <RotateCcw size={15} />
               </button>
             )}
-            {!hideCollapse && (
-              <button
-                onClick={() => setExpanded(false)}
-                aria-label="Collapse Copilot"
-                className="p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+            {isFloating && (
+              <Link
+                href="/chat"
+                onClick={onClose}
+                title="Open full page copilot"
+                aria-label="Open full page copilot"
+                className="p-1.5 sm:p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                <X size={20} />
+                <ExternalLink size={15} />
+              </Link>
+            )}
+            {(!hideCollapse || onClose) && (
+              <button
+                onClick={onClose ? onClose : () => setExpanded(false)}
+                aria-label={onClose ? "Close Copilot" : "Collapse Copilot"}
+                className="p-1.5 sm:p-2 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                <X size={18} />
               </button>
             )}
           </div>

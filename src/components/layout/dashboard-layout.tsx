@@ -4,6 +4,7 @@ import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { MobileNav } from "./mobile-nav";
 import { FPSOverlay } from "@/components/motion/FPSOverlay";
+import { FloatingCopilotWidget } from "@/components/chat/floating-copilot-widget";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import { useLocation } from "@/context/location-context";
 
@@ -41,6 +42,7 @@ export function DashboardLayout({
       </div>
       <MobileNav />
       <FPSOverlay />
+      <FloatingCopilotWidget />
     </div>
   );
 }
