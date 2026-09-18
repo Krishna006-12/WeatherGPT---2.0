@@ -11,6 +11,7 @@ import { LiveEventCard } from "@/components/events/live-event-card";
 import { ImpactCard } from "@/components/impact/impact-card";
 import { AgricultureCard } from "@/components/agriculture/agriculture-card";
 import { WeatherRiskCenterCard } from "@/components/risk/weather-risk-center-card";
+import { WeatherMascotCard } from "@/components/weather/weather-mascot-card";
 import { ModelConsensusCard } from "@/components/weather/model-consensus-card";
 import { ActivitySuitabilityCard } from "@/components/activity/activity-suitability-card";
 import { DecisionSupportCard } from "@/components/persona/decision-support-card";
@@ -92,6 +93,7 @@ export default function DashboardPage() {
             <HourlyForecastCard weather={weather} isLoading={isWeatherLoading} />
           </div>
           <div className="lg:col-span-4 flex flex-col gap-5 lg:gap-6">
+            <WeatherMascotCard weather={weather} location={selectedLocation} />
             <WeatherRiskCenterCard location={selectedLocation} />
             <LiveEventCard />
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import {
@@ -9,9 +10,12 @@ import {
   CloudRain,
   Cloud,
   AlertTriangle,
+  Footprints,
+  Shirt,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
+import { getWeatherMascot } from "@/lib/weather/mascot-helper";
 
 interface WeatherHeroProps {
   weather?: WeatherSnapshot;
@@ -206,6 +210,9 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   const { current, daily } = weather;
   const today = daily[0];
 
+  // Dynamic Mascot character based on live weather
+  const mascot = getWeatherMascot(current.condition, current.temperature, current.windSpeed);
+
   // Map condition to localized translation
   const condLower = current.condition.toLowerCase();
   let conditionLabel = t("condition.sunny", "Sunny");
@@ -302,8 +309,32 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           </p>
         </div>
 
-        {/* 2. 3D Volumetric Weather Icon Centerpiece */}
-        <div className="my-2 sm:my-3">
+        {/* 2. Character Mascot & 3D Volumetric Weather Icon */}
+        <div className="my-2.5 sm:my-3 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+          {/* Walking Mascot illustration corresponding to current location weather */}
+          <FloatingElement id="hero-mascot-character" massTier="light" envelopeScale={0.7} pressScale={true}>
+            <div
+              className="relative w-28 sm:w-36 h-40 sm:h-52 rounded-2xl overflow-hidden shadow-lg border border-black/10 dark:border-white/10 group cursor-pointer transition-transform duration-300 hover:scale-105 select-none"
+              title={`${mascot.title}: ${mascot.activityTip}`}
+            >
+              <Image
+                src={mascot.imageSrc}
+                alt={`${mascot.title} character mascot`}
+                fill
+                sizes="(max-width: 640px) 112px, 144px"
+                className="object-cover object-center"
+                priority
+              />
+              <div
+                className="absolute bottom-0 inset-x-0 py-1 px-1.5 text-[9px] font-bold text-white text-center tracking-wide uppercase shadow-xs"
+                style={{ background: "rgba(0, 0, 0, 0.65)", backdropFilter: "blur(4px)" }}
+              >
+                {mascot.badgeLabel}
+              </div>
+            </div>
+          </FloatingElement>
+
+          {/* 3D Volumetric Weather Centerpiece */}
           <FloatingElement id="hero-volumetric-centerpiece" massTier="light" envelopeScale={0.6} pressScale={true}>
             <VolumetricWeatherIcon condition={current.condition} />
           </FloatingElement>
@@ -328,6 +359,12 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
             <Wind size={14} className="text-cyan-500" />
             <span>{Math.round(current.windSpeed)} km/h</span>
           </div>
+        </div>
+
+        {/* Mascot Activity & Outfit Contextual Pill */}
+        <div className="mt-3 px-4 py-2 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-md text-xs font-medium text-[var(--text-secondary)] flex items-center gap-2 max-w-md shadow-xs">
+          <Footprints size={14} style={{ color: mascot.accentColor }} className="shrink-0" />
+          <span className="truncate">{mascot.activityTip}</span>
         </div>
 
         {/* 5. Environmental Pill Badges Row (UV, Pollution, Pollen) */}
