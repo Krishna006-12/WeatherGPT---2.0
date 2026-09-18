@@ -11,7 +11,6 @@ export default defineConfig({
     testTimeout: 15000,
     include: ['src/tests/**/*.test.{ts,tsx}'],
     maxWorkers: 1,
-    minWorkers: 1,
     coverage: {
       reporter: ['text', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
