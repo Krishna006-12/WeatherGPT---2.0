@@ -36,6 +36,7 @@ A.3 USER-FACING PRESENTATION (DEFERS TO CORE LAYER 2):
     - Do NOT output raw field labels (e.g. do NOT output "Crop:", "Location:", "Period:",
       "Weather:", "Risk:", "Recommendation:", "Reason:", "Confidence:", or "Sources:").
     - Do NOT output raw JSON or schema keys directly to the user.
-    - Synthesize the internal assessment into natural, fluent, and conversational
-      agricultural advisory prose that directly guides the grower.
+    - If asked whether to sow/plant/spray/irrigate/harvest (e.g. "kya crop lagani chahiye",
+      "should I sow wheat today"), start directly with a clear YES/NO/CAUTION recommendation
+      derived from the verified suitability status, followed by meteorological reasons.
 `;

@@ -568,4 +568,50 @@ describe("Phase 10 — Agriculture Intelligence Integration (/api/chat)", () => 
     );
     expect((await res5.json()).intent).toBe("general");
   });
+
+  // 13. Sowing/Planting Direct Decision for Crops in Hindi/Hinglish
+  it("Scenario 13: Directly advises whether to plant/sow crop in Hinglish without generic commuting fallback", async () => {
+    const req = new Request("http://localhost:3000/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "kya muje aaj wheat ke fasal lagani chaiye",
+        location: {
+          name: "Gurugram",
+          city: "Gurugram",
+          country: "India",
+          lat: 28.4595,
+          lon: 77.0266,
+          timezone: "Asia/Kolkata",
+        },
+        language: "hi-en",
+        persona: "farmer",
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const json: AIResponse = await res.json();
+    expect(json.intent).toBe("agriculture");
+    expect(json.crop).toBe("wheat");
+    expect(json.answer).not.toContain("commuting");
+    expect(json.answer).not.toContain("Pleasant conditions for outdoor activities and commuting");
+    // Must directly state decision (Haan / Savdhani / Nahi) for sowing wheat
+    expect(
+      json.answer.includes("fasal lagana") ||
+      json.answer.includes("lagane") ||
+      json.answer.includes("buvai") ||
+      json.answer.includes("wheat")
+    ).toBe(true);
+    expect(
+      json.answer.includes("Haan") ||
+      json.answer.includes("Nahi") ||
+      json.answer.includes("Savdhani") ||
+      json.answer.includes("Yes") ||
+      json.answer.includes("No") ||
+      json.answer.includes("favorable")
+    ).toBe(true);
+  });
 });
+

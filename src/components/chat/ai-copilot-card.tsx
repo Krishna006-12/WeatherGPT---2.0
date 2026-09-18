@@ -152,6 +152,7 @@ export function AICopilotCard({
           context: lastContext,
           channel,
           language: effectiveLanguage,
+          persona: isFarmer ? "farmer" : undefined,
         }),
       });
 

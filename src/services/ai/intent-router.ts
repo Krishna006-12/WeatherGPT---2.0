@@ -326,7 +326,7 @@ export class IntentRouter {
       const extractedCrop = this.extractCrop(clean);
       const extractedActivity = this.extractActivity(clean);
       const cleanForLoc = clean.replace(
-        /\b(?:wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson|crop|crops|field|farming|farm|agriculture|agricultural|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|insecticide|fertilizer|harvesting|harvest|sowing|sow|planting|plant|seed|seeding|outdoor|precautions|precaution|weather|mausam|affect|impact)\b/gi,
+        /\b(?:wheat|gehun|rice|paddy|dhan|chawal|maize|corn|makka|bhutta|potato|potatoes|aloo|mustard|sarson|rai|cotton|kapas|rui|sugarcane|ganna|eekh|chickpea|chana|gram|soybean|soya|soyabean|groundnut|mungfali|peanut|peanuts|tomato|tomatoes|tamatar|onion|onions|pyaz|kanda|chili|chilli|chilies|chillies|mirch|mirchi|tea|chai|coffee|kafi|barley|jau|sorghum|jowar|chari|pearl_millet|bajra|bajre|pigeon_pea|arhar|tur|tuvar|toor|lentil|masoor|garlic|lahsun|lehsan|jute|patson|san|mango|mangoes|aam|banana|bananas|kela|crop|crops|field|farming|farm|agriculture|agricultural|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|insecticide|fertilizer|fertilizers|harvesting|harvest|sowing|sow|planting|plant|seed|seeding|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan|bona|boyein|boye|katai|katna|kaatein|sinchai|paani|chhidkav|dawai|outdoor|precautions|precaution|weather|mausam|affect|impact|kya|aaj|kal|parso|mujhe|hoga|chahiye|chaiye)\b/gi,
         " "
       );
       const location = this.extractLocation(cleanForLoc);
@@ -883,10 +883,10 @@ export class IntentRouter {
       /\b(crop|crops|farming|farm|agriculture|agricultural|fasal|kheti)\b/i,
       /\b(irrigation|irrigate|watering|sinchai|paani)\b/i,
       /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai|fertilizer|fertilizers)\b/i,
-      /\b(harvest|harvesting|sowing|sow|planting|plant|cutting|katai|buvai|bone|seed|seeding)\b/i,
-      /\b(wheat|gehun|rice|paddy|dhan|maize|corn|makka|potato|potatoes|aloo|mustard|sarson)\b/i,
+      /\b(harvest|harvesting|sowing|sow|planting|plant|cutting|katai|katna|kaatein|buvai|bone|bona|boye|boyein|seed|seeding|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan)\b/i,
+      /\b(wheat|gehun|rice|paddy|dhan|chawal|maize|corn|makka|bhutta|potato|potatoes|aloo|mustard|sarson|rai|cotton|kapas|rui|sugarcane|ganna|eekh|chickpea|chana|gram|soybean|soya|soyabean|groundnut|mungfali|peanut|peanuts|tomato|tomatoes|tamatar|onion|onions|pyaz|kanda|chili|chilli|chilies|chillies|mirch|mirchi|tea|chai|coffee|kafi|barley|jau|sorghum|jowar|chari|pearl_millet|bajra|bajre|pigeon_pea|arhar|tur|tuvar|toor|lentil|masoor|garlic|lahsun|lehsan|jute|patson|san|mango|mangoes|aam|banana|bananas|kela)\b/i,
       /\b(outdoor field work|field work|fieldwork|khet ka kaam|farm work)\b/i,
-      /\b(precautions for wheat|precautions for rice|precautions for crop|precautions for farming)\b/i,
+      /\b(precautions for [a-z]+|precautions for crop|precautions for farming)\b/i,
     ];
     return agriTerms.some((pattern) => pattern.test(text));
   }
@@ -898,30 +898,49 @@ export class IntentRouter {
     if (/\b(irrigation|irrigate|watering|sinchai|paani)\b/i.test(text)) {
       return "irrigation";
     }
-    if (/\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai)\b/i.test(text)) {
+    if (/\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai|fertilizer|fertilizers)\b/i.test(text)) {
       return "spraying";
     }
-    if (/\b(sowing|sow|planting|plant|seeding|bone|buvai)\b/i.test(text)) {
+    if (/\b(sowing|sow|planting|plant|seeding|seed|bone|buvai|bona|boye|boyein|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan)\b/i.test(text)) {
       return "sowing";
     }
-    if (/\b(harvesting|harvest|cutting|reaping|katai)\b/i.test(text)) {
+    if (/\b(harvesting|harvest|cutting|reaping|katai|katna|kaatein)\b/i.test(text)) {
       return "harvesting";
     }
-    if (/\b(outdoor field work|outdoor work|field work|fieldwork|field operations|khet ka kaam)\b/i.test(text)) {
+    if (/\b(outdoor field work|outdoor work|field work|fieldwork|field operations|khet ka kaam|farm work)\b/i.test(text)) {
       return "outdoor_field_work";
     }
     return undefined;
   }
 
   /**
-   * Extract target crop from user text.
+   * Extract target crop from user text across all supported ICAR crops.
    */
   private extractCrop(text: string): CropType | undefined {
     if (/\b(wheat|gehun)\b/i.test(text)) return "wheat";
-    if (/\b(rice|paddy|dhan)\b/i.test(text)) return "rice";
-    if (/\b(maize|corn|makka)\b/i.test(text)) return "maize";
+    if (/\b(rice|paddy|dhan|chawal)\b/i.test(text)) return "rice";
+    if (/\b(maize|corn|makka|bhutta)\b/i.test(text)) return "maize";
     if (/\b(potato|potatoes|aloo)\b/i.test(text)) return "potato";
-    if (/\b(mustard|sarson)\b/i.test(text)) return "mustard";
+    if (/\b(mustard|sarson|rai)\b/i.test(text)) return "mustard";
+    if (/\b(cotton|kapas|rui)\b/i.test(text)) return "cotton";
+    if (/\b(sugarcane|ganna|eekh)\b/i.test(text)) return "sugarcane";
+    if (/\b(chickpea|chickpeas|chana|gram)\b/i.test(text)) return "chickpea";
+    if (/\b(soybean|soybeans|soyabean|soyabeans|soya)\b/i.test(text)) return "soybean";
+    if (/\b(groundnut|groundnuts|mungfali|moongfali|peanut|peanuts)\b/i.test(text)) return "groundnut";
+    if (/\b(tomato|tomatoes|tamatar)\b/i.test(text)) return "tomato";
+    if (/\b(onion|onions|pyaz|kanda)\b/i.test(text)) return "onion";
+    if (/\b(chili|chilli|chilies|chillies|mirch|mirchi)\b/i.test(text)) return "chili";
+    if (/\b(tea|chai)\b/i.test(text)) return "tea";
+    if (/\b(coffee|kafi)\b/i.test(text)) return "coffee";
+    if (/\b(barley|jau)\b/i.test(text)) return "barley";
+    if (/\b(sorghum|jowar|chari)\b/i.test(text)) return "sorghum";
+    if (/\b(pearl_millet|pearl\s+millet|bajra|bajre)\b/i.test(text)) return "pearl_millet";
+    if (/\b(pigeon_pea|pigeon\s+pea|arhar|tur|tuvar|toor)\b/i.test(text)) return "pigeon_pea";
+    if (/\b(lentil|lentils|masoor)\b/i.test(text)) return "lentil";
+    if (/\b(garlic|lahsun|lehsan)\b/i.test(text)) return "garlic";
+    if (/\b(jute|patson|san)\b/i.test(text)) return "jute";
+    if (/\b(mango|mangoes|aam)\b/i.test(text)) return "mango";
+    if (/\b(banana|bananas|kela)\b/i.test(text)) return "banana";
     return undefined;
   }
 }

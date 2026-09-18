@@ -921,12 +921,149 @@ export class AIOrchestrator {
       const periodText = context.temporalResolution?.label || "Target period";
       const weatherSummary = `Precipitation: ${agr.forecastSummary.next24hPrecipMm} mm (48h: ${agr.forecastSummary.next48hPrecipMm} mm), Max Temp: ${agr.forecastSummary.maxTemperatureC}°C, Min Temp: ${agr.forecastSummary.minTemperatureC}°C, Wind: up to ${agr.forecastSummary.maxWindSpeedKmh} km/h, Humidity: ${agr.forecastSummary.averageHumidityPct}%`;
       const riskText = agr.overallRiskLevel.charAt(0).toUpperCase() + agr.overallRiskLevel.slice(1);
-      const recommendationText = (agr as unknown as { recommendation?: string }).recommendation || agr.activities.spraying.advisory || agr.activities.irrigation.advisory;
-      const reasonText = (agr as unknown as { reason?: string }).reason || agr.activities.spraying.reason || agr.activities.irrigation.reason;
-      const confidenceText = (agr as unknown as { confidence?: string }).confidence ? (((agr as unknown as { confidence: string }).confidence.charAt(0).toUpperCase() + (agr as unknown as { confidence: string }).confidence.slice(1))) : "High";
       const noteLine = agr.cropEvidenceNote ? `\n\n${agr.cropEvidenceNote}` : "";
 
-      answer = `🌾 Agriculture Intelligence\n\nCrop:\n${cropText}\n\nLocation:\n${locName}\n\nPeriod:\n${periodText}\n\nWeather:\n${weatherSummary}\n\nRisk:\n${riskText}\n\nRecommendation:\n${recommendationText}\n\nReason:\n${reasonText}\n\nConfidence:\n${confidenceText}${noteLine}`;
+      const queryLower = (context.userQuery || "").toLowerCase();
+      const isSowing = /\b(sowing|sow|planting|plant|seeding|seed|bone|buvai|bona|boye|boyein|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan)\b/i.test(queryLower);
+      const isSpraying = /\b(spraying|spray|pesticide|pesticides|fungicide|foliar|insecticide|chhidkav|dawai|fertilizer|fertilizers)\b/i.test(queryLower);
+      const isIrrigation = /\b(irrigation|irrigate|watering|sinchai|paani)\b/i.test(queryLower);
+      const isHarvesting = /\b(harvesting|harvest|cutting|reaping|katai|katna|kaatein)\b/i.test(queryLower);
+
+      let recommendationText = (agr as unknown as { recommendation?: string }).recommendation;
+      let reasonText = (agr as unknown as { reason?: string }).reason;
+      let decisionLine = "";
+
+      if (isSowing && agr.activities.sowing) {
+        const act = agr.activities.sowing;
+        recommendationText = act.advisory;
+        reasonText = act.reason;
+        decisionLine =
+          act.status === "favorable"
+            ? `Decision: YES, weather conditions are favorable to sow/plant ${cropText} today.`
+            : act.status === "caution"
+            ? `Decision: CAUTION advised before sowing/planting ${cropText} today.`
+            : `Decision: NO, sowing/planting ${cropText} today is unfavorable.`;
+      } else if (isSpraying && agr.activities.spraying) {
+        const act = agr.activities.spraying;
+        recommendationText = act.advisory;
+        reasonText = act.reason;
+        decisionLine =
+          act.status === "favorable"
+            ? `Decision: YES, weather conditions are favorable for spraying today.`
+            : act.status === "caution"
+            ? `Decision: CAUTION advised for spraying operations today.`
+            : `Decision: NO, avoid spraying operations today.`;
+      } else if (isIrrigation && agr.activities.irrigation) {
+        const act = agr.activities.irrigation;
+        recommendationText = act.advisory;
+        reasonText = act.reason;
+        decisionLine =
+          act.status === "favorable"
+            ? `Decision: YES, irrigation is favorable today.`
+            : act.status === "caution"
+            ? `Decision: CAUTION advised for irrigation today.`
+            : `Decision: NO, postpone irrigation today.`;
+      } else if (isHarvesting && agr.activities.harvesting) {
+        const act = agr.activities.harvesting;
+        recommendationText = act.advisory;
+        reasonText = act.reason;
+        decisionLine =
+          act.status === "favorable"
+            ? `Decision: YES, harvesting is favorable today.`
+            : act.status === "caution"
+            ? `Decision: CAUTION advised for harvesting today.`
+            : `Decision: NO, harvesting is unfavorable today.`;
+      } else {
+        recommendationText = recommendationText || agr.activities.spraying.advisory || agr.activities.irrigation.advisory;
+        reasonText = reasonText || agr.activities.spraying.reason || agr.activities.irrigation.reason;
+      }
+
+      const confidenceText = (agr as unknown as { confidence?: string }).confidence ? (((agr as unknown as { confidence: string }).confidence.charAt(0).toUpperCase() + (agr as unknown as { confidence: string }).confidence.slice(1))) : "High";
+
+      if (context.language === "hi") {
+        if (isSowing && agr.activities.sowing) {
+          const act = agr.activities.sowing;
+          const decision =
+            act.status === "favorable"
+              ? `हाँ, आज ${locName} में ${cropText} की बुवाई/फसल लगाना अनुकूल है।`
+              : act.status === "caution"
+              ? `सावधानी: आज ${locName} में ${cropText} की फसल लगाने में सावधानी बरतें।`
+              : `नहीं, आज ${locName} में ${cropText} की बुवाई/फसल लगाना अनुकूल नहीं (unfavorable) है।`;
+          answer = `🌾 कृषि परामर्श (Agriculture Intelligence)\n\n${decision}\n\nफसल: ${cropText}\nस्थान: ${locName}\nसलाह: ${act.advisory}\nकारण: ${act.reason}\n\nमौसम विवरण: तापमान ${agr.forecastSummary.minTemperatureC}°C से ${agr.forecastSummary.maxTemperatureC}°C, 24 घंटे में वर्षा ${agr.forecastSummary.next24hPrecipMm} mm, हवा: ${agr.forecastSummary.maxWindSpeedKmh} km/h।`;
+        } else if (isSpraying && agr.activities.spraying) {
+          const act = agr.activities.spraying;
+          const decision =
+            act.status === "favorable"
+              ? `हाँ, आज ${locName} में ${cropText} पर छिड़काव अनुकूल है।`
+              : act.status === "caution"
+              ? `सावधानी: छिड़काव से पहले मौसम की जांच करें।`
+              : `नहीं, आज छिड़काव (spraying) न करें।`;
+          answer = `🌾 कृषि परामर्श (Agriculture Intelligence)\n\n${decision}\n\nफसल: ${cropText}\nस्थान: ${locName}\nसलाह: ${act.advisory}\nकारण: ${act.reason}\n\nमौसम: ${weatherSummary}`;
+        } else if (isIrrigation && agr.activities.irrigation) {
+          const act = agr.activities.irrigation;
+          const decision =
+            act.status === "favorable"
+              ? `हाँ, आज ${locName} में सिंचाई करना अनुकूल है।`
+              : act.status === "caution"
+              ? `सावधानी: आवश्यकतानुसार ही हल्की सिंचाई करें।`
+              : `नहीं, आज सिंचाई रोक दें।`;
+          answer = `🌾 कृषि परामर्श (Agriculture Intelligence)\n\n${decision}\n\nफसल: ${cropText}\nस्थान: ${locName}\nसलाह: ${act.advisory}\nकारण: ${act.reason}\n\nमौसम: ${weatherSummary}`;
+        } else if (isHarvesting && agr.activities.harvesting) {
+          const act = agr.activities.harvesting;
+          const decision =
+            act.status === "favorable"
+              ? `हाँ, आज ${locName} में कटाई करना अनुकूल है।`
+              : act.status === "caution"
+              ? `सावधानी: कटाई से पहले मौसम की जांच करें।`
+              : `नहीं, आज फसल की कटाई न करें।`;
+          answer = `🌾 कृषि परामर्श (Agriculture Intelligence)\n\n${decision}\n\nफसल: ${cropText}\nस्थान: ${locName}\nसलाह: ${act.advisory}\nकारण: ${act.reason}\n\nमौसम: ${weatherSummary}`;
+        } else {
+          answer = `🌾 कृषि परामर्श (Agriculture Intelligence)\n\nफसल: ${cropText}\nस्थान: ${locName}\nअवधि: ${periodText}\nमौसम: ${weatherSummary}\nजोखिम: ${riskText}\nसलाह: ${recommendationText}\nकारण: ${reasonText}`;
+        }
+      } else if (context.language === "hi-en") {
+        if (isSowing && agr.activities.sowing) {
+          const act = agr.activities.sowing;
+          const decision =
+            act.status === "favorable"
+              ? `Haan, aaj ${locName} mein ${cropText} ki fasal lagana/bona anukool hai (favorable).`
+              : act.status === "caution"
+              ? `Savdhani: Aaj ${locName} mein ${cropText} ki fasal lagane ke liye savdhani bartein (caution).`
+              : `Nahi, aaj ${locName} mein ${cropText} ki fasal na lagayein (unfavorable).`;
+          answer = `🌾 Agriculture Intelligence\n\n${decision}\n\nCrop: ${cropText}\nLocation: ${locName}\nAdvisory: ${act.advisory}\nReason: ${act.reason}\nRisk: ${riskText}\n\nWeather: ${weatherSummary}`;
+        } else if (isSpraying && agr.activities.spraying) {
+          const act = agr.activities.spraying;
+          const decision =
+            act.status === "favorable"
+              ? `Haan, aaj ${locName} mein ${cropText} par spray karna anukool hai (favorable).`
+              : act.status === "caution"
+              ? `Savdhani: Spray karne se pehle hawa aur barish check karein (caution).`
+              : `Nahi, aaj spray/chhidkav postpone karein (unfavorable).`;
+          answer = `🌾 Agriculture Intelligence\n\n${decision}\n\nCrop: ${cropText}\nLocation: ${locName}\nAdvisory: ${act.advisory}\nReason: ${act.reason}\nRisk: ${riskText}\n\nWeather: ${weatherSummary}`;
+        } else if (isIrrigation && agr.activities.irrigation) {
+          const act = agr.activities.irrigation;
+          const decision =
+            act.status === "favorable"
+              ? `Haan, aaj ${locName} mein sinchai (irrigation) anukool hai (favorable).`
+              : act.status === "caution"
+              ? `Savdhani: Zaroorat ke mutabiq hi halki sinchai karein (caution).`
+              : `Nahi, aaj sinchai postpone karein (unfavorable).`;
+          answer = `🌾 Agriculture Intelligence\n\n${decision}\n\nCrop: ${cropText}\nLocation: ${locName}\nAdvisory: ${act.advisory}\nReason: ${act.reason}\n\nWeather: ${weatherSummary}`;
+        } else if (isHarvesting && agr.activities.harvesting) {
+          const act = agr.activities.harvesting;
+          const decision =
+            act.status === "favorable"
+              ? `Haan, aaj ${locName} mein ${cropText} ki katai (harvesting) anukool hai (favorable).`
+              : act.status === "caution"
+              ? `Savdhani: Katai se pehle local mausam check kar lein (caution).`
+              : `Nahi, aaj katai postpone karein (unfavorable).`;
+          answer = `🌾 Agriculture Intelligence\n\n${decision}\n\nCrop: ${cropText}\nLocation: ${locName}\nAdvisory: ${act.advisory}\nReason: ${act.reason}\n\nWeather: ${weatherSummary}`;
+        } else {
+          answer = `🌾 Agriculture Intelligence\n\nCrop: ${cropText}\nLocation: ${locName}\nPeriod: ${periodText}\nWeather: ${weatherSummary}\nRisk: ${riskText}\nRecommendation: ${recommendationText}\nReason: ${reasonText}`;
+        }
+      } else {
+        const decisionPrefix = decisionLine ? `\n\n${decisionLine}` : "";
+        answer = `🌾 Agriculture Intelligence${decisionPrefix}\n\nCrop:\n${cropText}\n\nLocation:\n${locName}\n\nPeriod:\n${periodText}\n\nWeather:\n${weatherSummary}\n\nRisk:\n${riskText}\n\nRecommendation:\n${recommendationText}\n\nReason:\n${reasonText}\n\nConfidence:\n${confidenceText}${noteLine}`;
+      }
     } else if (context.activitySuitability) {
       const actRep = context.activitySuitability;
       const reqAct = actRep.requestedActivity || "running_cycling";
@@ -1002,19 +1139,24 @@ export class AIOrchestrator {
         windSpeedKmh: context.weather.current.windSpeed,
       });
 
+      const isGeneralWeatherQuery = context.intent === "weather" || context.intent === "general";
       if (context.language === "hi") {
         const c = context.weather.current;
         if (isGreeting) {
           answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ। ${locName} के लिए वर्तमान मौसम: ${c.temperature}°C, ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
-        } else {
+        } else if (isGeneralWeatherQuery) {
           answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
+        } else {
+          answer += `\n\n${personaAdvisory}`;
         }
       } else if (context.language === "hi-en") {
         const c = context.weather.current;
         if (isGreeting) {
           answer = `Namaste! Main WeatherGPT Copilot hoon. ${locName} ke liye current weather: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
-        } else {
+        } else if (isGeneralWeatherQuery) {
           answer = `${locName} ka current weather update: Temperature ${c.temperature}°C, condition: ${c.condition}. Humidity: ${c.humidity}%, Wind speed: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
+        } else {
+          answer += `\n\n${personaAdvisory}`;
         }
       } else {
         answer += `\n\n${personaAdvisory}`;

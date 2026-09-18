@@ -135,4 +135,67 @@ describe("Deterministic IntentRouter", () => {
     expect(res4.intent).toBe("weather");
     expect(res4.extractedLocation?.toLowerCase()).toBe("gurugram");
   });
+
+  it("Scenario 13: Correctly extracts sowing/planting activity for Hindi and Hinglish queries", () => {
+    const res1 = router.classify("kya muje aaj wheat ke fasal lagani chaiye");
+    expect(res1.intent).toBe("agriculture");
+    expect(res1.extractedCrop).toBe("wheat");
+    expect(res1.extractedActivity).toBe("sowing");
+
+    const res2 = router.classify("kya aaj sarson lagana sahi rahega?");
+    expect(res2.intent).toBe("agriculture");
+    expect(res2.extractedCrop).toBe("mustard");
+    expect(res2.extractedActivity).toBe("sowing");
+
+    const res3 = router.classify("kya kal kapas ki buvai karein?");
+    expect(res3.intent).toBe("agriculture");
+    expect(res3.extractedCrop).toBe("cotton");
+    expect(res3.extractedActivity).toBe("sowing");
+
+    const res4 = router.classify("chana kab boyein?");
+    expect(res4.intent).toBe("agriculture");
+    expect(res4.extractedCrop).toBe("chickpea");
+    expect(res4.extractedActivity).toBe("sowing");
+
+    const res5 = router.classify("should I plant tomatoes today?");
+    expect(res5.intent).toBe("agriculture");
+    expect(res5.extractedCrop).toBe("tomato");
+    expect(res5.extractedActivity).toBe("sowing");
+  });
+
+  it("Scenario 14: Accurately identifies all 24 ICAR crop types and aliases", () => {
+    const testCases: [string, string][] = [
+      ["kya gehun lagani chahiye", "wheat"],
+      ["dhan ki ropai kab karein", "rice"],
+      ["makka ki kheti", "maize"],
+      ["aloo kab lagayein", "potato"],
+      ["sarson par spray karein", "mustard"],
+      ["kapas ki fasal", "cotton"],
+      ["ganna ki sinchai", "sugarcane"],
+      ["chana kab boye", "chickpea"],
+      ["soyabean ki buvai", "soybean"],
+      ["mungfali ki kheti", "groundnut"],
+      ["tamatar lagana chahiye ya nahi", "tomato"],
+      ["pyaz ki ropai", "onion"],
+      ["mirchi par dawai chhidkav", "chili"],
+      ["chai ke bagan", "tea"],
+      ["coffee plantation", "coffee"],
+      ["jau ki kheti", "barley"],
+      ["jowar kab boye", "sorghum"],
+      ["bajra lagana hai", "pearl_millet"],
+      ["arhar ki dal", "pigeon_pea"],
+      ["masoor ki fasal", "lentil"],
+      ["lahsun lagana chahiye", "garlic"],
+      ["patson ki kheti", "jute"],
+      ["aam ke ped", "mango"],
+      ["kela ki fasal", "banana"],
+    ];
+
+    for (const [query, expectedCrop] of testCases) {
+      const res = router.classify(query);
+      expect(res.intent).toBe("agriculture");
+      expect(res.extractedCrop).toBe(expectedCrop);
+    }
+  });
 });
+
