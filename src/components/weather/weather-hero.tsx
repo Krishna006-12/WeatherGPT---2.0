@@ -11,7 +11,6 @@ import {
   Cloud,
   AlertTriangle,
   Footprints,
-  Shirt,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
@@ -229,10 +228,10 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   // Environmental Indicator Estimates
   const uvVal = current.uvIndex ?? 4.5;
   const uvLabel = uvVal > 6 ? t("hero.high_badge", "High") : uvVal > 3 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
-  
+
   // Pollution / Air Quality estimate (Clean: Low, Hazy: Moderate)
   const pollutionLabel = current.humidity > 75 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
-  
+
   // Pollen count (higher in dry sunny winds)
   const pollenLabel = current.humidity < 45 && current.windSpeed > 15 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
 
@@ -256,7 +255,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           <div
             role="status"
             aria-live="polite"
-            className="w-full mb-3 px-4 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-center gap-2 text-xs font-semibold shadow-xs"
+            className="w-full mb-3 px-4 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-center gap-2 text-xs font-semibold"
           >
             <AlertTriangle size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
@@ -283,7 +282,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         <div className="w-full flex items-center justify-between pointer-events-none mb-1">
           {/* Left Floating Temp Tag */}
           <FloatingElement id="hero-float-badge-left" massTier="light" envelopeScale={0.8} pressScale={false}>
-            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-sm text-xs font-semibold text-[var(--text-primary)]">
+            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-[0_8px_25px_-12px_rgba(15,23,42,0.35)]">
               <Sun size={13} className="text-amber-500" />
               <span>{Math.round(today?.temperatureLow ?? current.temperature - 5)}°</span>
             </div>
@@ -291,7 +290,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
           {/* Right Floating Atmospheric Pill */}
           <FloatingElement id="hero-float-badge-right" massTier="medium" envelopeScale={0.7} pressScale={false}>
-            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-sm text-xs font-semibold text-[var(--text-primary)]">
+            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-[0_8px_25px_-12px_rgba(15,23,42,0.35)]">
               <Droplets size={13} className="text-blue-500" />
               <span>{current.humidity}%</span>
             </div>
@@ -314,7 +313,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           {/* Walking Mascot illustration corresponding to current location weather */}
           <FloatingElement id="hero-mascot-character" massTier="light" envelopeScale={0.7} pressScale={true}>
             <div
-              className="relative w-28 sm:w-36 h-40 sm:h-52 rounded-2xl overflow-hidden shadow-lg border border-black/10 dark:border-white/10 group cursor-pointer transition-transform duration-300 hover:scale-105 select-none"
+              className="relative w-28 sm:w-36 h-40 sm:h-52 rounded-2xl overflow-hidden shadow-lg border border-black/10 dark:border-white/10 group cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
               title={`${mascot.title}: ${mascot.activityTip}`}
             >
               <Image
@@ -362,7 +361,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         </div>
 
         {/* Mascot Activity & Outfit Contextual Pill */}
-        <div className="mt-3 px-4 py-2 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-md text-xs font-medium text-[var(--text-secondary)] flex items-center gap-2 max-w-md shadow-xs">
+        <div className="mt-3 px-4 py-2 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-md text-xs font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2 max-w-full">
           <Footprints size={14} style={{ color: mascot.accentColor }} className="shrink-0" />
           <span className="truncate">{mascot.activityTip}</span>
         </div>
@@ -371,32 +370,20 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mt-5">
           {/* UV Badge */}
           <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-center">
-            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
-              {uvLabel}
-            </span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">
-              {t("hero.uv_index", "UV")}
-            </span>
+            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">{uvLabel}</span>
+            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.uv_index", "UV")}</span>
           </div>
 
           {/* Pollution / AQI Badge */}
           <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-center">
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300">
-              {pollutionLabel}
-            </span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">
-              {t("hero.pollution", "Pollution")}
-            </span>
+            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{pollutionLabel}</span>
+            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollution", "Pollution")}</span>
           </div>
 
           {/* Pollen Badge */}
           <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-center">
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-              {pollenLabel}
-            </span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">
-              {t("hero.pollen", "Pollen")}
-            </span>
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{pollenLabel}</span>
+            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollen", "Pollen")}</span>
           </div>
         </div>
 
@@ -409,17 +396,15 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                 i === 0
                   ? t("timeline.today", "Today")
                   : i === 1
-                  ? t("hero.tomorrow", "Tomorrow")
-                  : dayDate.toLocaleDateString(locale, { weekday: "short" });
+                    ? t("hero.tomorrow", "Tomorrow")
+                    : dayDate.toLocaleDateString(locale, { weekday: "short" });
 
               return (
                 <div
                   key={d.date}
                   className="flex-1 min-w-[72px] p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] flex flex-col items-center text-center shadow-sm"
                 >
-                  <span className="text-xs font-bold text-[var(--text-primary)]">
-                    {Math.round(d.temperatureHigh)}°
-                  </span>
+                  <span className="text-xs font-bold text-[var(--text-primary)]">{Math.round(d.temperatureHigh)}°</span>
                   <div className="my-1.5 text-amber-500">
                     {d.condition.includes("rain") ? (
                       <CloudRain size={16} className="text-blue-500" />
@@ -429,9 +414,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                       <Sun size={16} className="text-amber-500" />
                     )}
                   </div>
-                  <span className="text-[10px] font-medium text-[var(--text-tertiary)]">
-                    {dayTitle}
-                  </span>
+                  <span className="text-[10px] font-medium text-[var(--text-tertiary)]">{dayTitle}</span>
                 </div>
               );
             })}
