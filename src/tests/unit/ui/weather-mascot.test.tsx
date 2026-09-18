@@ -1,11 +1,19 @@
+import type { ImgHTMLAttributes } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { getWeatherMascot } from "@/lib/weather/mascot-helper";
 import { WeatherMascotCard } from "@/components/weather/weather-mascot-card";
+import type { WeatherSnapshot } from "@/types/weather";
 
 // Mock next/image
+type MockImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
+  src?: string;
+  fill?: boolean;
+  priority?: boolean;
+};
+
 vi.mock("next/image", () => ({
-  default: ({ fill, priority, ...props }: any) => {
+  default: ({ fill: _fill, priority: _priority, ...props }: MockImageProps) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img alt={props.alt} src={props.src} {...props} />;
   },
@@ -65,7 +73,7 @@ describe("WeatherMascotCard UI Component", () => {
     country: "India",
   };
 
-  const mockRainyWeather: any = {
+  const mockRainyWeather: WeatherSnapshot = {
     current: {
       temperature: 19,
       apparentTemperature: 18,
