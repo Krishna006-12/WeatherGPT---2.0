@@ -214,25 +214,63 @@ export class LocationService {
         return popB - popA;
       });
 
-      const limitedItems = uniqueItems.slice(0, safeCount);
+      const qLower = trimmed.toLowerCase();
+      const maxPop = uniqueItems[0]?.population ?? 0;
 
-      const normalized: NormalizedLocation[] = limitedItems.map((item) => {
+      // Dominant Metropolis Filter:
+      // If the top match is a major global or national city (e.g. Dubai UAE, Tokyo, London, Delhi),
+      // filter out obscure hamlets/villages with tiny populations (< 20,000 or < 2% of the city's population),
+      // UNLESS the user's search query specifically included that region, district, or country.
+      const filteredItems = uniqueItems.filter((item) => {
+        const admin1 = (item.admin1 || "").toLowerCase();
+        const admin2 = (item.admin2 || "").toLowerCase();
+        const country = (item.country || "").toLowerCase();
+
+        // If the user explicitly searched for a specific state/region or country, retain it
+        if (admin1 && qLower.includes(admin1)) return true;
+        if (admin2 && qLower.includes(admin2)) return true;
+        if (country && qLower.includes(country)) return true;
+
+        if (maxPop >= 100_000) {
+          const pop = item.population ?? 0;
+          const threshold = Math.min(50_000, Math.max(20_000, maxPop * 0.02));
+          if (pop < threshold) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      // Deduplicate by displayName so no duplicate rows (e.g. multiple identical 'Dubai, Uttar Pradesh, India')
+      // ever appear in the search dropdown.
+      const normalized: NormalizedLocation[] = [];
+      const seenDisplayNames = new Set<string>();
+
+      for (const item of filteredItems) {
         const parts: string[] = [item.name];
         if (item.admin1) parts.push(item.admin1);
         if (item.country) parts.push(item.country);
+        const displayName = parts.join(", ");
 
-        return {
-          id: item.id,
-          name: item.name,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          country: item.country || "",
-          region: item.admin1,
-          timezone: item.timezone || "UTC",
-          displayName: parts.join(", "),
-          population: item.population,
-        };
-      });
+        if (!seenDisplayNames.has(displayName)) {
+          seenDisplayNames.add(displayName);
+          normalized.push({
+            id: item.id,
+            name: item.name,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            country: item.country || "",
+            region: item.admin1,
+            timezone: item.timezone || "UTC",
+            displayName,
+            population: item.population,
+          });
+        }
+
+        if (normalized.length >= safeCount) {
+          break;
+        }
+      }
 
       this.cache.set(cacheKey, normalized);
       return { success: true, data: normalized };

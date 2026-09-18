@@ -117,4 +117,22 @@ describe("Deterministic IntentRouter", () => {
     expect(router.classify("London weather").extractedLocation?.toLowerCase()).toBe("london");
     expect(router.classify("New Delhi weather").extractedLocation?.toLowerCase()).toBe("new delhi");
   });
+
+  it("Scenario 12: Correctly extracts location from Hinglish questions and rejects question words as locations", () => {
+    const res1 = router.classify("gurugram ka mausam kasa hau");
+    expect(res1.intent).toBe("weather");
+    expect(res1.extractedLocation?.toLowerCase()).toBe("gurugram");
+
+    const res2 = router.classify("delhi ka mausam kaisa hai");
+    expect(res2.intent).toBe("weather");
+    expect(res2.extractedLocation?.toLowerCase()).toBe("delhi");
+
+    const res3 = router.classify("mumbai ka weather kaisa rahega");
+    expect(res3.intent).toBe("weather");
+    expect(res3.extractedLocation?.toLowerCase()).toBe("mumbai");
+
+    const res4 = router.classify("mausam kaisa hai gurugram ka");
+    expect(res4.intent).toBe("weather");
+    expect(res4.extractedLocation?.toLowerCase()).toBe("gurugram");
+  });
 });

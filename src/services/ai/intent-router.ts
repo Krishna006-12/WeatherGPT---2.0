@@ -209,6 +209,46 @@ const STOP_WORDS = [
   "sunao",
   "bolkar",
   "boliye",
+  // Hinglish inquiry & interrogative terms
+  "kaisa",
+  "kasa",
+  "kaise",
+  "kese",
+  "hau",
+  "hai",
+  "h",
+  "hein",
+  "hain",
+  "tha",
+  "thi",
+  "the",
+  "hoga",
+  "hogi",
+  "honge",
+  "rahega",
+  "rahegi",
+  "rahenge",
+  "kya",
+  "kab",
+  "kaun",
+  "kahan",
+  "kitna",
+  "kitne",
+  "kitni",
+  "batao",
+  "bataiye",
+  "bataye",
+  "batayein",
+  "bata",
+  "bologe",
+  "update",
+  "info",
+  "status",
+  "haal",
+  "hal",
+  "bhi",
+  "to",
+  "toh",
 ];
 
 function sanitizeExtractedLocation(raw?: string): string | undefined {
@@ -746,16 +786,21 @@ export class IntentRouter {
    */
   extractLocation(text: string): string | undefined {
     const locationRegexes = [
+      // Hinglish possessive: "Gurugram ka mausam", "Delhi ki weather", "Mumbai ke mausam", "Kanpur ka taapman"
+      /\b([a-zA-Z0-9\s\-_]+?)\s+(?:ka|ki|ke|ko|se)\s*(?:aaj|kal|parso|abhi)?\s*(?:weather|forecast|temperature|temp|taapman|mausam|rain|baarish|toofan|hawa)\b/i,
+      // Hinglish inverted questions: "mausam kaisa hai Gurugram ka", "kaisa hai mausam Gurugram mein"
+      /\b(?:mausam)\s+(?:kaisa|kasa|kese|kaise)\s*(?:hai|h|hau|hoga|rahega)?\s*([a-zA-Z0-9\s\-_]+?)(?:\s+(?:ka|ki|ke|mein|me)|\?|\.|\,|!|;|$)/i,
+      /\b(?:kaisa|kasa|kese|kaise)\s+(?:hai|h|hau|hoga|rahega)?\s*(?:mausam|weather|temp)\s*(?:hai\s+)?([a-zA-Z0-9\s\-_]+?)(?:\s+(?:ka|ki|ke|mein|me)|\?|\.|\,|!|;|$)/i,
       // "what about London", "how about Kanpur", "what about Nepal"
       /\b(?:what\s+about|how\s+about|and\s+for|and\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar", "near Delhi"
       /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
       // "weather in London", "temp in New Delhi", "forecast for Delhi"
       /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
-      // "weather London", "forecast Tokyo"
-      /\b(?:weather|forecast|temperature|temp|mausam)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
+      // "weather London", "forecast Tokyo" — with negative lookahead so question phrases like "kasa hau", "kaisa hai" are never matched as locations
+      /\b(?:weather|forecast|temperature|temp|mausam)\s+(?!kaisa\b|kasa\b|kaise\b|kese\b|kya\b|kab\b|kitna\b|batao\b|bataiye\b|sunao\b|haal\b|update\b|hau\b|hai\b|h\b)([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Hinglish: "Kanpur mein kal mausam", "Kanpur mein: Ignore..."
-      /\b([a-zA-Z0-9\s\-_]+?)\s+mein(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?(?:\b|$|\?|\.|\,)/i,
+      /\b([a-zA-Z0-9\s\-_]+?)\s+(?:mein|me)(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?(?:\b|$|\?|\.|\,)/i,
       // "London weather", "New Delhi forecast" (excluding temporal/stop words)
       /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z0-9\s\-_]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];

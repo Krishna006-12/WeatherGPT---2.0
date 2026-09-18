@@ -150,4 +150,68 @@ describe("LocationService", () => {
       expect(result.data[0]?.displayName).toBe("Dubai, Dubai, United Arab Emirates");
     }
   });
+
+  it("filters out obscure tiny villages and duplicate display names when searching a major city", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          results: [
+            {
+              id: 292223,
+              name: "Dubai",
+              latitude: 25.07725,
+              longitude: 55.30927,
+              country: "United Arab Emirates",
+              admin1: "Dubai",
+              timezone: "Asia/Dubai",
+              population: 3790000,
+            },
+            {
+              id: 10604810,
+              name: "Dubai",
+              latitude: 27.0843,
+              longitude: 82.93179,
+              country: "India",
+              admin1: "Uttar Pradesh",
+              timezone: "Asia/Kolkata",
+              population: 2139,
+            },
+            {
+              id: 10553763,
+              name: "Dubai",
+              latitude: 26.31205,
+              longitude: 80.75172,
+              country: "India",
+              admin1: "Uttar Pradesh",
+              timezone: "Asia/Kolkata",
+              population: 1969,
+            },
+            {
+              id: 10564658,
+              name: "Dubai",
+              latitude: 27.08365,
+              longitude: 81.75133,
+              country: "India",
+              admin1: "Uttar Pradesh",
+              timezone: "Asia/Kolkata",
+              population: 1081,
+            },
+          ],
+        }),
+    });
+
+    const service = new LocationService();
+    const result = await service.search("dubai", 5);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      // Must contain only the major city, NOT the obscure ~1000 person villages in UP
+      expect(result.data.length).toBe(1);
+      expect(result.data[0]?.name).toBe("Dubai");
+      expect(result.data[0]?.country).toBe("United Arab Emirates");
+      expect(result.data[0]?.displayName).toBe("Dubai, Dubai, United Arab Emirates");
+    }
+  });
 });
