@@ -7,6 +7,8 @@ import type { AIResponse, GroundingStatus, ConversationContext } from "@/types/a
 import { useVoiceAssistant } from "@/hooks/use-voice-assistant";
 import { useAuth } from "@/context/auth-context";
 import { useLanguage } from "@/context/language-context";
+import { detectInputLanguage } from "@/lib/i18n/language-detector";
+import { MarkdownContent } from "./markdown-content";
 
 interface ChatMessage {
   id: string;
@@ -129,6 +131,8 @@ export function AICopilotCard({
     setQuery("");
     setLoading(true);
 
+    const effectiveLanguage = detectInputLanguage(trimmed, language);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -147,7 +151,7 @@ export function AICopilotCard({
             : undefined,
           context: lastContext,
           channel,
-          language,
+          language: effectiveLanguage,
         }),
       });
 
@@ -378,7 +382,7 @@ export function AICopilotCard({
                         border: "1px solid var(--border-subtle)",
                       }}
                     >
-                      <p className="text-[14px] whitespace-pre-wrap leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>{m.content}</p>
+                      <MarkdownContent content={m.content} style={{ color: "var(--text-secondary)" }} />
 
                       {/* Status Badges */}
                       {m.response && (

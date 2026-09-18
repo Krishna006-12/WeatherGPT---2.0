@@ -234,5 +234,60 @@ describe("AICopilotCard", () => {
     expect(body).toHaveProperty("language");
     expect(typeof body.language).toBe("string");
   });
+
+  it("detects and overrides language to 'hi-en' when user types Hinglish while UI language is 'en'", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        intent: "weather",
+        answer: "Dubai me abhi mausam **34.1°C** hai aur clear sky hai.",
+        groundingStatus: "grounded",
+        citations: [],
+      }),
+    });
+
+    render(<AICopilotCard location={mockLocation} />);
+    fireEvent.click(screen.getByText("Copilot").closest("div")?.parentElement!);
+
+    const input = screen.getByPlaceholderText(/Ask Copilot/i);
+    fireEvent.change(input, { target: { value: "dubai ka mausam" } });
+    fireEvent.click(input.nextElementSibling as HTMLButtonElement);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/chat", expect.any(Object));
+    });
+
+    const call = fetchMock.mock.calls[0];
+    const body = JSON.parse(call![1]!.body as string);
+    expect(body.message).toBe("dubai ka mausam");
+    expect(body.language).toBe("hi-en");
+  });
+
+  it("renders markdown bold syntax as <strong> elements rather than literal asterisks", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        intent: "weather",
+        answer: "The current temperature is **34.1°C** with **clear skies**.",
+        groundingStatus: "grounded",
+        citations: [],
+      }),
+    });
+
+    render(<AICopilotCard location={mockLocation} />);
+    fireEvent.click(screen.getByText("Copilot").closest("div")?.parentElement!);
+
+    const input = screen.getByPlaceholderText(/Ask Copilot/i);
+    fireEvent.change(input, { target: { value: "What is the temperature?" } });
+    fireEvent.click(input.nextElementSibling as HTMLButtonElement);
+
+    await waitFor(() => {
+      expect(screen.getByText("34.1°C")).toBeInTheDocument();
+    });
+
+    const boldElement = screen.getByText("34.1°C");
+    expect(boldElement.tagName).toBe("STRONG");
+    expect(screen.queryByText(/\*\*34\.1°C\*\*/)).not.toBeInTheDocument();
+  });
 });
 

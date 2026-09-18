@@ -36,6 +36,7 @@ import { aiResponseSchema } from "@/schemas/ai";
 import { generateDeterministicHash } from "@/lib/deduplicator";
 import { globalVoiceService } from "@/services/voice/voice-service";
 import { summarizeOlderTurns } from "./context-summarizer";
+import { detectInputLanguage } from "@/lib/i18n/language-detector";
 
 import { IntentRouter, globalIntentRouter, type IntentClassification } from "./intent-router";
 import { ContextBuilder, globalContextBuilder } from "./context-builder";
@@ -322,11 +323,12 @@ export class AIOrchestrator {
       }
 
       // 5. Grounded Context Construction with XML Boundaries
+      const resolvedLanguage = detectInputLanguage(message, request.language);
       const groundedContext: GroundedContext = {
         userQuery: message,
         intent,
         channel,
-        language: request.language,
+        language: resolvedLanguage,
         persona: request.persona,
         recentTurns,
         olderTurnsSummary,

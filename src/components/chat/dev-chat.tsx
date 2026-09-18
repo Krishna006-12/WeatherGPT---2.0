@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import type { AIResponse, GroundingStatus } from "@/types/ai";
+import { MarkdownContent } from "./markdown-content";
+import { detectInputLanguage } from "@/lib/i18n/language-detector";
 
 export function DevChat() {
   const [query, setQuery] = useState("");
@@ -35,6 +37,7 @@ export function DevChat() {
         body: JSON.stringify({
           message: query.trim(),
           location: locationName ? { name: locationName.trim() } : undefined,
+          language: detectInputLanguage(query.trim()),
         }),
       });
 
@@ -129,9 +132,10 @@ export function DevChat() {
               <span>Model: {response.model || "gemini"}</span>
             </div>
 
-            <div className="text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 whitespace-pre-wrap">
-              {response.answer}
-            </div>
+            <MarkdownContent
+              content={response.answer}
+              className="text-neutral-900 dark:text-neutral-100"
+            />
 
             {response.uncertainty && (
               <div className="rounded border-l-2 border-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 text-xs text-amber-800 dark:text-amber-200">
