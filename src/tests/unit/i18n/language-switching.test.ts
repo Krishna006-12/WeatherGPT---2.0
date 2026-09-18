@@ -40,6 +40,17 @@ describe("Multilingual Language Switching & Translation Parity", () => {
       expect(prompt).toContain("Gurmukhi script");
     });
 
+    it("injects mandatory Hinglish language directive when language is 'hi-en'", () => {
+      const prompt = buildSystemPrompt({
+        intent: "weather",
+        language: "hi-en",
+      });
+      expect(prompt).toContain("MANDATORY LANGUAGE DIRECTIVE: HINGLISH");
+      expect(prompt).toContain("conversational Hinglish");
+      expect(prompt).toContain("Roman script");
+      expect(prompt).toContain("Do NOT use Devanagari script");
+    });
+
     it("injects farmer persona addendum when persona is 'farmer'", () => {
       const prompt = buildSystemPrompt({
         intent: "weather",
@@ -100,6 +111,24 @@ describe("Multilingual Language Switching & Translation Parity", () => {
         expect(res.data.answer).toContain("Hello! I am WeatherGPT Copilot");
       }
     });
+
+    it("produces conversational Hinglish fallback response when language is set to 'hi-en'", async () => {
+      const mockProvider = new MockAIProvider();
+      mockProvider.setFailure(new AppError("AI_PROVIDER_UNAVAILABLE", "Downstream error", 502));
+
+      const orchestrator = new AIOrchestrator({ aiProvider: mockProvider });
+
+      const res = await orchestrator.processQuery({
+        message: "Hello",
+        language: "hi-en",
+        persona: "general_public",
+      });
+
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.answer).toContain("Namaste! Main WeatherGPT Copilot hoon");
+      }
+    });
   });
 
   describe("Translation Dictionary Key Parity", () => {
@@ -115,6 +144,10 @@ describe("Multilingual Language Switching & Translation Parity", () => {
         expect(TRANSLATIONS.pa[key]).toBeDefined();
         expect(typeof TRANSLATIONS.pa[key]).toBe("string");
         expect(TRANSLATIONS.pa[key]?.trim().length).toBeGreaterThan(0);
+
+        expect(TRANSLATIONS["hi-en"][key]).toBeDefined();
+        expect(typeof TRANSLATIONS["hi-en"][key]).toBe("string");
+        expect(TRANSLATIONS["hi-en"][key]?.trim().length).toBeGreaterThan(0);
       }
     });
 
@@ -122,6 +155,16 @@ describe("Multilingual Language Switching & Translation Parity", () => {
       expect(TRANSLATIONS.hi["alert.extreme"]).toBe("अत्यधिक चेतावनी");
       expect(TRANSLATIONS.hi["alert.severe"]).toBe("गंभीर परामर्श");
       expect(TRANSLATIONS.hi["persona.farmer"]).toContain("किसान");
+    });
+
+    it("has authentic colloquial texting translations in Hinglish", () => {
+      expect(TRANSLATIONS["hi-en"]["nav.weather"]).toBe("Mausam");
+      expect(TRANSLATIONS["hi-en"]["hero.feels_like"]).toBe("Feels like");
+      expect(TRANSLATIONS["hi-en"]["condition.rain"]).toBe("Baarish");
+      expect(TRANSLATIONS["hi-en"]["copilot.welcome_title"]).toContain("Namaste!");
+      expect(TRANSLATIONS["hi-en"]["copilot.welcome_title"]).toContain("kya janna chahte hain?");
+      expect(TRANSLATIONS["hi-en"]["agri.irrigation"]).toContain("Sinchai");
+      expect(TRANSLATIONS["hi-en"]["risk.cyclone"]).toContain("Chakravat");
     });
   });
 });

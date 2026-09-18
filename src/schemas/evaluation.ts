@@ -25,7 +25,7 @@ export const queryLatencyRecordSchema = z.object({
   statusCode: z.number().int().min(100).max(599),
   taskCompletion: taskCompletionStatusSchema,
   persona: z.enum(["general_public", "farmer", "disaster_manager"]),
-  language: z.enum(["en", "hi", "pa"]),
+  language: z.enum(["en", "hi", "pa", "hi-en"]),
   timestamp: z.string().datetime(),
   cacheHit: z.boolean(),
   source: telemetrySourceSchema.default("live"),
@@ -65,7 +65,7 @@ export const metricsIngestPayloadSchema = z.object({
   statusCode: z.number().int().default(200),
   taskCompletion: taskCompletionStatusSchema.default("direct_answer"),
   persona: z.enum(["general_public", "farmer", "disaster_manager"]).default("general_public"),
-  language: z.enum(["en", "hi", "pa"]).default("en"),
+  language: z.enum(["en", "hi", "pa", "hi-en"]).default("en"),
   cacheHit: z.boolean().default(false),
   source: telemetrySourceSchema.default("live"),
 });

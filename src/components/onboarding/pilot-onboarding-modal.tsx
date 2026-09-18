@@ -13,12 +13,13 @@ import {
   Info,
 } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
 import type { PersonaId } from "@/types/persona";
 
 interface PilotOnboardingModalProps {
   isOpen?: boolean;
   onClose?: () => void;
-  onComplete?: (persona: PersonaId, language: "en" | "hi" | "pa") => void;
+  onComplete?: (persona: PersonaId, language: SupportedLanguage) => void;
 }
 
 export function PilotOnboardingModal({
@@ -30,7 +31,7 @@ export function PilotOnboardingModal({
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedCohort, setSelectedCohort] = useState<PersonaId>("farmer");
-  const [selectedLanguage, setSelectedLanguage] = useState<"en" | "hi" | "pa">("pa");
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("pa");
 
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
@@ -209,6 +210,17 @@ export function PilotOnboardingModal({
               >
                 <span>English (Recommended for DDMA Command & Analysis)</span>
                 {selectedLanguage === "en" && <CheckCircle2 size={18} />}
+              </button>
+
+              <button
+                onClick={() => setSelectedLanguage("hi-en")}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border text-sm font-semibold transition-all ${selectedLanguage === "hi-en"
+                  ? "border-[var(--accent)] bg-[var(--accent-surface)] text-[var(--accent)]"
+                  : "border-[var(--border-subtle)] hover:bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  }`}
+              >
+                <span>Hinglish (Conversational Hindi-English Mix)</span>
+                {selectedLanguage === "hi-en" && <CheckCircle2 size={18} />}
               </button>
             </div>
 

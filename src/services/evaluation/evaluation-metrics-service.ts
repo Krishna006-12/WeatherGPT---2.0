@@ -58,7 +58,7 @@ export class EvaluationMetricsService {
     statusCode?: number;
     taskCompletion?: TaskCompletionStatus;
     persona?: PersonaId;
-    language?: "en" | "hi" | "pa";
+    language?: QueryLatencyRecord["language"];
     cacheHit?: boolean;
     timestamp?: string;
     source?: TelemetrySource;

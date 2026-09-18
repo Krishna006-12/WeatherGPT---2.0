@@ -117,6 +117,8 @@ export const chatRequestSchema = z.object({
   context: conversationContextSchema.optional(),
   sessionId: z.string().optional(),
   channel: promptChannelSchema.optional(),
+  language: z.enum(["en", "hi", "pa", "hi-en"]).optional(),
+  persona: z.enum(["general_public", "farmer", "disaster_manager"]).optional(),
 });
 
 

@@ -11,6 +11,7 @@ export function LanguageSwitcher() {
     { code: "en", label: "English", short: "EN" },
     { code: "hi", label: "हिंदी", short: "हिं" },
     { code: "pa", label: "ਪੰਜਾਬੀ", short: "ਪੰ" },
+    { code: "hi-en", label: "Hinglish", short: "Hing" },
   ];
 
   return (

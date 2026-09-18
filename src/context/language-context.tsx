@@ -29,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_LANG) as SupportedLanguage | null;
-      if (saved && (saved === "en" || saved === "hi" || saved === "pa")) {
+      if (saved && (saved === "en" || saved === "hi" || saved === "pa" || saved === "hi-en")) {
         setLanguageState(saved);
         if (typeof document !== "undefined") {
           document.documentElement.lang = saved;

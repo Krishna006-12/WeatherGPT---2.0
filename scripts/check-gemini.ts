@@ -52,19 +52,30 @@ async function checkGemini() {
   console.log("📡 Sending test request to Gemini Generative Language API...");
 
   try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const modelNames = (listData.models || []).map((m: any) => m.name.replace("models/", "")).filter((n: string) => n.includes("gemini"));
+      console.log(`📋 Available Gemini models (${modelNames.length}):`, modelNames.slice(0, 8).join(", "));
+    }
+
     const response = await provider.generateCompletion(
       "Ping test: Reply with a JSON object {\"status\": \"active\", \"model\": \"gemini\"}",
       "You are a weather AI system diagnostic tool. Always respond in valid JSON.",
       {
         temperature: 0.1,
-        maxTokens: 100,
+        maxTokens: 500,
         jsonMode: true,
       }
     );
 
     console.log("✅ SUCCESS! Gemini API key is working.");
     console.log("   Response received:\n");
-    console.log(`   ${response.trim()}`);
+    try {
+      console.log("   " + JSON.stringify(JSON.parse(response), null, 2).replace(/\n/g, "\n   "));
+    } catch {
+      console.log(`   ${response.trim()}`);
+    }
     console.log("\n==========================================\n");
   } catch (error) {
     console.error("❌ FAILED to generate completion with Gemini.");

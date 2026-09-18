@@ -1007,6 +1007,13 @@ export class AIOrchestrator {
         } else {
           answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
         }
+      } else if (context.language === "hi-en") {
+        const c = context.weather.current;
+        if (isGreeting) {
+          answer = `Namaste! Main WeatherGPT Copilot hoon. ${locName} ke liye current weather: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
+        } else {
+          answer = `${locName} ka current weather update: Temperature ${c.temperature}°C, condition: ${c.condition}. Humidity: ${c.humidity}%, Wind speed: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
+        }
       } else {
         answer += `\n\n${personaAdvisory}`;
       }
@@ -1015,6 +1022,12 @@ export class AIOrchestrator {
         answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ, आपका मौसम और आपदा खुफिया सहायक। आप मुझसे मौसम, पूर्वानुमान या क्षेत्रीय आपदा प्रभाव के बारे में पूछ सकते हैं।`;
       } else if (context.locationNotFound) {
         answer = `"${locName}" के लिए सत्यापित भौगोलिक स्थान या मौसम अवलोकन नहीं मिल सका। कृपया स्थान के नाम की पुष्टि करें और पुनः प्रयास करें।`;
+      }
+    } else if (context.language === "hi-en") {
+      if (isGreeting) {
+        answer = `Namaste! Main WeatherGPT Copilot hoon, aapka weather aur disaster intelligence assistant. Aap mujhse live weather, forecast ya regional disaster impact ke baare me pooch sakte hain.`;
+      } else if (context.locationNotFound) {
+        answer = `"${locName}" ke liye verified geographical location ya weather observations nahi mil sake. Please location name check karke dobara try karein.`;
       }
     }
 

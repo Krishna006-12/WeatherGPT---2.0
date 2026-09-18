@@ -115,6 +115,16 @@ export function buildSystemPrompt(
 - Do NOT respond in English.
 - Grounded numbers and metrics remain strictly accurate, but all explanations and advisories must be in Punjabi.`
     );
+  } else if (language === "hi-en") {
+    sections.push(
+      `// ============================================================
+// MANDATORY LANGUAGE DIRECTIVE: HINGLISH (Conversational Romanized Hindi-English)
+// ============================================================
+- You MUST formulate your entire response in natural, genuine conversational Hinglish (the modern Romanized colloquial mix of Hindi and English as texted and spoken in daily life in India).
+- Use Roman script (English alphabet). Do NOT use Devanagari script.
+- Blend English weather and activity terminology with colloquial Hindi naturally (e.g., "Aaj mausam mostly clear rahega with slight breeze. Afternoon me temperature around 32°C touch kar sakta hai, so hydration ka dhyan rakhein.").
+- Keep all numerical measurements, units (°C, km/h, mm, hPa), coordinates, and verified data source names strictly accurate.`
+    );
   } else {
     sections.push(
       `// ============================================================

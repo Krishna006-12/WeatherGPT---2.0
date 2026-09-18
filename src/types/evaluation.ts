@@ -12,6 +12,7 @@
 
 import type { ISOTimestamp } from "./common";
 import type { PersonaId } from "./persona";
+import type { SupportedLanguage } from "@/lib/i18n/translations";
 
 /**
  * Telemetry source discriminant to keep seed/demo data strictly isolated from real pilot results.
@@ -38,7 +39,7 @@ export interface QueryLatencyRecord {
   statusCode: number;
   taskCompletion: TaskCompletionStatus;
   persona: PersonaId;
-  language: "en" | "hi" | "pa";
+  language: SupportedLanguage;
   timestamp: ISOTimestamp;
   cacheHit: boolean;
   source: TelemetrySource;

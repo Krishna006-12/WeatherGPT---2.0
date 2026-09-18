@@ -3,7 +3,7 @@
  * Supports English (en), Hindi (hi), and Punjabi (pa).
  */
 
-export type SupportedLanguage = "en" | "hi" | "pa";
+export type SupportedLanguage = "en" | "hi" | "pa" | "hi-en";
 
 export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   en: {
@@ -841,5 +841,289 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "evaluation.export_csv": "ਸੀਐਸਵੀ ਨਿਰਯਾਤ ਕਰੋ",
     "evaluation.export_json": "ਜੇਸਨ ਨਿਰਯਾਤ ਕਰੋ",
     "sidebar.evaluation": "ਪਾਇਲਟ ਅਤੇ ਮੁਲਾਂਕਣ ਮੈਟ੍ਰਿਕਸ",
+  },
+
+  "hi-en": {
+    // Navigation
+    "nav.overview": "Overview",
+    "nav.weather": "Mausam",
+    "nav.forecast": "Forecast",
+    "nav.intelligence": "Disasters & Alerts",
+    "nav.impact": "Area Impact",
+    "nav.history": "History & Timeline",
+    "nav.agriculture": "Kheti & Agri",
+    "nav.risks": "Risk Center",
+    "nav.copilot": "AI Copilot",
+    "nav.motion": "Motion Lab",
+    "nav.settings": "Settings",
+
+    // Sidebar
+    "sidebar.overview": "Dashboard Overview",
+    "sidebar.weather": "Mausam & Observations",
+    "sidebar.intelligence": "Live Disaster Alerts",
+    "sidebar.impact": "Regional Risk & Impact",
+    "sidebar.copilot": "WeatherGPT AI Copilot",
+    "sidebar.motion": "Antigravity Motion Lab",
+    "sidebar.history": "Forecast & Mausam Timeline",
+    "sidebar.settings": "System Intelligence Settings",
+
+    // Topbar & Header
+    "topbar.search_placeholder": "City ya gaon search karein (jaise Kanpur, London, Lucknow)...",
+    "topbar.synoptic_grid": "Weather Grid Active",
+    "topbar.model_blend": "Model: ECMWF / GFS Blend",
+    "topbar.recent_searches": "Recent Searches",
+    "topbar.no_recents": "Koi recent search nahi mili",
+    "topbar.clear_all": "Sab clear karein",
+
+    // Weather Hero & Indicators
+    "hero.live_telemetry": "Live Mausam Telemetry",
+    "hero.feels_like": "Feels like",
+    "hero.high": "Max Temp",
+    "hero.low": "Min Temp",
+    "hero.dry_atmosphere": "Dry Mausam",
+    "hero.humid_atmosphere": "Humid / Hawa me nami",
+    "hero.temperate_atmosphere": "Suhana Mausam",
+    "hero.humidity": "Humidity (Nami)",
+    "hero.wind_speed": "Hawa ki Speed",
+    "hero.visibility": "Visibility",
+    "hero.pressure": "Atmospheric Pressure",
+    "hero.uv_index": "UV Index",
+    "hero.pollution": "Pollution Level",
+    "hero.pollen": "Pollen Count",
+    "hero.rain_chance": "Baarish ke Chances",
+    "hero.daily_forecast": "Daily Forecast",
+    "hero.tomorrow": "Kal",
+    "hero.low_badge": "Kam Risk",
+    "hero.moderate_badge": "Moderate",
+    "hero.high_badge": "High Risk",
+
+    // Weather Conditions
+    "condition.clear": "Saaf Aasmaan",
+    "condition.sunny": "Dhoop",
+    "condition.partly_cloudy": "Thode Baadal",
+    "condition.cloudy": "Baadal Chhaye Hain",
+    "condition.overcast": "Ghane Baadal",
+    "condition.rain": "Baarish",
+    "condition.heavy_rain": "Bhari Baarish",
+    "condition.thunderstorm": "Toofan aur Bijli",
+    "condition.snow": "Barfbari",
+    "condition.drizzle": "Halki Boondabaandi",
+    "condition.fog": "Kohra",
+    "condition.mist": "Dhundh",
+
+    // Hourly & 7-Day Forecasts
+    "timeline.next_24_hours": "Agle 24 Ghante",
+    "timeline.timeline": "Timeline",
+    "timeline.now": "Abhi",
+    "timeline.7_day_forecast": "7-Day Forecast",
+    "timeline.weekly_cycle": "Weekly Pattern",
+    "timeline.today": "Aaj",
+    "timeline.sun_cycle": "Suraj & Astro Cycle",
+    "timeline.sunrise": "Sunrise (Sooryoday)",
+    "timeline.sunset": "Sunset (Sooryast)",
+    "timeline.solar_noon": "Dopahar (Solar Noon)",
+    "timeline.daylight": "Din ka Samay",
+
+    // Severe Risk Intelligence
+    "risk.center_title": "Weather Risk Center",
+    "risk.verified": "Verified Data",
+    "risk.deterministic": "Deterministic Rules",
+    "risk.cyclone": "Cyclone (Chakravat)",
+    "risk.flood": "Baadh (Flood)",
+    "risk.heavy_rain": "Bhari Baarish",
+    "risk.thunderstorm": "Thunderstorm & Aandhi",
+    "risk.wind": "Tez Hawaayein",
+    "risk.heat": "Loo / Heatwave",
+    "risk.drought": "Sookha (Drought)",
+    "risk.uv": "UV Radiation Risk",
+    "risk.low": "Low Risk",
+    "risk.moderate": "Moderate Risk",
+    "risk.high": "High Risk",
+    "risk.extreme": "Extreme Warning",
+    "risk.no_evidence": "Koi severe hazard detect nahi hua",
+
+    // Agriculture Intelligence
+    "agri.title": "Kheti Intelligence & Fasal Advisory",
+    "agri.subtitle": "ICAR guidelines aur verified weather par based kheti decisions",
+    "agri.irrigation": "Sinchai (Irrigation)",
+    "agri.spraying": "Pesticide Spray",
+    "agri.harvesting": "Fasal Kataai (Harvesting)",
+    "agri.sowing": "Bijai (Sowing)",
+    "agri.field_operations": "Khet ke Kaam",
+    "agri.disease_risk": "Keede & Bimari ka Khatra",
+    "agri.evapotranspiration": "Mitti se Nami ka Udna (ET0)",
+
+    // Activity Intelligence
+    "activity.title": "Daily Activity Suitability",
+    "activity.walking": "Tahalna (Walking)",
+    "activity.running": "Running / Jogging",
+    "activity.cycling": "Cycling",
+    "activity.outdoor_work": "Outdoor Work",
+    "activity.driving": "Driving / Highway",
+    "activity.flight": "Flight Travel",
+    "activity.favorable": "Badiya Mausam (Favorable)",
+    "activity.moderate": "Thik-Thak (Moderate)",
+    "activity.unfavorable": "Kharab Mausam (Avoid Karein)",
+
+    // Multi-Model Consensus
+    "consensus.title": "Multi-Model Forecast Consensus",
+    "consensus.spread": "Models me Difference (Spread)",
+    "consensus.confidence": "Consensus Confidence Level",
+
+    // AI Copilot
+    "copilot.title": "WeatherGPT AI Copilot",
+    "copilot.welcome_title": "Namaste! Aaj mausam ke baare me kya janna chahte hain?",
+    "copilot.placeholder": "Poochhein: Kya aaj baarish hogi? Fasal kataai kab karein?...",
+    "copilot.listening": "Sun raha hoon... Boliye",
+    "copilot.analyzing": "Verified mausam aur disaster data analyze ho raha hai...",
+    "copilot.clear_chat": "Chat clear karein",
+    "copilot.suggest_1": "Kya aaj baarish hogi?",
+    "copilot.suggest_2": "Agle 3 din ka temperature kaisa rahega?",
+    "copilot.suggest_3": "Kya aaj fasal par spray karna safe hai?",
+
+    // User Profile & Modes
+    "user.farmer_mode": "Farmer Mode (Kisan Profile)",
+    "user.urban_mode": "Urban Citizen Mode",
+    "user.guest": "Guest User",
+    "user.sign_in_google": "Google se Sign In karein",
+    "user.sign_out": "Sign Out",
+
+    // System Settings
+    "settings.title": "System Intelligence Settings",
+    "settings.subtitle": "AI models, data sources aur language preferences customize karein",
+    "settings.ai_model": "Primary AI Model",
+    "settings.active": "Active",
+    "settings.current_model": "Google Gemini 2.5 Flash",
+    "settings.current_model_desc": "Fast reasoning and multimodal intelligence",
+    "settings.grounding_protocol": "Grounding Protocol",
+    "settings.grounding_protocol_val": "Strict Source Verification",
+    "settings.grounding_protocol_desc": "Answers sirf real measured data par ground hote hain",
+    "settings.data_providers": "Active Data Providers",
+    "settings.open_meteo_desc": "Global high-resolution numerical weather models",
+    "settings.gdacs_desc": "UN & European Commission disaster alerts",
+    "settings.connected": "Connected",
+    "settings.live_sync": "Live Sync",
+    "settings.agri_engine": "ICAR Agriculture Engine",
+    "settings.agri_engine_desc": "Crop water and disease rule evaluation",
+    "settings.units": "Units Preference",
+    "settings.metric": "Metric (°C, km/h, mm)",
+    "settings.imperial": "Imperial (°F, mph, in)",
+
+    // Forecast & Historical Timeline
+    "history.title": "Mausam History & Timeline",
+    "history.subtitle": "Historical climate trends aur ERA5 reanalysis data",
+    "history.open_meteo_badge": "Open-Meteo Historical Archive",
+    "history.era5_badge": "ECMWF ERA5 Reanalysis",
+    "history.era5_title": "Historical Weather Benchmarking",
+    "history.era5_desc": "Pichhle saalon ke patterns se current mausam compare karein",
+    "history.1_year": "1 Saal",
+    "history.3_years": "3 Saal",
+    "history.5_years": "5 Saal",
+    "history.10_years": "10 Saal",
+    "history.temp": "Temperature Trend",
+    "history.precip": "Baarish ka Trend",
+    "history.characterization": "Climate Assessment",
+    "history.avg_max": "Average Max Temp",
+    "history.baseline": "Climate Baseline",
+    "history.rain_days": "Baarish wale Din",
+    "history.total_7d": "Pichhle 7 Din ki Baarish",
+    "history.relative_normal": "Normal ke Muqable",
+    "history.ecmwf_source": "ECMWF Reanalysis Model",
+    "history.dry": "Sukha Daur (Dry Spell)",
+
+    // Live Weather & Observations Page
+    "weather.title": "Weather & Meteorological Dashboard",
+    "weather.subtitle": "High-precision live telemetry aur multi-tier forecast",
+
+    // Live Disaster Intelligence Page
+    "intel.title": "Live Disaster & Event Intelligence",
+    "intel.subtitle": "GDACS aur official feeds se tracked regional hazards",
+    "intel.bulletin": "Disaster Bulletin",
+    "intel.hazard_condition": "Hazard Status",
+    "intel.verified_source": "Verified Source",
+    "intel.verified_sources": "Verified Data Sources",
+    "intel.subcontinent": "Indian Subcontinent Monitoring",
+    "intel.threat_rating": "Threat Severity Level",
+    "intel.relevance": "Location Relevance Score",
+
+    // Regional Risk & Impact Page
+    "impact.title": "Regional Risk & Impact Analysis",
+    "impact.subtitle": "Disaster propagation aur local vulnerability assessment",
+    "impact.location_impact": "Location Impact Status",
+    "impact.hazard_vuln": "Hazard Vulnerability",
+    "impact.agri_vuln": "Kheti par Asar",
+    "impact.grounded": "Grounded Assessment",
+    "impact.normal": "Sab Normal Hai",
+    "impact.advisory": "Advisory / Savdhani",
+    "impact.warning": "Warning / Chetawani",
+    "impact.hazard_assessment": "Hazard Evaluation",
+    "impact.actionable_advisory": "Actionable Advice",
+
+    // Dashboard Overview Components
+    "dashboard.immediate_horizon": "Immediate Forecast Horizon",
+    "dashboard.regional_analysis": "Regional Weather & Hazard Analysis",
+    "welcome.title": "WeatherGPT 2.0 me Swagat Hai",
+    "welcome.subtitle": "Actionable decisions ke liye banaya gaya weather intelligence platform",
+    "metric.wind": "Wind Speed",
+
+    // Live Event Management
+    "events.category": "Category",
+    "events.all_categories": "Sabhi Categories",
+    "events.refresh": "Refresh Karein",
+    "events.sync_feeds": "Feeds Sync Karein",
+    "events.syncing": "Sync ho raha hai...",
+    "events.confidence": "Source Confidence",
+    "events.updated": "Updated",
+    "events.locations": "Affected Locations",
+    "events.sources": "Official Sources",
+    "events.no_active": "Koi active hazard report nahi hua",
+    "events.monitoring_subcontinent": "Continuous regional monitoring active hai",
+    "events.multiple_regions": "Kayi ilaqe affected hain",
+
+    // Disaster Categories
+    "category.flood": "Baadh (Flood)",
+    "category.flash_flood": "Achanak Baadh (Flash Flood)",
+    "category.cyclone": "Cyclone (Toofan)",
+    "category.heavy_rain": "Bhari Baarish",
+    "category.thunderstorm": "Aandhi-Toofan & Bijli",
+    "category.heatwave": "Loo (Heatwave)",
+    "category.landslide": "Pahad Khisakna (Landslide)",
+    "category.earthquake": "Bhookamp (Earthquake)",
+    "category.wildfire": "Jungle ki Aag (Wildfire)",
+    "impact.no_active": "Koi active disaster event nahi hai",
+    "impact.clear_assessment": "Regional impact assessment bilkul clear hai.",
+
+    // Alert System
+    "alert.extreme": "Extreme Warning",
+    "alert.severe": "Severe Advisory",
+    "alert.moderate": "Moderate Watch",
+    "alert.minor": "Minor Advisory",
+    "alert.rules_engine": "Deterministic Physics Rules Engine",
+    "alert.no_active": "Koi active severe alert nahi mila",
+
+    // Persona System
+    "persona.title": "Profile Persona",
+    "persona.general_public": "Aam Nagrik (Daily Citizen)",
+    "persona.farmer": "Kisan / Agri Producer",
+    "persona.disaster_manager": "Disaster & Emergency Manager",
+
+    // Decision Support System
+    "decision.title": "Role-Based Decision Support",
+    "decision.traceability": "Source Evidence & Rule Traceability",
+    "decision.checklist": "Evidence-Based Action Checklist",
+
+    // Notification System
+    "notif.title": "Mausam Notifications",
+    "notif.in_app": "In-App Alerts",
+    "notif.browser": "Browser Notifications",
+    "notif.sms": "SMS Alerts",
+    "notif.push": "Web Push",
+
+    // Evaluation & Metrics Reporting
+    "evaluation.title": "Pilot & Evaluation Metrics",
+    "evaluation.subtitle": "Performance reporting, latency tracking, aur forecast verification",
+    "evaluation.export_csv": "Export CSV",
+    "evaluation.export_json": "Export JSON",
+    "sidebar.evaluation": "Pilot & Evaluation Metrics",
   },
 };

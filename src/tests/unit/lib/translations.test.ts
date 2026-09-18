@@ -19,12 +19,21 @@ describe("Multilingual Translations Dictionary", () => {
       expect(typeof TRANSLATIONS.pa[k]).toBe("string");
       expect(TRANSLATIONS.pa[k]?.length).toBeGreaterThan(0);
     }
+
+    // Hinglish coverage
+    for (const k of keys) {
+      expect(TRANSLATIONS["hi-en"][k]).toBeDefined();
+      expect(typeof TRANSLATIONS["hi-en"][k]).toBe("string");
+      expect(TRANSLATIONS["hi-en"][k]?.length).toBeGreaterThan(0);
+    }
   });
 
   it("translates key agricultural and risk terms accurately", () => {
     expect(TRANSLATIONS.hi["agri.title"]).toContain("कृषि");
     expect(TRANSLATIONS.pa["agri.title"]).toContain("ਖੇਤੀਬਾੜੀ");
+    expect(TRANSLATIONS["hi-en"]["agri.title"]).toContain("Kheti");
     expect(TRANSLATIONS.hi["risk.cyclone"]).toBe("चक्रवात");
     expect(TRANSLATIONS.pa["risk.cyclone"]).toContain("ਤੂਫਾਨ");
+    expect(TRANSLATIONS["hi-en"]["risk.cyclone"]).toContain("Chakravat");
   });
 });
