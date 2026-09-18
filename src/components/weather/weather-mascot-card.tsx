@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import { getWeatherMascot, type WeatherMascotType } from "@/lib/weather/mascot-helper";
-import { Sparkles, Shirt, Footprints, Info } from "lucide-react";
+import { Sparkles, Shirt, Footprints } from "lucide-react";
 import { triggerHaptic } from "@/lib/motion/haptics";
 
 interface WeatherMascotCardProps {
@@ -40,7 +40,7 @@ export function WeatherMascotCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[28px] border border-black/10 dark:border-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_36px_-6px_rgba(0,0,0,0.5)] ${className}`}
+      className={`relative overflow-hidden rounded-[28px] border border-black/10 dark:border-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_-6px_rgba(255,255,255,0.04)] ${className}`}
       style={{
         background: activeMascot.moodGradient,
       }}
