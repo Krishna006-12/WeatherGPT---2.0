@@ -90,11 +90,16 @@ export function Sidebar() {
         href="/dashboard"
         aria-label="WeatherGPT Home"
         title="WeatherGPT Home"
-        className="mb-7 p-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-colors duration-150"
-        style={{ color: "var(--accent)" }}
+        className="mb-7 p-2 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105"
       >
         <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-[var(--accent-surface)] transition-opacity duration-150" />
-        <Cloud size={24} className="relative z-10" />
+        <img
+          src="/icon.svg"
+          alt="WeatherGPT 2.0"
+          width={28}
+          height={28}
+          className="relative z-10 w-7 h-7 object-contain rounded-md drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]"
+        />
       </Link>
 
       {/* Main navigation list */}
