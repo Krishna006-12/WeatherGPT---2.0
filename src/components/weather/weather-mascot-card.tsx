@@ -40,7 +40,7 @@ export function WeatherMascotCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[28px] border border-black/10 dark:border-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_-6px_rgba(255,255,255,0.04)] ${className}`}
+      className={`relative overflow-hidden rounded-[28px] border border-black/10 dark:border-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_-6px_rgba(255,255,255,0.04)] wg-card-interactive ${className}`}
       style={{
         background: activeMascot.moodGradient,
       }}
@@ -127,9 +127,9 @@ export function WeatherMascotCard({
                     setManualPose(manualPose === p ? null : p);
                   }}
                   title={`Preview ${p} mascot`}
-                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer wg-tactile-press ${
                     isSelected
-                      ? "bg-white dark:bg-white/20 text-neutral-900 dark:text-white shadow-xs"
+                      ? "bg-white dark:bg-white/20 text-neutral-900 dark:text-white shadow-xs scale-[1.04]"
                       : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/5"
                   }`}
                 >

@@ -369,19 +369,19 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         {/* 5. Environmental Pill Badges Row (UV, Pollution, Pollen) */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mt-5">
           {/* UV Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-center wg-card-interactive cursor-default">
             <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">{uvLabel}</span>
             <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.uv_index", "UV")}</span>
           </div>
 
           {/* Pollution / AQI Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-center wg-card-interactive cursor-default">
             <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{pollutionLabel}</span>
             <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollution", "Pollution")}</span>
           </div>
 
           {/* Pollen Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-center wg-card-interactive cursor-default">
             <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{pollenLabel}</span>
             <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollen", "Pollen")}</span>
           </div>
@@ -402,7 +402,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
               return (
                 <div
                   key={d.date}
-                  className="flex-1 min-w-[72px] p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] flex flex-col items-center text-center shadow-sm"
+                  className="flex-1 min-w-[72px] p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] flex flex-col items-center text-center shadow-sm wg-card-interactive wg-tactile-press cursor-pointer"
                 >
                   <span className="text-xs font-bold text-[var(--text-primary)]">{Math.round(d.temperatureHigh)}°</span>
                   <div className="my-1.5 text-amber-500">
