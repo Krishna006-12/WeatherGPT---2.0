@@ -16,11 +16,11 @@ export interface WeatherMascotData {
  * Returns the mascot character configuration dynamically tailored to the
  * current weather condition, temperature, wind speed, and precipitation.
  *
- * Modeled after the Samsung One UI minimalist vector walking character:
- * - Sunny: Coffee stroll in light hoodie & warm sunshine
- * - Cloudy/Windy: Flowing windbreaker jacket against autumn wind & leaves
- * - Rainy: Overhead umbrella, bright yellow raincoat & rubber boots
- * - Snowy: Cozy blue puffer jacket, crossbody bag, beanie & footprints in snow
+ * Mascot: "Aero" (에어로) — Designed with Samsung One UI weather design language:
+ * - Sunny: Warm golden corona & radiant sunlight motes
+ * - Cloudy/Windy: Warm knit breeze scarf & flowing wind trails
+ * - Rainy: Translucent cyan rain slicker, umbrella & floating water droplets
+ * - Snowy: Powder blue knit earmuffs, winter sweater & crystalline frost sparkles
  */
 export function getWeatherMascot(
   condition: string,
@@ -47,7 +47,7 @@ export function getWeatherMascot(
       cardImageSrc: "/images/mascot/snowy-card.webp",
       title: "Snowy Path",
       activityTip: "Cold wintry weather. Step carefully on frost and fresh snow.",
-      outfitTip: "Warm blue puffer coat, thermal layers, beanie & winter boots.",
+      outfitTip: "Cozy powder-blue earmuffs, knitted winter sweater & warm boots.",
       moodGradient: "linear-gradient(180deg, rgba(224, 242, 254, 0.15) 0%, rgba(186, 230, 253, 0.05) 100%)",
       accentColor: "#38bdf8",
       badgeLabel: "Winter Walk",
@@ -68,7 +68,7 @@ export function getWeatherMascot(
       cardImageSrc: "/images/mascot/rainy-card.webp",
       title: "Rainy Day",
       activityTip: "Precipitation in progress. Watch out for puddles and slippery roads.",
-      outfitTip: "Waterproof raincoat, umbrella & slip-resistant rubber boots.",
+      outfitTip: "Translucent cyan raincoat, floating umbrella & slip-resistant boots.",
       moodGradient: "linear-gradient(180deg, rgba(20, 184, 166, 0.15) 0%, rgba(13, 148, 136, 0.05) 100%)",
       accentColor: "#14b8a6",
       badgeLabel: "Rain Shield",
@@ -92,7 +92,7 @@ export function getWeatherMascot(
       cardImageSrc: "/images/mascot/cloudy-card.webp",
       title: "Cloudy & Windy",
       activityTip: "Breezy conditions and muted sunlight across the horizon.",
-      outfitTip: "Windbreaker jacket, casual joggers & eyewear to shield breezes.",
+      outfitTip: "Warm knitted breeze scarf, windbreaker jacket & wind shield.",
       moodGradient: "linear-gradient(180deg, rgba(251, 146, 60, 0.12) 0%, rgba(249, 115, 22, 0.04) 100%)",
       accentColor: "#f97316",
       badgeLabel: "Windy Breeze",
@@ -106,7 +106,7 @@ export function getWeatherMascot(
     cardImageSrc: "/images/mascot/sunny-card.webp",
     title: "Sunny Walk",
     activityTip: "Crisp and pleasant sunshine. Ideal for a walk with a hot beverage.",
-    outfitTip: "Light hoodie, breathable casual wear & comfortable sneakers.",
+    outfitTip: "Warm golden sunlight aura, breathable casual wear & sneakers.",
     moodGradient: "linear-gradient(180deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%)",
     accentColor: "#f59e0b",
     badgeLabel: "Sunny Stroll",
