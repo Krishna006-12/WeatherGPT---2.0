@@ -99,6 +99,7 @@ describe("WeatherMascotCard UI Component", () => {
     expect(screen.getByText("Rainy Day")).toBeInTheDocument();
     expect(screen.getByText("Rain Shield")).toBeInTheDocument();
     expect(screen.getByAltText("Rainy Day mascot")).toHaveAttribute("src", "/images/mascot/rainy.webp");
+    expect(screen.getByTestId("antigravity-mascot")).toBeInTheDocument();
   });
 
   it("allows interactive pose switching for preview", () => {

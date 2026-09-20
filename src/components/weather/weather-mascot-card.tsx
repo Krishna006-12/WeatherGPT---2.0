@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import { getWeatherMascot, type WeatherMascotType } from "@/lib/weather/mascot-helper";
 import { Sparkles, Shirt, Footprints } from "lucide-react";
 import { triggerHaptic } from "@/lib/motion/haptics";
+import { AntigravityMascot } from "@/components/weather/antigravity-mascot";
 
 interface WeatherMascotCardProps {
   weather?: WeatherSnapshot | null;
@@ -77,18 +77,16 @@ export function WeatherMascotCard({
           </span>
         </div>
 
-        {/* Character Visual Showcase */}
+        {/* Character Visual Showcase — Antigravity Physics Floating Mascot */}
         <div className="relative w-full flex items-center justify-center my-2 sm:my-3">
-          <div className="relative w-36 sm:w-44 h-52 sm:h-60 rounded-2xl overflow-hidden shadow-md border border-white/20 dark:border-white/10 group">
-            <Image
-              src={activeMascot.imageSrc}
-              alt={`${activeMascot.title} mascot`}
-              fill
-              sizes="(max-width: 640px) 144px, 176px"
-              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              priority
-            />
-          </div>
+          <AntigravityMascot
+            imageSrc={activeMascot.imageSrc}
+            alt={`${activeMascot.title} mascot`}
+            accentColor={activeMascot.accentColor}
+            weatherType={activeMascot.type}
+            pointerReactive={true}
+            priority
+          />
         </div>
 
         {/* Dynamic Contextual Advisory */}
