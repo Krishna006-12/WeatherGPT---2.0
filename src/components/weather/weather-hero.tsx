@@ -11,10 +11,12 @@ import {
   Cloud,
   AlertTriangle,
   Footprints,
+  MapPin,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
 import { getWeatherMascot } from "@/lib/weather/mascot-helper";
+import { getLocalizedLocationName } from "@/lib/i18n/location-names";
 
 interface WeatherHeroProps {
   weather?: WeatherSnapshot;
@@ -209,8 +211,16 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   const { current, daily } = weather;
   const today = daily[0];
 
-  // Dynamic Mascot character based on live weather
-  const mascot = getWeatherMascot(current.condition, current.temperature, current.windSpeed);
+  // Dynamic Mascot character based on live weather (localized)
+  const mascot = getWeatherMascot(current.condition, current.temperature, current.windSpeed, t);
+  const localizedLoc = getLocalizedLocationName(location, language);
+
+  // Formatted date string corresponding to user's selected locale
+  const dateString = new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(weather.observedAt || today?.date || Date.now()));
 
   // Map condition to localized translation
   const condLower = current.condition.toLowerCase();
@@ -297,12 +307,20 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           </FloatingElement>
         </div>
 
-        {/* 1. Centered Location Heading & Condition Subtitle */}
+        {/* 1. Centered Location Heading, Pin Subtitle & Condition */}
         <div className="flex flex-col items-center">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-            {location.displayName.split(",")[0]}
+            {localizedLoc.cityName}
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-1 capitalize">
+          <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] font-medium mt-1 flex-wrap justify-center">
+            <span className="flex items-center gap-1 text-[var(--text-tertiary)]">
+              <MapPin size={13} className="text-[var(--accent)] shrink-0" />
+              <span>{localizedLoc.fullDisplayName}</span>
+            </span>
+            <span className="text-[var(--text-tertiary)]">•</span>
+            <span className="text-[var(--text-tertiary)] capitalize">{dateString}</span>
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-[var(--accent)] mt-1.5 capitalize">
             {conditionLabel}
             {current.windSpeed > 20 && ` • ${t("metric.wind", "Wind")} ${Math.round(current.windSpeed)} km/h`}
           </p>

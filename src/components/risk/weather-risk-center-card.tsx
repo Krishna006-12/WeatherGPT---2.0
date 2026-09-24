@@ -196,9 +196,9 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
                 {isExpanded && (
                   <div className="mt-2.5 pt-2.5 border-t border-dashed border-[var(--border-subtle)] pl-7 pr-1 text-xs space-y-2 wg-animate-in">
                     <div className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
-                      <span>Window: {assessment.timeWindow}</span>
+                      <span>{t("risk.window", "Window:")} {assessment.timeWindow}</span>
                       <span>•</span>
-                      <span>Confidence: {assessment.confidence.toUpperCase()}</span>
+                      <span>{t("risk.confidence", "Confidence:")} {assessment.confidence.toUpperCase()}</span>
                     </div>
 
                     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -209,7 +209,7 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
                     {assessment.evidence.length > 0 && (
                       <div className="bg-black/20 p-2 rounded-lg border border-[var(--border-subtle)] space-y-1">
                         <span className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] block">
-                          Verified Evidence
+                          {t("risk.verified_evidence", "Verified Evidence")}
                         </span>
                         {assessment.evidence.map((ev, i) => (
                           <div
@@ -240,10 +240,10 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
 
       {/* Footer */}
       <div className="pt-3 mt-3 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] text-[var(--text-tertiary)]">
-        <span>Updated from verified forecast</span>
+        <span>{t("risk.updated_forecast", "Updated from verified forecast")}</span>
         <span className="flex items-center gap-1">
           <ShieldCheck size={11} className="text-emerald-400" />
-          Deterministic
+          {t("risk.deterministic", "Deterministic")}
         </span>
       </div>
     </section>

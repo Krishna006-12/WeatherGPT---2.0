@@ -68,13 +68,14 @@ export default function DashboardPage() {
       {/* Pilot Quick-Launch Banner */}
       <div className="flex items-center justify-between p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs">
         <span className="text-[var(--text-secondary)]">
-          <strong>Stakeholder Pilot Active:</strong> Punjab/UP Farmers & DDMA Emergency Officers.
+          <strong>{t("pilot.active_label", "Stakeholder Pilot Active:")}</strong>{" "}
+          {t("pilot.cohort_desc", "Punjab/UP Farmers & DDMA Emergency Officers.")}
         </span>
         <button
           onClick={() => setShowOnboarding(true)}
           className="px-3 py-1.5 rounded-xl font-semibold bg-[var(--accent-surface)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white border border-[var(--accent-border)] transition-colors"
         >
-          Stakeholder Onboarding Guide
+          {t("pilot.onboarding_guide", "Stakeholder Onboarding Guide")}
         </button>
       </div>
 

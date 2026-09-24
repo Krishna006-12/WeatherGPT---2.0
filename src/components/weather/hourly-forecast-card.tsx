@@ -17,7 +17,8 @@ function getWeatherIcon(condition: string) {
 }
 
 export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
   if (isLoading || !weather) return <div className="wg-skeleton h-44 w-full" />;
 
   const timezone = weather.location.timezone;
@@ -72,7 +73,7 @@ export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSn
                   }`}
                 >
                   {isNow && <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
-                  {isNow ? t("timeline.now", "Now") : formatTime(h.time, timezone)}
+                  {isNow ? t("timeline.now", "Now") : formatTime(h.time, timezone, locale)}
                 </span>
 
                 {/* Weather Icon anchored on the guide rail */}

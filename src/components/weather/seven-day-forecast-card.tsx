@@ -54,13 +54,18 @@ export function SevenDayForecastCard({ weather, isLoading }: { weather?: Weather
           </span>
         </div>
         <span className="text-[11px] font-medium text-[var(--text-tertiary)]">
-          Synoptic Model
+          {t("timeline.synoptic_model", "Synoptic Model")}
         </span>
       </div>
 
       <div className="flex flex-col flex-1 justify-between divide-y divide-[var(--border-subtle)]">
         {days.map((day, i) => {
-          const label = i === 0 ? t("timeline.today", "Today") : formatDayName(day.date, timezone, "short", locale);
+          const label =
+            i === 0
+              ? t("timeline.today", "Today")
+              : i === 1
+              ? t("hero.tomorrow", "Tomorrow")
+              : formatDayName(day.date, timezone, "short", locale);
 
           // Proportional range bar calculation
           const leftPct = ((day.temperatureLow - globalMin) / range) * 100;

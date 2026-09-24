@@ -22,13 +22,13 @@ interface ActivitySuitabilityCardProps {
   location?: NormalizedLocation | null;
 }
 
-const ACTIVITIES: { id: ActivityType; label: string; icon: typeof Bike }[] = [
-  { id: "running_cycling", label: "Running & Cycling", icon: Bike },
-  { id: "commute", label: "Commute & Roads", icon: Car },
-  { id: "travel_road", label: "Highway Travel", icon: Compass },
-  { id: "outdoor_work", label: "Outdoor Labor", icon: HardHat },
-  { id: "school_sports", label: "School Sports", icon: Users },
-  { id: "outdoor_events", label: "Outdoor Events", icon: Calendar },
+const ACTIVITIES: { id: ActivityType; key: string; label: string; icon: typeof Bike }[] = [
+  { id: "running_cycling", key: "activity.running_cycling", label: "Running & Cycling", icon: Bike },
+  { id: "commute", key: "activity.commute", label: "Commute & Roads", icon: Car },
+  { id: "travel_road", key: "activity.travel_road", label: "Highway Travel", icon: Compass },
+  { id: "outdoor_work", key: "activity.outdoor_labor", label: "Outdoor Labor", icon: HardHat },
+  { id: "school_sports", key: "activity.school_sports", label: "School Sports", icon: Users },
+  { id: "outdoor_events", key: "activity.outdoor_events", label: "Outdoor Events", icon: Calendar },
 ];
 
 function getSafetyBadge(level: ActivitySafetyLevel, score: number) {
@@ -133,7 +133,7 @@ export function ActivitySuitabilityCard({ location }: ActivitySuitabilityCardPro
               }`}
             >
               <Icon size={14} />
-              {act.label}
+              {t(act.key, act.label)}
             </button>
           );
         })}
@@ -157,7 +157,7 @@ export function ActivitySuitabilityCard({ location }: ActivitySuitabilityCardPro
               <Clock size={16} className="text-emerald-400 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                  Recommended Time Window
+                  {t("activity.recommended_window", "Recommended Time Window")}
                 </span>
                 <span className="text-xs font-semibold text-emerald-200">
                   {currentEvaluation.bestWindow.startHour} - {currentEvaluation.bestWindow.endHour}

@@ -3,7 +3,8 @@ import { Sunrise, Sunset } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
 
 export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot; isLoading: boolean }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
   if (isLoading || !weather) return <div className="wg-skeleton h-56 w-full" />;
 
   const today = weather.daily[0];
@@ -12,7 +13,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
   const timezone = weather.location.timezone;
   const formatTime = (isoString: string) => {
     const d = new Date(isoString);
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(locale, {
       hour: "numeric",
       minute: "2-digit",
       timeZone: timezone,
@@ -50,7 +51,7 @@ export function SunriseCard({ weather, isLoading }: { weather?: WeatherSnapshot;
             {t("timeline.sun_cycle", "Sunrise & Sunset")}
           </h3>
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-            Celestial Arc
+            {t("timeline.celestial_arc", "Celestial Arc")}
           </span>
         </div>
         <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">

@@ -25,11 +25,13 @@ export interface WeatherMascotData {
 export function getWeatherMascot(
   condition: string,
   temperature?: number,
-  windSpeed?: number
+  windSpeed?: number,
+  t?: (key: string, defaultText?: string) => string
 ): WeatherMascotData {
   const c = (condition || "").toLowerCase();
   const temp = temperature !== undefined ? temperature : 22;
   const wind = windSpeed !== undefined ? windSpeed : 10;
+  const tr = t || ((_k: string, defaultText?: string) => defaultText || "");
 
   // 1. Snowy / Freezing conditions (temp <= 0 or snow/ice/sleet in condition)
   if (
@@ -45,12 +47,12 @@ export function getWeatherMascot(
       type: "snowy",
       imageSrc: "/images/mascot/snowy.webp",
       cardImageSrc: "/images/mascot/snowy-card.webp",
-      title: "Snowy Path",
-      activityTip: "Cold wintry weather. Step carefully on frost and fresh snow.",
-      outfitTip: "Cozy powder-blue earmuffs, knitted winter sweater & warm boots.",
+      title: tr("mascot.title.snowy_path", "Snowy Path"),
+      activityTip: tr("mascot.activity.snowy", "Cold wintry weather. Step carefully on frost and fresh snow."),
+      outfitTip: tr("mascot.outfit.snowy", "Cozy powder-blue earmuffs, knitted winter sweater & warm boots."),
       moodGradient: "linear-gradient(180deg, rgba(224, 242, 254, 0.15) 0%, rgba(186, 230, 253, 0.05) 100%)",
       accentColor: "#38bdf8",
-      badgeLabel: "Winter Walk",
+      badgeLabel: tr("mascot.badge.winter_walk", "Winter Walk"),
     };
   }
 
@@ -66,12 +68,12 @@ export function getWeatherMascot(
       type: "rainy",
       imageSrc: "/images/mascot/rainy.webp",
       cardImageSrc: "/images/mascot/rainy-card.webp",
-      title: "Rainy Day",
-      activityTip: "Precipitation in progress. Watch out for puddles and slippery roads.",
-      outfitTip: "Translucent cyan raincoat, floating umbrella & slip-resistant boots.",
+      title: tr("mascot.title.rainy_day", "Rainy Day"),
+      activityTip: tr("mascot.activity.rainy", "Precipitation in progress. Watch out for puddles and slippery roads."),
+      outfitTip: tr("mascot.outfit.rainy", "Translucent cyan raincoat, floating umbrella & slip-resistant boots."),
       moodGradient: "linear-gradient(180deg, rgba(20, 184, 166, 0.15) 0%, rgba(13, 148, 136, 0.05) 100%)",
       accentColor: "#14b8a6",
-      badgeLabel: "Rain Shield",
+      badgeLabel: tr("mascot.badge.rain_shield", "Rain Shield"),
     };
   }
 
@@ -90,12 +92,12 @@ export function getWeatherMascot(
       type: "cloudy",
       imageSrc: "/images/mascot/cloudy.webp",
       cardImageSrc: "/images/mascot/cloudy-card.webp",
-      title: "Cloudy & Windy",
-      activityTip: "Breezy conditions and muted sunlight across the horizon.",
-      outfitTip: "Warm knitted breeze scarf, windbreaker jacket & wind shield.",
+      title: tr("mascot.title.cloudy_windy", "Cloudy & Windy"),
+      activityTip: tr("mascot.activity.cloudy", "Breezy conditions and muted sunlight across the horizon."),
+      outfitTip: tr("mascot.outfit.cloudy", "Warm knitted breeze scarf, windbreaker jacket & wind shield."),
       moodGradient: "linear-gradient(180deg, rgba(251, 146, 60, 0.12) 0%, rgba(249, 115, 22, 0.04) 100%)",
       accentColor: "#f97316",
-      badgeLabel: "Windy Breeze",
+      badgeLabel: tr("mascot.badge.windy_breeze", "Windy Breeze"),
     };
   }
 
@@ -104,11 +106,11 @@ export function getWeatherMascot(
     type: "sunny",
     imageSrc: "/images/mascot/sunny.webp",
     cardImageSrc: "/images/mascot/sunny-card.webp",
-    title: "Sunny Walk",
-    activityTip: "Crisp and pleasant sunshine. Ideal for a walk with a hot beverage.",
-    outfitTip: "Warm golden sunlight aura, breathable casual wear & sneakers.",
+    title: tr("mascot.title.sunny_walk", "Sunny Walk"),
+    activityTip: tr("mascot.activity.sunny", "Crisp and pleasant sunshine. Ideal for a walk with a hot beverage."),
+    outfitTip: tr("mascot.outfit.sunny", "Warm golden sunlight aura, breathable casual wear & sneakers."),
     moodGradient: "linear-gradient(180deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%)",
     accentColor: "#f59e0b",
-    badgeLabel: "Sunny Stroll",
+    badgeLabel: tr("mascot.badge.sunny_stroll", "Sunny Stroll"),
   };
 }

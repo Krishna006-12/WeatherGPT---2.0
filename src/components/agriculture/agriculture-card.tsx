@@ -7,12 +7,12 @@ import { Sprout, CheckCircle2, AlertCircle, Droplets, Wind, Tractor, Leaf } from
 import type { NormalizedLocation } from "@/services/location/location-service";
 import type { CropType } from "@/types/agriculture";
 
-const CROPS: { id: CropType; label: string }[] = [
-  { id: "wheat", label: "Wheat" },
-  { id: "rice", label: "Rice" },
-  { id: "maize", label: "Maize" },
-  { id: "potato", label: "Potato" },
-  { id: "mustard", label: "Mustard" },
+const CROPS: { id: CropType; key: string; label: string }[] = [
+  { id: "wheat", key: "agri.crop_wheat", label: "Wheat" },
+  { id: "rice", key: "agri.crop_rice", label: "Rice" },
+  { id: "maize", key: "agri.crop_maize", label: "Maize" },
+  { id: "potato", key: "agri.crop_potato", label: "Potato" },
+  { id: "mustard", key: "agri.crop_mustard", label: "Mustard" },
 ];
 
 export function AgricultureCard({ location }: { location?: NormalizedLocation | null }) {
@@ -106,7 +106,7 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
                 border: selectedCrop === crop.id ? "1px solid hsla(160, 60%, 50%, 0.28)" : "1px solid var(--border-subtle)",
               }}
             >
-              {crop.label}
+              {t(crop.key, crop.label)}
             </button>
           ))}
         </div>
@@ -163,7 +163,7 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
         {assessment.hazards.length > 0 && (
           <div className="p-3 rounded-xl bg-[var(--surface-base)]/50 border border-[var(--border-subtle)] mt-2.5 space-y-1">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-              Hazard Trigger
+              {t("agri.hazard_trigger", "Hazard Trigger")}
             </div>
             <p className="text-[11px] text-[var(--text-secondary)]">
               {assessment.hazards[0]?.description}

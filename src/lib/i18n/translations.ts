@@ -283,6 +283,72 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "evaluation.export_csv": "Export CSV",
     "evaluation.export_json": "Export JSON",
     "sidebar.evaluation": "Pilot & Evaluation Metrics",
+
+    // Floating Copilot Button
+    "copilot.floating_btn": "Ask WeatherGPT",
+
+    // Pilot Banner & Onboarding
+    "pilot.active_label": "Stakeholder Pilot Active:",
+    "pilot.cohort_desc": "Punjab/UP Farmers & DDMA Emergency Officers.",
+    "pilot.onboarding_guide": "Stakeholder Onboarding Guide",
+
+    // Mascot
+    "mascot.header": "Mascot",
+    "mascot.poses": "Weather Poses",
+    "mascot.pose_sunny": "Sunny",
+    "mascot.pose_cloudy": "Cloudy",
+    "mascot.pose_rainy": "Rainy",
+    "mascot.pose_snowy": "Snowy",
+    "mascot.badge.windy_breeze": "Windy Breeze",
+    "mascot.badge.sunny_stroll": "Sunny Stroll",
+    "mascot.badge.rain_shield": "Rain Shield",
+    "mascot.badge.winter_walk": "Winter Walk",
+    "mascot.title.cloudy_windy": "Cloudy & Windy",
+    "mascot.title.sunny_walk": "Sunny Walk",
+    "mascot.title.rainy_day": "Rainy Day",
+    "mascot.title.snowy_path": "Snowy Path",
+    "mascot.activity.cloudy": "Breezy conditions and muted sunlight across the horizon.",
+    "mascot.activity.sunny": "Crisp and pleasant sunshine. Ideal for a walk with a hot beverage.",
+    "mascot.activity.rainy": "Precipitation in progress. Watch out for puddles and slippery roads.",
+    "mascot.activity.snowy": "Cold wintry weather. Step carefully on frost and fresh snow.",
+    "mascot.outfit.cloudy": "Warm knitted breeze scarf, windbreaker jacket & wind shield.",
+    "mascot.outfit.sunny": "Warm golden sunlight aura, breathable casual wear & sneakers.",
+    "mascot.outfit.rainy": "Translucent cyan raincoat, floating umbrella & slip-resistant boots.",
+    "mascot.outfit.snowy": "Cozy powder-blue earmuffs, knitted winter sweater & warm boots.",
+
+    // Timeline & Ephemeris
+    "timeline.synoptic_model": "Synoptic Model",
+    "timeline.celestial_arc": "Celestial Arc",
+
+    // Risk Center
+    "risk.updated_forecast": "Updated from verified forecast",
+    "risk.verified_evidence": "Verified Evidence",
+    "risk.window": "Window:",
+    "risk.confidence": "Confidence:",
+
+    // Agriculture
+    "agri.crop_wheat": "Wheat",
+    "agri.crop_rice": "Rice",
+    "agri.crop_maize": "Maize",
+    "agri.crop_potato": "Potato",
+    "agri.crop_mustard": "Mustard",
+    "agri.hazard_trigger": "Hazard Trigger",
+
+    // Activity Suitability
+    "activity.running_cycling": "Running & Cycling",
+    "activity.commute": "Commute & Roads",
+    "activity.travel_road": "Highway Travel",
+    "activity.outdoor_labor": "Outdoor Labor",
+    "activity.school_sports": "School Sports",
+    "activity.outdoor_events": "Outdoor Events",
+    "activity.recommended_window": "Recommended Time Window",
+
+    // User Menu
+    "user.experience_mode": "Experience Mode",
+    "user.farmer": "Farmer",
+    "user.urban": "Urban",
+    "user.zero_data": "Zero data harvesting • Open access",
+    "user.kisan_mitra": "Kisan Mitra",
   },
 
   hi: {
@@ -562,6 +628,72 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "evaluation.export_csv": "सीएसवी निर्यात करें",
     "evaluation.export_json": "जेएसओएन निर्यात करें",
     "sidebar.evaluation": "पायलट और मूल्यांकन मेट्रिक्स",
+
+    // Floating Copilot Button
+    "copilot.floating_btn": "AI सहायक",
+
+    // Pilot Banner & Onboarding
+    "pilot.active_label": "हितधारक पायलट सक्रिय:",
+    "pilot.cohort_desc": "पंजाब/यूपी किसान और डीडीएमए आपातकालीन अधिकारी।",
+    "pilot.onboarding_guide": "हितधारक ऑनबोर्डिंग गाइड",
+
+    // Mascot
+    "mascot.header": "मैस्कॉट",
+    "mascot.poses": "मौसम मुद्राएं",
+    "mascot.pose_sunny": "धूप",
+    "mascot.pose_cloudy": "बादल",
+    "mascot.pose_rainy": "बारिश",
+    "mascot.pose_snowy": "बर्फबारी",
+    "mascot.badge.windy_breeze": "ठंडी हवा",
+    "mascot.badge.sunny_stroll": "सुहानी धूप",
+    "mascot.badge.rain_shield": "वर्षा कवच",
+    "mascot.badge.winter_walk": "शीतकालीन वॉक",
+    "mascot.title.cloudy_windy": "हवादार और बादल",
+    "mascot.title.sunny_walk": "सुहावना मौसम",
+    "mascot.title.rainy_day": "बारिश का दिन",
+    "mascot.title.snowy_path": "बर्फबारी पथ",
+    "mascot.activity.cloudy": "हवादार मौसम और क्षितिज पर मध्यम धूप।",
+    "mascot.activity.sunny": "ताज़ा और सुखद धूप। गर्म पेय के साथ टहलने के लिए अनुकूल।",
+    "mascot.activity.rainy": "वर्षा हो रही है। सड़कों पर फिसलन और पानी के भराव से सावधान रहें।",
+    "mascot.activity.snowy": "कड़ाके की ठंड। बर्फ और पाले पर सावधानी से चलें।",
+    "mascot.outfit.cloudy": "हल्का स्कार्फ, विंडब्रेकर जैकेट और सुरक्षात्मक पहनावा।",
+    "mascot.outfit.sunny": "हल्के आरामदायक कपड़े और धूप का चश्मा।",
+    "mascot.outfit.rainy": "रेनकोट, छाता और जलरोधी जूते।",
+    "mascot.outfit.snowy": "गर्म स्वेटर, ऊनी टोपी और दस्ताने।",
+
+    // Timeline & Ephemeris
+    "timeline.synoptic_model": "मौसम मॉडल",
+    "timeline.celestial_arc": "सूर्य पथ",
+
+    // Risk Center
+    "risk.updated_forecast": "सत्यापित पूर्वानुमान से अपडेटेड",
+    "risk.verified_evidence": "सत्यापित साक्ष्य",
+    "risk.window": "समय अवधि:",
+    "risk.confidence": "विश्वसनीयता:",
+
+    // Agriculture
+    "agri.crop_wheat": "गेहूं",
+    "agri.crop_rice": "धान / चावल",
+    "agri.crop_maize": "मक्का",
+    "agri.crop_potato": "आलू",
+    "agri.crop_mustard": "सरसों",
+    "agri.hazard_trigger": "जोखिम कारक",
+
+    // Activity Suitability
+    "activity.running_cycling": "दौड़ और साइकिलिंग",
+    "activity.commute": "दैनिक यात्रा व सड़कें",
+    "activity.travel_road": "हाइवे यात्रा",
+    "activity.outdoor_labor": "बाहरी शारीरिक कार्य",
+    "activity.school_sports": "विद्यालय खेलकूद",
+    "activity.outdoor_events": "सारਵजनिक आयोजन",
+    "activity.recommended_window": "अनुशंसित समय खिड़की",
+
+    // User Menu
+    "user.experience_mode": "अनुभव मोड",
+    "user.farmer": "किसान",
+    "user.urban": "शहरी",
+    "user.zero_data": "शून्य डेटा संचय • खुला उपयोग",
+    "user.kisan_mitra": "किसान मित्र",
   },
 
   pa: {
@@ -841,6 +973,72 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "evaluation.export_csv": "ਸੀਐਸਵੀ ਨਿਰਯਾਤ ਕਰੋ",
     "evaluation.export_json": "ਜੇਸਨ ਨਿਰਯਾਤ ਕਰੋ",
     "sidebar.evaluation": "ਪਾਇਲਟ ਅਤੇ ਮੁਲਾਂਕਣ ਮੈਟ੍ਰਿਕਸ",
+
+    // Floating Copilot Button
+    "copilot.floating_btn": "ਏਆਈ ਸਹਾਇਕ",
+
+    // Pilot Banner & Onboarding
+    "pilot.active_label": "ਹਿੱਸੇਦਾਰ ਪਾਇਲਟ ਸਰਗਰਮ:",
+    "pilot.cohort_desc": "ਪੰਜਾਬ/ਯੂਪੀ ਕਿਸਾਨ ਅਤੇ ਡੀਡੀਐਮਏ ਐਮਰਜੈਂਸੀ ਅਧਿਕਾਰੀ।",
+    "pilot.onboarding_guide": "ਹਿੱਸੇਦਾਰ ਆਨਬੋਰਡਿੰਗ ਗਾਈਡ",
+
+    // Mascot
+    "mascot.header": "ਮੈਸਕੌਟ",
+    "mascot.poses": "ਮੌਸਮ ਪੋਜ਼",
+    "mascot.pose_sunny": "ਧੁੱਪ",
+    "mascot.pose_cloudy": "ਬੱਦਲ",
+    "mascot.pose_rainy": "ਮੀਂਹ",
+    "mascot.pose_snowy": "ਬਰਫ਼ਬਾਰੀ",
+    "mascot.badge.windy_breeze": "ਠੰਢੀ ਹਵਾ",
+    "mascot.badge.sunny_stroll": "ਸੁਹਾਵਣੀ ਧੁੱਪ",
+    "mascot.badge.rain_shield": "ਮੀਂਹ ਕਵਚ",
+    "mascot.badge.winter_walk": "ਸਰਦੀਆਂ ਦੀ ਸੈਰ",
+    "mascot.title.cloudy_windy": "ਹਵਾਦਾਰ ਤੇ ਬੱਦਲਵਾਈ",
+    "mascot.title.sunny_walk": "ਸੁਹਾਵਣਾ ਮੌਸਮ",
+    "mascot.title.rainy_day": "ਮੀਂਹ ਵਾਲਾ ਦਿਨ",
+    "mascot.title.snowy_path": "ਬਰਫ਼ੀਲਾ ਰਾਹ",
+    "mascot.activity.cloudy": "ਹਲਕੀ ਹਵਾ ਅਤੇ ਅਸਮਾਨ ਵਿੱਚ ਧੁੰਦਲੀ ਧੁੱਪ।",
+    "mascot.activity.sunny": "ਤਾਜ਼ਾ ਅਤੇ ਸੁਹਾਵਣੀ ਧੁੱਪ। ਸੈਰ ਲਈ ਬਹੁਤ ਵਧੀਆ ਮੌਸਮ।",
+    "mascot.activity.rainy": "ਮੀਂਹ ਪੈ ਰਿਹਾ ਹੈ। ਸੜਕਾਂ 'ਤੇ ਤਿਲਕਣ ਅਤੇ ਪਾਣੀ ਤੋਂ ਸਾਵਧਾਨ ਰਹੋ।",
+    "mascot.activity.snowy": "ਬਹੁਤ ਠੰਢਾ ਮੌਸਮ। ਬਰਫ਼ ਅਤੇ ਕੋਹਰੇ 'ਤੇ ਧਿਆਨ ਨਾਲ ਚੱਲੋ।",
+    "mascot.outfit.cloudy": "ਨਿੱਘਾ ਸਕਾਰਫ਼ ਅਤੇ ਵਿੰਡਬ੍ਰੇਕਰ ਜੈਕਟ।",
+    "mascot.outfit.sunny": "ਹਲਕੇ ਆਰਾਮਦਾਇਕ ਕੱਪੜੇ।",
+    "mascot.outfit.rainy": "ਰੇਨਕੋਟ, ਛਤਰੀ ਅਤੇ ਵਾਟਰਪ੍ਰੂਫ਼ ਬੂਟ।",
+    "mascot.outfit.snowy": "ਨਿੱਘਾ ਸਵੈਟਰ, ਉੱਨੀ ਟੋਪੀ ਅਤੇ ਦਸਤਾਨੇ।",
+
+    // Timeline & Ephemeris
+    "timeline.synoptic_model": "ਮੌਸਮ ਮਾਡਲ",
+    "timeline.celestial_arc": "ਸੂਰਜੀ ਚੱਕਰ",
+
+    // Risk Center
+    "risk.updated_forecast": "ਪ੍ਰਮਾਣਿਤ ਭਵਿੱਖਬਾਣੀ ਤੋਂ ਅੱਪਡੇਟ",
+    "risk.verified_evidence": "ਪ੍ਰਮਾਣਿਤ ਸਬੂਤ",
+    "risk.window": "ਸਮਾਂ ਸੀਮਾ:",
+    "risk.confidence": "ਭਰੋਸੇਯੋਗਤਾ:",
+
+    // Agriculture
+    "agri.crop_wheat": "ਕਣਕ",
+    "agri.crop_rice": "ਝੋਨਾ / ਚੌਲ",
+    "agri.crop_maize": "ਮੱਕੀ",
+    "agri.crop_potato": "ਆਲੂ",
+    "agri.crop_mustard": "ਸਰ੍ਹੋਂ",
+    "agri.hazard_trigger": "ਖ਼ਤਰਾ ਕਾਰਕ",
+
+    // Activity Suitability
+    "activity.running_cycling": "ਦੌੜ ਅਤੇ ਸਾਈਕਲਿੰਗ",
+    "activity.commute": "ਰੋਜ਼ਾਨਾ ਸਫ਼ਰ ਤੇ ਸੜਕਾਂ",
+    "activity.travel_road": "ਹਾਈਵੇ ਸਫ਼ਰ",
+    "activity.outdoor_labor": "ਬਾਹਰੀ ਮਿਹਨਤ-ਮਜ਼ਦੂਰੀ",
+    "activity.school_sports": "ਸਕੂਲੀ ਖੇਡਾਂ",
+    "activity.outdoor_events": "ਬਾਹਰੀ ਪ੍ਰੋਗਰਾਮ",
+    "activity.recommended_window": "ਸਿਫ਼ਾਰਿਸ਼ ਕੀਤਾ ਸਮਾਂ",
+
+    // User Menu
+    "user.experience_mode": "ਤਜਰਬਾ ਮੋਡ",
+    "user.farmer": "ਕਿਸਾਨ",
+    "user.urban": "ਸ਼ਹਿਰੀ",
+    "user.zero_data": "ਜ਼ੀਰੋ ਡੇਟਾ ਇਕੱਠਾ • ਖੁੱਲ੍ਹੀ ਪਹੁੰਚ",
+    "user.kisan_mitra": "ਕਿਸਾਨ ਮਿੱਤਰ",
   },
 
   "hi-en": {
@@ -1125,5 +1323,71 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "evaluation.export_csv": "Export CSV",
     "evaluation.export_json": "Export JSON",
     "sidebar.evaluation": "Pilot & Evaluation Metrics",
+
+    // Floating Copilot Button
+    "copilot.floating_btn": "Ask WeatherGPT",
+
+    // Pilot Banner & Onboarding
+    "pilot.active_label": "Stakeholder Pilot Active:",
+    "pilot.cohort_desc": "Punjab/UP Farmers & DDMA Emergency Officers.",
+    "pilot.onboarding_guide": "Stakeholder Onboarding Guide",
+
+    // Mascot
+    "mascot.header": "Mascot",
+    "mascot.poses": "Weather Poses",
+    "mascot.pose_sunny": "Sunny",
+    "mascot.pose_cloudy": "Cloudy",
+    "mascot.pose_rainy": "Rainy",
+    "mascot.pose_snowy": "Snowy",
+    "mascot.badge.windy_breeze": "Windy Breeze",
+    "mascot.badge.sunny_stroll": "Sunny Stroll",
+    "mascot.badge.rain_shield": "Rain Shield",
+    "mascot.badge.winter_walk": "Winter Walk",
+    "mascot.title.cloudy_windy": "Cloudy & Windy",
+    "mascot.title.sunny_walk": "Sunny Walk",
+    "mascot.title.rainy_day": "Rainy Day",
+    "mascot.title.snowy_path": "Snowy Path",
+    "mascot.activity.cloudy": "Breezy conditions and muted sunlight across the horizon.",
+    "mascot.activity.sunny": "Crisp and pleasant sunshine. Ideal for a walk with a hot beverage.",
+    "mascot.activity.rainy": "Precipitation in progress. Watch out for puddles and slippery roads.",
+    "mascot.activity.snowy": "Cold wintry weather. Step carefully on frost and fresh snow.",
+    "mascot.outfit.cloudy": "Warm knitted breeze scarf, windbreaker jacket & wind shield.",
+    "mascot.outfit.sunny": "Warm golden sunlight aura, breathable casual wear & sneakers.",
+    "mascot.outfit.rainy": "Translucent cyan raincoat, floating umbrella & slip-resistant boots.",
+    "mascot.outfit.snowy": "Cozy powder-blue earmuffs, knitted winter sweater & warm boots.",
+
+    // Timeline & Ephemeris
+    "timeline.synoptic_model": "Synoptic Model",
+    "timeline.celestial_arc": "Celestial Arc",
+
+    // Risk Center
+    "risk.updated_forecast": "Updated from verified forecast",
+    "risk.verified_evidence": "Verified Evidence",
+    "risk.window": "Window:",
+    "risk.confidence": "Confidence:",
+
+    // Agriculture
+    "agri.crop_wheat": "Wheat",
+    "agri.crop_rice": "Rice",
+    "agri.crop_maize": "Maize",
+    "agri.crop_potato": "Potato",
+    "agri.crop_mustard": "Mustard",
+    "agri.hazard_trigger": "Hazard Trigger",
+
+    // Activity Suitability
+    "activity.running_cycling": "Running & Cycling",
+    "activity.commute": "Commute & Roads",
+    "activity.travel_road": "Highway Travel",
+    "activity.outdoor_labor": "Outdoor Labor",
+    "activity.school_sports": "School Sports",
+    "activity.outdoor_events": "Outdoor Events",
+    "activity.recommended_window": "Recommended Time Window",
+
+    // User Menu
+    "user.experience_mode": "Experience Mode",
+    "user.farmer": "Farmer",
+    "user.urban": "Urban",
+    "user.zero_data": "Zero data harvesting • Open access",
+    "user.kisan_mitra": "Kisan Mitra",
   },
 };

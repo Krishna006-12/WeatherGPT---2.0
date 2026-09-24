@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useLocation } from "@/context/location-context";
+import { useLanguage } from "@/context/language-context";
 import { triggerHaptic } from "@/lib/motion/haptics";
 import { AICopilotCard } from "./ai-copilot-card";
 
@@ -11,6 +12,7 @@ export function FloatingCopilotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { selectedLocation } = useLocation();
+  const { t } = useLanguage();
   const pillRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
 
@@ -94,7 +96,7 @@ export function FloatingCopilotWidget() {
 
             {/* Label */}
             <span className="text-xs sm:text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-100 whitespace-nowrap">
-              Ask WeatherGPT
+              {t("copilot.floating_btn", "Ask WeatherGPT")}
             </span>
 
             {/* Keyboard Shortcut Tag (Desktop only) */}

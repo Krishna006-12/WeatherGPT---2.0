@@ -40,7 +40,7 @@ export function UserMenu() {
         </div>
         <div className="hidden md:flex flex-col text-left leading-none">
           <span className="text-xs font-medium text-[var(--text-primary)]">
-            {session.user.name}
+            {session.user.name === "Kisan Mitra" ? t("user.kisan_mitra", "Kisan Mitra") : session.user.name}
           </span>
           <span className="text-[10px] text-[var(--text-tertiary)] flex items-center gap-1">
             {isFarmer ? t("user.farmer_mode", "Farmer Mode") : t("user.urban_mode", "Urban")} • {isGuest ? t("user.guest", "Guest") : "Google"}
@@ -53,7 +53,9 @@ export function UserMenu() {
           {/* Header */}
           <div className="pb-3 border-b border-[var(--border-subtle)]">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-white">{session.user.name}</span>
+              <span className="text-xs font-semibold text-white">
+                {session.user.name === "Kisan Mitra" ? t("user.kisan_mitra", "Kisan Mitra") : session.user.name}
+              </span>
               <span
                 className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                   isGuest
@@ -72,7 +74,7 @@ export function UserMenu() {
           {/* Role Switching */}
           <div className="py-2.5 border-b border-[var(--border-subtle)]">
             <span className="text-[10px] uppercase font-semibold text-[var(--text-tertiary)] tracking-wider block mb-1.5">
-              {t("user.farmer_mode", "Experience Mode")}
+              {t("user.experience_mode", "Experience Mode")}
             </span>
             <div className="grid grid-cols-2 gap-1.5">
               <button
@@ -86,7 +88,7 @@ export function UserMenu() {
               >
                 <span className="flex items-center gap-1.5">
                   <Sprout size={12} />
-                  Farmer
+                  {t("user.farmer", "Farmer")}
                 </span>
                 {isFarmer && <Check size={12} />}
               </button>
@@ -102,7 +104,7 @@ export function UserMenu() {
               >
                 <span className="flex items-center gap-1.5">
                   <User size={12} />
-                  Urban
+                  {t("user.urban", "Urban")}
                 </span>
                 {!isFarmer && <Check size={12} />}
               </button>
@@ -139,7 +141,7 @@ export function UserMenu() {
 
             <div className="pt-1 flex items-center justify-center gap-1 text-[10px] text-[var(--text-tertiary)]">
               <Shield size={10} />
-              <span>Zero data harvesting • Open access</span>
+              <span>{t("user.zero_data", "Zero data harvesting • Open access")}</span>
             </div>
           </div>
         </div>

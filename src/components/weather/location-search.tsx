@@ -5,6 +5,7 @@ import { Search, X, Clock, Trash2 } from "lucide-react";
 import { useLocationSearch } from "@/hooks/use-location-search";
 import { useLocation } from "@/context/location-context";
 import { useLanguage } from "@/context/language-context";
+import { getLocalizedLocationName } from "@/lib/i18n/location-names";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
 interface LocationSearchProps {
@@ -16,7 +17,7 @@ export function LocationSearch({
   onSelectLocation,
   selectedLocation: _selectedLocation,
 }: LocationSearchProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -104,36 +105,47 @@ export function LocationSearch({
             </button>
           </div>
 
-          {recentLocations.map((loc) => (
-            <div
-              key={`recent-${loc.id}-${loc.displayName}`}
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] group"
-            >
-              <button
-                type="button"
-                className="flex-1 text-left focus:outline-none"
-                onClick={() => handleSelect(loc)}
+          {recentLocations.map((loc) => {
+            const localized = getLocalizedLocationName(
+              {
+                name: loc.name,
+                region: loc.region,
+                country: loc.country,
+                displayName: loc.displayName,
+              },
+              language
+            );
+            return (
+              <div
+                key={`recent-${loc.id}-${loc.displayName}`}
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] group"
               >
-                <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                  {loc.displayName}
-                </div>
-                <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
-                  {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
-                </div>
-              </button>
-              <button
-                type="button"
-                aria-label={`Remove ${loc.displayName}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeRecent(loc.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-red-400 transition-opacity"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
+                <button
+                  type="button"
+                  className="flex-1 text-left focus:outline-none"
+                  onClick={() => handleSelect(loc)}
+                >
+                  <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                    {localized.fullDisplayName}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+                    {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${loc.displayName}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeRecent(loc.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-red-400 transition-opacity"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -161,21 +173,32 @@ export function LocationSearch({
 
           {!isLoading &&
             results &&
-            results.map((loc) => (
-              <button
-                key={loc.id}
-                type="button"
-                className="w-full rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] focus:bg-[var(--surface-3)] focus:outline-none group"
-                onClick={() => handleSelect(loc)}
-              >
-                <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                  {loc.displayName}
-                </div>
-                <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
-                  {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
-                </div>
-              </button>
-            ))}
+            results.map((loc) => {
+              const localized = getLocalizedLocationName(
+                {
+                  name: loc.name,
+                  region: loc.region,
+                  country: loc.country,
+                  displayName: loc.displayName,
+                },
+                language
+              );
+              return (
+                <button
+                  key={loc.id}
+                  type="button"
+                  className="w-full rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-[var(--surface-3)] focus:bg-[var(--surface-3)] focus:outline-none group"
+                  onClick={() => handleSelect(loc)}
+                >
+                  <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                    {localized.fullDisplayName}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+                    {loc.latitude.toFixed(2)}°, {loc.longitude.toFixed(2)}° • {loc.timezone}
+                  </div>
+                </button>
+              );
+            })}
         </div>
       )}
     </div>

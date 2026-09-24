@@ -7,6 +7,8 @@ import { getWeatherMascot, type WeatherMascotType } from "@/lib/weather/mascot-h
 import { Sparkles, Shirt, Footprints } from "lucide-react";
 import { triggerHaptic } from "@/lib/motion/haptics";
 import { AntigravityMascot } from "@/components/weather/antigravity-mascot";
+import { useLanguage } from "@/context/language-context";
+import { getLocalizedCityName } from "@/lib/i18n/location-names";
 
 interface WeatherMascotCardProps {
   weather?: WeatherSnapshot | null;
@@ -21,22 +23,29 @@ export function WeatherMascotCard({
   className = "",
   compact = false,
 }: WeatherMascotCardProps) {
+  const { t, language } = useLanguage();
   const current = weather?.current;
   const condition = current?.condition || "Clear";
   const temperature = current?.temperature;
   const windSpeed = current?.windSpeed;
 
   // Resolved dynamic mascot based on live location weather
-  const liveMascot = getWeatherMascot(condition, temperature, windSpeed);
+  const liveMascot = getWeatherMascot(condition, temperature, windSpeed, t);
 
   // Allow user to preview poses if they want to inspect the character sheet
   const [manualPose, setManualPose] = useState<WeatherMascotType | null>(null);
 
   const activeMascot = manualPose
-    ? getWeatherMascot(manualPose === "sunny" ? "Sunny" : manualPose === "cloudy" ? "Cloudy" : manualPose === "rainy" ? "Rain" : "Snow")
+    ? getWeatherMascot(
+        manualPose === "sunny" ? "Sunny" : manualPose === "cloudy" ? "Cloudy" : manualPose === "rainy" ? "Rain" : "Snow",
+        temperature,
+        windSpeed,
+        t
+      )
     : liveMascot;
 
-  const cityName = location?.displayName?.split(",")[0] || location?.name || "Local";
+  const rawCityName = location?.displayName?.split(",")[0] || location?.name || "Local";
+  const cityName = getLocalizedCityName(location?.name || rawCityName, language);
 
   return (
     <div
@@ -61,7 +70,7 @@ export function WeatherMascotCard({
               style={{ background: activeMascot.accentColor }}
             />
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-              {cityName} Mascot
+              {cityName} {t("mascot.header", "Mascot")}
             </span>
           </div>
 
@@ -112,7 +121,7 @@ export function WeatherMascotCard({
         <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
           <span className="text-[10px] font-semibold text-[var(--text-tertiary)] flex items-center gap-1">
             <Sparkles size={11} />
-            Weather Poses
+            {t("mascot.poses", "Weather Poses")}
           </span>
 
           <div className="flex items-center gap-1">
@@ -133,7 +142,7 @@ export function WeatherMascotCard({
                       : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/5"
                   }`}
                 >
-                  {p}
+                  {t(`mascot.pose_${p}`, p)}
                 </button>
               );
             })}
