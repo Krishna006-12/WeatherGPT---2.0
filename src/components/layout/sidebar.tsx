@@ -98,7 +98,7 @@ export function Sidebar() {
           alt="WeatherGPT 2.0"
           width={28}
           height={28}
-          className="relative z-10 w-7 h-7 object-contain rounded-md drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]"
+          className="relative z-10 w-7 h-7 object-contain rounded-md drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)]"
         />
       </Link>
 
