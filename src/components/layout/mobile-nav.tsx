@@ -6,12 +6,16 @@ import {
   LayoutDashboard,
   CloudSun,
   History,
-  Sprout,
-  ShieldAlert,
+  AlertTriangle,
   Bot,
+  Grid3X3,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/motion/haptics";
 import { useLanguage } from "@/context/language-context";
+
+interface MobileNavProps {
+  onOpenMenu?: () => void;
+}
 
 interface NavItemConfig {
   href: string;
@@ -23,9 +27,10 @@ interface NavItemConfig {
   bgGradient: string;
   borderColor: string;
   matches: (path: string) => boolean;
+  isAction?: boolean;
 }
 
-export function MobileNav() {
+export function MobileNav({ onOpenMenu }: MobileNavProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -42,20 +47,42 @@ export function MobileNav() {
       matches: (path) => path === "/" || path === "/dashboard" || path.startsWith("/dashboard"),
     },
     {
-      href: "/forecast",
-      fullLabel: t("nav.forecast", "Forecast"),
-      shortLabel: t("nav.forecast", "Forecast"),
+      href: "/weather",
+      fullLabel: t("nav.weather", "Weather & Radar"),
+      shortLabel: t("nav.weather", "Weather"),
       icon: CloudSun,
       accentColor: "#fbbf24", // Solar Gold
       glowFilter: "drop-shadow(0 0 8px rgba(251, 191, 36, 0.75)) drop-shadow(0 0 16px rgba(251, 191, 36, 0.35))",
       bgGradient: "linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(251, 191, 36, 0.08) 100%)",
       borderColor: "rgba(251, 191, 36, 0.4)",
-      matches: (path) => path.startsWith("/forecast") || path.startsWith("/weather"),
+      matches: (path) => path.startsWith("/weather") || path.startsWith("/forecast"),
+    },
+    {
+      href: "/intelligence",
+      fullLabel: t("nav.intelligence", "Live Disaster Intel"),
+      shortLabel: t("nav.intelligence", "Alerts"),
+      icon: AlertTriangle,
+      accentColor: "#f43f5e", // Crimson Rose
+      glowFilter: "drop-shadow(0 0 8px rgba(244, 63, 94, 0.75)) drop-shadow(0 0 16px rgba(244, 63, 94, 0.35))",
+      bgGradient: "linear-gradient(135deg, rgba(244, 63, 94, 0.25) 0%, rgba(244, 63, 94, 0.08) 100%)",
+      borderColor: "rgba(244, 63, 94, 0.4)",
+      matches: (path) => path.startsWith("/intelligence") || path.startsWith("/risks") || path.startsWith("/impact"),
+    },
+    {
+      href: "/chat",
+      fullLabel: t("nav.copilot", "WeatherGPT AI Copilot"),
+      shortLabel: t("nav.copilot", "Copilot"),
+      icon: Bot,
+      accentColor: "#22d3ee", // Electric Cyan
+      glowFilter: "drop-shadow(0 0 8px rgba(34, 211, 238, 0.8)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))",
+      bgGradient: "linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(34, 211, 238, 0.08) 100%)",
+      borderColor: "rgba(34, 211, 238, 0.4)",
+      matches: (path) => path.startsWith("/chat") || path.startsWith("/copilot"),
     },
     {
       href: "/history",
       fullLabel: t("nav.history", "History & Timeline"),
-      shortLabel: t("timeline.timeline", "History"),
+      shortLabel: t("timeline.timeline", "Timeline"),
       icon: History,
       accentColor: "#c084fc", // Amethyst / Violet
       glowFilter: "drop-shadow(0 0 8px rgba(192, 132, 252, 0.75)) drop-shadow(0 0 16px rgba(192, 132, 252, 0.35))",
@@ -64,37 +91,20 @@ export function MobileNav() {
       matches: (path) => path.startsWith("/history"),
     },
     {
-      href: "/agriculture",
-      fullLabel: t("nav.agriculture", "Agriculture"),
-      shortLabel: t("nav.agriculture", "Agri"),
-      icon: Sprout,
-      accentColor: "#34d399", // Emerald
-      glowFilter: "drop-shadow(0 0 8px rgba(52, 211, 153, 0.75)) drop-shadow(0 0 16px rgba(52, 211, 153, 0.35))",
-      bgGradient: "linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(52, 211, 153, 0.08) 100%)",
-      borderColor: "rgba(52, 211, 153, 0.4)",
-      matches: (path) => path.startsWith("/agriculture"),
-    },
-    {
-      href: "/risks",
-      fullLabel: t("nav.risks", "Risk Center"),
-      shortLabel: t("nav.risks", "Risks"),
-      icon: ShieldAlert,
-      accentColor: "#f43f5e", // Crimson Rose
-      glowFilter: "drop-shadow(0 0 8px rgba(244, 63, 94, 0.75)) drop-shadow(0 0 16px rgba(244, 63, 94, 0.35))",
-      bgGradient: "linear-gradient(135deg, rgba(244, 63, 94, 0.25) 0%, rgba(244, 63, 94, 0.08) 100%)",
-      borderColor: "rgba(244, 63, 94, 0.4)",
-      matches: (path) => path.startsWith("/risks") || path.startsWith("/impact") || path.startsWith("/intelligence"),
-    },
-    {
-      href: "/copilot",
-      fullLabel: t("nav.copilot", "AI Copilot"),
-      shortLabel: t("nav.copilot", "Copilot"),
-      icon: Bot,
-      accentColor: "#22d3ee", // Electric Cyan
-      glowFilter: "drop-shadow(0 0 8px rgba(34, 211, 238, 0.8)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))",
-      bgGradient: "linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(34, 211, 238, 0.08) 100%)",
-      borderColor: "rgba(34, 211, 238, 0.4)",
-      matches: (path) => path.startsWith("/copilot") || path.startsWith("/chat"),
+      href: "#more",
+      fullLabel: t("nav.features", "All Features & Menu"),
+      shortLabel: t("nav.features", "More"),
+      icon: Grid3X3,
+      accentColor: "#a855f7", // Purple
+      glowFilter: "drop-shadow(0 0 8px rgba(168, 85, 247, 0.75)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.35))",
+      bgGradient: "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.08) 100%)",
+      borderColor: "rgba(168, 85, 247, 0.4)",
+      matches: (path) =>
+        path.startsWith("/evaluation") ||
+        path.startsWith("/motion") ||
+        path.startsWith("/settings") ||
+        path.startsWith("/agriculture"),
+      isAction: true,
     },
   ];
 
@@ -105,7 +115,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Mobile Navigation Dock"
-      className="md:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.25rem)] max-w-[430px] select-none pointer-events-auto"
+      className="md:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.25rem)] max-w-[430px] select-none pointer-events-auto"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
@@ -132,6 +142,49 @@ export function MobileNav() {
           const Icon = item.icon;
           const isActive = idx === effectiveIndex;
 
+          if (item.isAction) {
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => {
+                  triggerHaptic("medium");
+                  onOpenMenu?.();
+                }}
+                title={item.fullLabel}
+                aria-label={item.fullLabel}
+                className="relative z-10 flex flex-col items-center justify-center min-h-[48px] sm:min-h-[52px] rounded-full px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 group"
+              >
+                <div className="relative flex items-center justify-center">
+                  <Icon
+                    size={19}
+                    className="transition-all duration-200 motion-reduce:transition-none shrink-0"
+                    style={{
+                      color: isActive ? item.accentColor : "var(--text-tertiary)",
+                      filter: isActive ? item.glowFilter : "none",
+                      transform: isActive ? "scale(1.06)" : "scale(1)",
+                    }}
+                  />
+                  {/* Subtle notification dot for all features */}
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-purple-400" />
+                </div>
+
+                <span
+                  className={`text-[9px] font-semibold tracking-tight transition-all duration-200 motion-reduce:transition-none truncate max-w-full leading-none mt-1 ${
+                    isActive
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-1 h-0 overflow-hidden pointer-events-none"
+                  }`}
+                  style={{
+                    color: isActive ? item.accentColor : "transparent",
+                  }}
+                >
+                  {item.shortLabel}
+                </span>
+              </button>
+            );
+          }
+
           return (
             <Link
               key={item.href}
@@ -152,6 +205,13 @@ export function MobileNav() {
                     transform: isActive ? "scale(1.06)" : "scale(1)",
                   }}
                 />
+                {/* Live pulse for intelligence */}
+                {item.href === "/intelligence" && (
+                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                  </span>
+                )}
               </div>
 
               {/* Smooth fading micro-label only visible for active item */}
