@@ -65,7 +65,7 @@ export function UserMenu() {
           <span className="text-xs font-medium text-[var(--text-primary)] truncate max-w-[120px]">
             {session.user.name === "Kisan Mitra" ? t("user.kisan_mitra", "Kisan Mitra") : session.user.name}
           </span>
-          <span className="text-[10px] text-[var(--text-tertiary)] flex items-center gap-1">
+          <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1 font-normal">
             {isFarmer ? t("user.farmer_mode", "Farmer Mode") : t("user.urban_mode", "Urban")} • {providerLabel}
           </span>
         </div>

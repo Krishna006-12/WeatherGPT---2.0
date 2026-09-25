@@ -314,9 +314,9 @@ export function DecisionSupportCard({
                     onClick={() => toggleTrace(item.id)}
                     aria-expanded={isTraceExpanded}
                     aria-label={`View source evidence for ${item.title}`}
-                    className="flex items-center gap-1 font-semibold text-[var(--accent)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-sm px-1"
+                    className="wg-btn-ghost text-xs py-0.5 px-2 text-[var(--accent)] hover:bg-[var(--accent-surface)] rounded-lg transition-colors flex items-center gap-1 font-medium"
                   >
-                    <span>Evidence & Rule</span>
+                    <span>Evidence</span>
                     {isTraceExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   </button>
                 </div>

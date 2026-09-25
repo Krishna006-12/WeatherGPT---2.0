@@ -151,7 +151,7 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
                     {act.data.status}
                   </span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
                   {act.data.advisory}
                 </p>
               </div>
@@ -162,27 +162,27 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
         {/* Key Hazard Trigger */}
         {assessment.hazards.length > 0 && (
           <div className="p-3 rounded-xl bg-[var(--surface-base)]/50 border border-[var(--border-subtle)] mt-2.5 space-y-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            <div className="text-xs font-semibold text-[var(--text-tertiary)]">
               {t("agri.hazard_trigger", "Hazard Trigger")}
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)]">
+            <p className="text-xs text-[var(--text-secondary)]">
               {assessment.hazards[0]?.description}
             </p>
-            <div className="font-mono text-[10px] text-[var(--text-quaternary)] pt-0.5">
+            <div className="font-mono text-xs text-[var(--text-tertiary)] pt-0.5">
               Metric: {assessment.hazards[0]?.triggerMetric}
             </div>
           </div>
         )}
 
         {assessment.cropEvidenceNote && (
-          <div className="p-2.5 rounded-xl bg-[var(--surface-base)]/40 border border-[var(--border-subtle)] mt-2 text-[11px] text-[var(--text-tertiary)] leading-relaxed">
+          <div className="p-2.5 rounded-xl bg-[var(--surface-base)]/40 border border-[var(--border-subtle)] mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
             {assessment.cropEvidenceNote}
           </div>
         )}
       </div>
 
       {/* Disclaimer */}
-      <p className="text-center text-[10px] text-[var(--text-quaternary)] leading-relaxed pt-3 border-t border-[var(--border-subtle)] mt-3">
+      <p className="text-center text-xs text-[var(--text-tertiary)] leading-relaxed pt-3 border-t border-[var(--border-subtle)] mt-3">
         {assessment.disclaimer}
       </p>
     </section>

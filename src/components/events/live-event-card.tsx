@@ -103,7 +103,7 @@ export function LiveEventCard() {
 
         {/* 1. WHAT IS HAPPENING: Readable Headline & Scope */}
         <div className="mb-3.5">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)] block mb-1">
+          <span className="text-xs font-semibold text-[var(--text-tertiary)] block mb-1">
             {t("intel.hazard_condition", "Hazard Condition")}
           </span>
           <h4 className="text-base sm:text-lg font-semibold leading-snug text-[var(--text-primary)]">

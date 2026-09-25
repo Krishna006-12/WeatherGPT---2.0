@@ -142,7 +142,7 @@ export function WeatherRiskCenterCard({ location }: WeatherRiskCenterCardProps) 
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-2">
             <AlertTriangle size={17} className="text-amber-400" />
-            <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
+            <h3 className="text-sm font-semibold tracking-normal text-[var(--text-primary)]">
               {t("risk.center_title", "Weather Risk Center")}
             </h3>
           </div>
