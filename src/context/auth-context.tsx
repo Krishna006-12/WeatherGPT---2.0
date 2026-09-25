@@ -20,6 +20,8 @@ import {
   loadStoredSession,
   saveStoredSession,
   createGoogleSession,
+  createEmailSession,
+  createPhoneSession,
   clearStoredSession,
 } from "@/lib/storage/auth-storage";
 
@@ -28,6 +30,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<UserSession>(createDefaultGuestSession());
   const [status, setStatus] = useState<AuthStatus>("loading");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"google" | "phone">("google");
 
   // Hydrate session from localStorage
   useEffect(() => {
@@ -43,13 +47,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signInWithGoogle = useCallback(async (mockProfile?: Partial<AuthUser>) => {
-    setStatus("loading");
-    // Simulate OAuth handshake or direct credential verification
-    const newSession = createGoogleSession(mockProfile);
-    setSession(newSession);
-    saveStoredSession(newSession);
-    setStatus("authenticated");
+  const openAuthModal = useCallback((tab: "google" | "phone" = "google") => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpen(true);
+  }, []);
+
+  const closeAuthModal = useCallback(() => {
+    setIsAuthModalOpen(false);
+  }, []);
+
+  const signInWithGoogle = useCallback(
+    async (profileOrEmail?: string | Partial<AuthUser>, name?: string, role?: UserRole) => {
+      setStatus("loading");
+      const newSession = createGoogleSession(profileOrEmail, name, role);
+      setSession(newSession);
+      saveStoredSession(newSession);
+      setStatus("authenticated");
+      setIsAuthModalOpen(false);
+    },
+    []
+  );
+
+  const signInWithEmail = useCallback(
+    async (email: string, name?: string, role?: UserRole) => {
+      setStatus("loading");
+      const newSession = createEmailSession(email, name, role);
+      setSession(newSession);
+      saveStoredSession(newSession);
+      setStatus("authenticated");
+      setIsAuthModalOpen(false);
+    },
+    []
+  );
+
+  const signInWithPhone = useCallback(
+    async (phoneNumber: string, name?: string, role?: UserRole) => {
+      setStatus("loading");
+      const newSession = createPhoneSession(phoneNumber, name, role);
+      setSession(newSession);
+      saveStoredSession(newSession);
+      setStatus("authenticated");
+      setIsAuthModalOpen(false);
+    },
+    []
+  );
+
+  const updateProfile = useCallback((updates: Partial<AuthUser>) => {
+    setSession((prev) => {
+      const updated: UserSession = {
+        ...prev,
+        user: {
+          ...prev.user,
+          ...updates,
+        },
+      };
+      saveStoredSession(updated);
+      return updated;
+    });
   }, []);
 
   const continueAsGuest = useCallback(() => {
@@ -57,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(guestSession);
     saveStoredSession(guestSession);
     setStatus("unauthenticated");
+    setIsAuthModalOpen(false);
   }, []);
 
   const setRole = useCallback((role: UserRole) => {
@@ -91,9 +146,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         status,
         isGuest,
         isFarmer,
+        isAuthModalOpen,
+        authModalTab,
+        openAuthModal,
+        closeAuthModal,
         signInWithGoogle,
+        signInWithEmail,
+        signInWithPhone,
         continueAsGuest,
         setRole,
+        updateProfile,
         signOut,
       }}
     >
@@ -112,9 +174,16 @@ export function useAuth(): AuthContextValue {
       status: "unauthenticated",
       isGuest: true,
       isFarmer: false,
+      isAuthModalOpen: false,
+      authModalTab: "google",
+      openAuthModal: () => {},
+      closeAuthModal: () => {},
       signInWithGoogle: async () => {},
+      signInWithEmail: async () => {},
+      signInWithPhone: async () => {},
       continueAsGuest: () => {},
       setRole: () => {},
+      updateProfile: () => {},
       signOut: () => {},
     };
   }

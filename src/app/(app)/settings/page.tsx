@@ -1,12 +1,14 @@
 "use client";
 
-import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2, Bell } from "lucide-react";
+import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2, User, Phone, Mail, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
 import { useNotification } from "@/context/notification-context";
+import { useAuth } from "@/context/auth-context";
 
 export default function SettingsPage() {
   const { t } = useLanguage();
   const { permission, requestPermission, testEmergencyNotification } = useNotification();
+  const { session, isGuest, isFarmer, openAuthModal, signOut } = useAuth();
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -21,6 +23,101 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-4">
+        {/* User Account & Identity Card */}
+        <div className="rounded-3xl bg-[var(--surface-1)] p-6 border border-[var(--border-subtle)] space-y-4 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2.5 text-[var(--text-primary)]">
+              <User className="text-cyan-400" size={20} />
+              <h2 className="font-semibold text-base">Account &amp; Meteorological Identity</h2>
+            </div>
+            <span
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${
+                isGuest
+                  ? "text-amber-400 bg-amber-500/10 border border-amber-500/20"
+                  : "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+              }`}
+            >
+              <CheckCircle2 size={12} />
+              {isGuest
+                ? "Guest Session"
+                : session.provider === "phone"
+                  ? "Phone Verified"
+                  : session.provider === "email"
+                    ? "Email Verified"
+                    : "Google Verified"}
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                {session.user.image && !isGuest ? (
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : isFarmer ? (
+                  <Sprout size={22} />
+                ) : (
+                  <User size={22} />
+                )}
+              </div>
+              <div>
+                <div className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <span>{session.user.name}</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-700/40 text-cyan-300">
+                    {isFarmer ? "🌾 Farmer Mode" : "🏙️ Urban Mode"}
+                  </span>
+                </div>
+                <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  {session.user.email || session.user.phone || "Rural Offline / Guest Session"}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 sm:pt-0">
+              {isGuest ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("google")}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Mail size={13} />
+                    <span>Sign in with Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("phone")}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <Phone size={13} />
+                    <span>Mobile Login</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal(session.provider === "phone" ? "phone" : "google")}
+                    className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-medium text-white transition-colors"
+                  >
+                    Switch Account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="px-3 py-1.5 rounded-xl bg-red-950/30 border border-red-900/40 text-red-400 text-xs font-medium hover:bg-red-950/50 transition-colors flex items-center gap-1.5"
+                  >
+                    <LogOut size={13} />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
         {/* AI Model Configuration */}
         <div className="rounded-3xl bg-[var(--surface-1)] p-6 border border-[var(--border-subtle)] space-y-4 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
