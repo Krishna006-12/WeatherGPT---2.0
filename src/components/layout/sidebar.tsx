@@ -91,41 +91,66 @@ export function Sidebar() {
       }}
     >
       {/* Brand logo & Expand Toggle Header */}
-      <div className={`flex items-center mb-6 ${isExpanded ? "justify-between px-2" : "justify-center"}`}>
-        <Link
-          href="/dashboard"
-          aria-label="WeatherGPT Home"
-          title="WeatherGPT Home"
-          className="p-1.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105 flex items-center gap-2.5"
-        >
-          <img
-            src="/icon.svg"
-            alt="WeatherGPT 2.0"
-            width={28}
-            height={28}
-            className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)]"
-          />
-          {isExpanded && (
+      {isExpanded ? (
+        <div className="flex items-center justify-between px-2 mb-6 w-full">
+          <Link
+            href="/dashboard"
+            aria-label="WeatherGPT Home"
+            title="WeatherGPT Home"
+            className="p-1.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105 flex items-center gap-2.5"
+          >
+            <img
+              src="/icon.svg"
+              alt="WeatherGPT 2.0"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)]"
+            />
             <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">
               WeatherGPT <span className="text-[var(--accent)] text-xs font-semibold">2.0</span>
             </span>
-          )}
-        </Link>
+          </Link>
 
-        {/* Sidebar Expand/Collapse Toggle Button (Heuristic 13) */}
-        <button
-          type="button"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? "Collapse navigation sidebar" : "Expand navigation sidebar with text labels"}
-          title={isExpanded ? "Collapse sidebar" : "Expand sidebar labels"}
-          className={`p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition-colors ${
-            !isExpanded ? "mt-2" : ""
-          }`}
-        >
-          {isExpanded ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(false)}
+            aria-expanded={true}
+            aria-label="Collapse navigation sidebar"
+            title="Collapse sidebar"
+            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition-colors"
+          >
+            <PanelLeftClose size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2.5 mb-6">
+          <Link
+            href="/dashboard"
+            aria-label="WeatherGPT Home"
+            title="WeatherGPT Home"
+            className="p-1.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105"
+          >
+            <img
+              src="/icon.svg"
+              alt="WeatherGPT 2.0"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)]"
+            />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            aria-expanded={false}
+            aria-label="Expand navigation sidebar with text labels"
+            title="Expand sidebar labels"
+            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition-colors"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Main navigation list */}
       <nav aria-label="Main Sections" className="flex flex-col gap-1.5 w-full">

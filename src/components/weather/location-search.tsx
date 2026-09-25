@@ -50,7 +50,7 @@ export function LocationSearch({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-lg">
+    <div ref={containerRef} className="relative w-full min-w-[200px] sm:min-w-[260px] max-w-lg">
       <div className="relative flex items-center">
         <Search
           size={16}
@@ -67,7 +67,7 @@ export function LocationSearch({
           onFocus={() => {
             setIsOpen(true);
           }}
-          className="w-full h-9 pl-9 pr-8 text-xs sm:text-sm rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-border)] focus:bg-[var(--surface-1)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none transition-colors duration-150"
+          className="w-full h-9 pl-9 pr-8 text-xs sm:text-sm rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-border)] focus:bg-[var(--surface-1)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none transition-colors duration-150 min-w-0"
         />
         {searchTerm && (
           <button
@@ -86,7 +86,7 @@ export function LocationSearch({
 
       {/* Recents Mode Dropdown */}
       {isRecentsMode && (
-        <div className="absolute z-50 mt-1.5 max-h-72 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
+        <div className="absolute left-0 z-50 mt-1.5 max-h-72 w-full min-w-[280px] sm:min-w-[340px] max-w-[calc(100vw-2rem)] overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
           <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider border-b border-[var(--border-subtle)] mb-1">
             <span className="flex items-center gap-1.5">
               <Clock size={12} className="text-cyan-400" />
@@ -151,7 +151,7 @@ export function LocationSearch({
 
       {/* Live Search Query Dropdown */}
       {isOpen && isSearchMode && (
-        <div className="absolute z-50 mt-1.5 max-h-64 w-full overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
+        <div className="absolute left-0 z-50 mt-1.5 max-h-64 w-full min-w-[280px] sm:min-w-[340px] max-w-[calc(100vw-2rem)] overflow-auto p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-default)] shadow-2xl backdrop-blur-md">
           {isLoading && (
             <div className="p-3 text-xs text-[var(--text-tertiary)] flex items-center gap-2">
               <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />

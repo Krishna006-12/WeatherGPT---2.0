@@ -50,7 +50,7 @@ describe("Sidebar Navigation Component", () => {
     expect(dashboardLink.style.background).toBe("var(--accent-surface)");
 
     const weatherLink = screen.getByRole("link", { name: /Weather & Observations/i });
-    expect(weatherLink.style.color).toBe("var(--text-tertiary)");
+    expect(weatherLink.style.color).toBe("var(--text-secondary)");
   });
 
   it("applies active styling dynamically to Weather when pathname is /weather", () => {
@@ -62,7 +62,7 @@ describe("Sidebar Navigation Component", () => {
     expect(weatherLink.style.background).toBe("var(--accent-surface)");
 
     const dashboardLink = screen.getByRole("link", { name: /Dashboard Overview/i });
-    expect(dashboardLink.style.color).toBe("var(--text-tertiary)");
+    expect(dashboardLink.style.color).toBe("var(--text-secondary)");
   });
 
   it("applies active styling dynamically to Intelligence when pathname is /intelligence", () => {

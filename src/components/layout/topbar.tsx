@@ -26,25 +26,25 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
         borderBottom: "1px solid var(--border-subtle)",
       }}
     >
-      {/* Left: Location Search Bar with keyboard shortcut hint */}
-      <div className="flex items-center gap-3 flex-1 max-w-md lg:max-w-lg">
+      {/* Left: Location Search Bar with guaranteed minimum readable width */}
+      <div className="flex items-center gap-3 flex-1 min-w-[220px] sm:min-w-[280px] max-w-sm lg:max-w-md shrink-0 sm:shrink">
         <LocationSearch onSelectLocation={onSelectLocation} selectedLocation={selectedLocation} />
       </div>
 
-      {/* Center: Meteorological Station Telemetry Status (fills the empty gap on desktop) */}
-      <div className="hidden lg:flex items-center gap-4 px-4 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
+      {/* Center: Meteorological Station Telemetry Status (fills the empty gap on wider desktop) */}
+      <div className="hidden xl:flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] shrink-0">
         <div className="flex items-center gap-1.5 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-pulse" />
           <span>{t("topbar.synoptic_grid", "Synoptic Grid Active")}</span>
         </div>
         <span className="text-[var(--border-default)]">•</span>
         <span className="text-[11px] text-[var(--text-tertiary)] font-mono">
-          {t("topbar.model_blend", "Model: ECMWF / GFS Blend")}
+          {t("topbar.model_blend", "ECMWF / GFS")}
         </span>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-2.5 ml-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 ml-2 sm:ml-3 shrink-0">
         <NotificationCenter />
         <ThemeToggle />
         <LanguageSwitcher />
@@ -59,9 +59,9 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
           <Settings size={18} />
         </Link>
 
-        {/* Product Brand Stamp */}
+        {/* Product Brand Stamp (shown on extra wide displays) */}
         <div
-          className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 justify-center bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] select-none"
+          className="hidden 2xl:flex h-8 px-2.5 rounded-lg items-center gap-1.5 justify-center bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] select-none"
         >
           <img
             src="/icon-192.png"
