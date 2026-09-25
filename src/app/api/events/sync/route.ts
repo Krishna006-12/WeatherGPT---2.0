@@ -12,8 +12,16 @@ export async function POST(request?: Request) {
 
   if (configuredSecret) {
     const providedSecret = request?.headers?.get("x-sync-secret");
+    const origin = request?.headers?.get("origin");
+    const referer = request?.headers?.get("referer");
+    const host = request?.headers?.get("host");
 
-    if (!providedSecret) {
+    // Allow legitimate same-origin browser requests from WeatherGPT dashboard
+    const isSameOrigin =
+      Boolean(host) &&
+      ((origin ? origin.includes(host!) : false) || (referer ? referer.includes(host!) : false));
+
+    if (!providedSecret && !isSameOrigin) {
       const error = new AppError(
         "SYNC_UNAUTHORIZED",
         "Missing x-sync-secret header",
@@ -22,7 +30,7 @@ export async function POST(request?: Request) {
       return NextResponse.json(toErrorResponse(error), { status: error.statusCode });
     }
 
-    if (providedSecret !== configuredSecret) {
+    if (providedSecret && providedSecret !== configuredSecret) {
       const error = new AppError(
         "SYNC_FORBIDDEN",
         "Invalid sync secret",

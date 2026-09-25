@@ -113,12 +113,20 @@ export function FloatingCopilotWidget() {
       {/* ── Expanded Functional Chat Flyout / Drawer ─────────────── */}
       {isOpen && (
         <>
-          {/* Mobile Backdrop Overlay */}
+          {/* Subtle Background Focus Blur Overlay across Desktop & Mobile */}
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs animate-[fade-in_200ms_ease-out_forwards]"
+            className="fixed inset-0 z-40 bg-black/45 dark:bg-black/70 backdrop-blur-md transition-all duration-300 animate-in fade-in"
             onClick={handleClose}
             aria-hidden="true"
           />
+
+          {/* Ambient Glow Aura Wrapper (Desktop only) */}
+          <div className="fixed z-50 md:bottom-6 md:right-6 pointer-events-none hidden md:block">
+            <div
+              className="w-[430px] h-[630px] rounded-[32px] bg-gradient-to-tr from-cyan-500/35 via-sky-400/25 to-blue-600/35 blur-2xl opacity-80 animate-pulse"
+              aria-hidden="true"
+            />
+          </div>
 
           <div
             ref={flyoutRef}
@@ -128,10 +136,16 @@ export function FloatingCopilotWidget() {
             aria-modal="true"
             className="fixed z-50
               /* Mobile bottom sheet */
-              inset-x-0 bottom-0 h-[85vh] max-h-[85vh] rounded-t-[28px] border-t border-black/10 dark:border-white/15 bg-white/95 dark:bg-[#0c0f17]/95 backdrop-blur-2xl shadow-[0_-12px_40px_rgba(15,23,42,0.18)]
+              inset-x-0 bottom-0 h-[85vh] max-h-[85vh] rounded-t-[28px] border-t-2 border-cyan-400/50 bg-[#0e1424]/98 dark:bg-[#070b16]/98 backdrop-blur-2xl shadow-[0_-12px_45px_rgba(6,182,212,0.25)]
               origin-bottom animate-[wg-morph-expand-mobile_320ms_cubic-bezier(0.16,1,0.3,1)_forwards]
-              /* Desktop elevated floating flyout with fluid pill-to-card morph */
-              md:inset-x-auto md:bottom-6 md:right-6 md:w-[420px] md:max-w-[calc(100vw-2rem)] md:h-[620px] md:max-h-[calc(100vh-4.5rem)] md:rounded-[28px] md:border md:border-black/10 md:dark:border-white/15 md:shadow-[0_24px_70px_rgba(15,23,42,0.22)]
+              /* Desktop elevated floating flyout with fluid pill-to-card morph & neon border glow */
+              md:inset-x-auto md:bottom-6 md:right-6 md:w-[420px] md:max-w-[calc(100vw-2rem)] md:h-[620px] md:max-h-[calc(100vh-4.5rem)]
+              md:rounded-[28px]
+              md:border-2 md:border-cyan-400/60
+              md:ring-1 md:ring-cyan-400/30
+              md:bg-[#0b101e]/98 md:dark:bg-[#070c18]/98
+              md:backdrop-blur-3xl
+              md:shadow-[0_0_50px_rgba(6,182,212,0.3),0_25px_80px_rgba(0,0,0,0.85)]
               md:origin-bottom-right md:animate-[wg-morph-expand-desktop_340ms_cubic-bezier(0.16,1,0.3,1)_forwards]
               flex flex-col overflow-hidden will-change-[transform,opacity,border-radius]"
           >
