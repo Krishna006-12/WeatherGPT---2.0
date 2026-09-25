@@ -195,23 +195,16 @@
   }
 }
 
-/* Fluid Morph Expand: Pill to Dialog (Desktop origin bottom-right, Mobile bottom-sheet) */
+/* Super-Fluid GPU-Accelerated Flyout Morphs (Silky 60-120fps on low-end & high-end devices)
+   Zero filter blur or border-radius thrashing during motion to prevent dropped frames */
 @keyframes wg-morph-expand-desktop {
   0% {
     opacity: 0;
-    transform: scale(0.3) translate3d(70px, 70px, 0);
-    border-radius: 9999px;
-    filter: blur(6px);
-  }
-  50% {
-    opacity: 0.95;
-    filter: blur(0px);
+    transform: scale(0.92) translate3d(10px, 18px, 0);
   }
   100% {
     opacity: 1;
     transform: scale(1) translate3d(0, 0, 0);
-    border-radius: 28px;
-    filter: blur(0px);
   }
 }
 
@@ -219,49 +212,53 @@
   0% {
     opacity: 1;
     transform: scale(1) translate3d(0, 0, 0);
-    border-radius: 28px;
-    filter: blur(0px);
-  }
-  40% {
-    opacity: 0.8;
   }
   100% {
     opacity: 0;
-    transform: scale(0.3) translate3d(70px, 70px, 0);
-    border-radius: 9999px;
-    filter: blur(5px);
+    transform: scale(0.93) translate3d(8px, 14px, 0);
   }
 }
 
 @keyframes wg-morph-expand-mobile {
   0% {
     opacity: 0;
-    transform: translateY(100%) scaleY(0.75);
-    border-top-left-radius: 9999px;
-    border-top-right-radius: 9999px;
+    transform: translate3d(0, 100%, 0);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scaleY(1);
-    border-top-left-radius: 28px;
-    border-top-right-radius: 28px;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes wg-morph-collapse-mobile {
   0% {
     opacity: 1;
-    transform: translateY(0) scaleY(1);
-    border-top-left-radius: 28px;
-    border-top-right-radius: 28px;
+    transform: translate3d(0, 0, 0);
   }
   100% {
     opacity: 0;
-    transform: translateY(100%) scaleY(0.75);
-    border-top-left-radius: 9999px;
-    border-top-right-radius: 9999px;
+    transform: translate3d(0, 100%, 0);
   }
 }
+
+@keyframes wg-backdrop-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes wg-backdrop-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 
 @keyframes wg-pill-spring-in {
   0% {
