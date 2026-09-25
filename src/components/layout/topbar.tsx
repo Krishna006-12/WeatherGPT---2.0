@@ -59,10 +59,17 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
 
         {/* Product Brand Stamp */}
         <div
-          className="h-8 px-2.5 rounded-lg flex items-center justify-center bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] select-none"
+          className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 justify-center bg-[var(--surface-2)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] select-none"
         >
+          <img
+            src="/icon-192.png"
+            alt="WeatherGPT"
+            width={18}
+            height={18}
+            className="w-4.5 h-4.5 rounded-md object-contain"
+          />
           <span>WeatherGPT</span>
-          <span className="ml-1 text-[10px] text-[var(--accent)] font-bold">2.0</span>
+          <span className="text-[10px] text-[var(--accent)] font-bold">2.0</span>
         </div>
       </div>
     </header>

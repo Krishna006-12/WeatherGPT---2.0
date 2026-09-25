@@ -96,9 +96,9 @@ export function Sidebar() {
         <img
           src="/icon.svg"
           alt="WeatherGPT 2.0"
-          width={28}
-          height={28}
-          className="relative z-10 w-7 h-7 object-contain rounded-md drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)]"
+          width={30}
+          height={30}
+          className="relative z-10 w-7.5 h-7.5 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)]"
         />
       </Link>
 
