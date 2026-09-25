@@ -6,6 +6,7 @@ import { LocationSearch } from "@/components/weather/location-search";
 import { UserMenu } from "@/components/auth/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { NotificationCenter } from "@/components/layout/notification-center";
 import { useLanguage } from "@/context/language-context";
 import type { NormalizedLocation } from "@/services/location/location-service";
 
@@ -44,6 +45,7 @@ export function Topbar({ onSelectLocation, selectedLocation }: TopbarProps) {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-2.5 ml-3">
+        <NotificationCenter />
         <ThemeToggle />
         <LanguageSwitcher />
         <UserMenu />

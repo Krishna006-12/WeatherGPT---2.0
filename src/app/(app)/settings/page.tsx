@@ -1,10 +1,12 @@
 "use client";
 
-import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2 } from "lucide-react";
+import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2, Bell } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
+import { useNotification } from "@/context/notification-context";
 
 export default function SettingsPage() {
   const { t } = useLanguage();
+  const { permission, requestPermission, testEmergencyNotification } = useNotification();
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -105,6 +107,50 @@ export default function SettingsPage() {
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
             {t("settings.agri_engine_desc", "Deterministic agrometeorological evaluation across 5 key crops (Wheat, Rice, Maize, Potato, Mustard). Evaluates precipitation accumulation, humidity thresholds, wind speed restrictions for spraying, and soil trafficability.")}
           </p>
+        </div>
+
+        {/* Emergency Push Notifications */}
+        <div className="rounded-3xl bg-[var(--surface-1)] p-6 border border-[var(--border-subtle)] space-y-4 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2.5 text-[var(--text-primary)]">
+              <Radio className="text-red-400" size={20} />
+              <h2 className="font-semibold text-base">{t("settings.notifications", "Emergency Push Alerts & Live Broadcasts")}</h2>
+            </div>
+            {permission === "granted" ? (
+              <span className="flex items-center gap-1.5 text-xs text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium">
+                <CheckCircle2 size={12} /> {t("settings.push_active", "Push Enabled")}
+              </span>
+            ) : (
+              <span className="text-xs text-amber-500 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full font-medium">
+                {permission === "denied" ? t("settings.push_denied", "Blocked") : t("settings.push_inactive", "Permission Needed")}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            {t(
+              "settings.notifications_desc",
+              "Dispatches browser push notifications and acoustic chimes when high-severity disaster events (cyclones, floods, severe storms, earthquakes) are confirmed by GDACS, NOAA, or regional meteorological agencies."
+            )}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {permission !== "granted" && (
+              <button
+                onClick={() => requestPermission()}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-semibold shadow-md hover:brightness-110 transition-all"
+              >
+                {t("settings.enable_push_btn", "Enable Push Notifications")}
+              </button>
+            )}
+
+            <button
+              onClick={() => testEmergencyNotification()}
+              className="px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all flex items-center gap-1.5"
+            >
+              <span>{t("settings.test_push_btn", "Test Emergency Broadcast")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Units & Preferences */}

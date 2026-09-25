@@ -104,6 +104,30 @@ export class LiveIntelligenceSyncService {
       return { success: true, data: metrics };
     } catch (err) {
       console.error("[LiveIntelligenceSyncService] Sync failed:", err);
+
+      // Gracefully recover using existing cached articles if upstream network failed
+      try {
+        const existingArticles = await this.articleRepo.findAll({ limit: 500 });
+        if (existingArticles.length > 0) {
+          const events = clusterArticlesIntoEvents(existingArticles);
+          await this.eventRepo.saveMany(events);
+          return {
+            success: true,
+            data: {
+              articlesIngested: 0,
+              articlesDeduplicated: existingArticles.length,
+              eventsCreatedOrUpdated: events.length,
+              timestamp: new Date().toISOString(),
+              durationMs: Date.now() - startTime,
+              providersSucceeded: [],
+              providersFailed: [err instanceof Error ? err.message : "Network feed timeout"],
+            },
+          };
+        }
+      } catch {
+        // Fall through to error
+      }
+
       return {
         success: false,
         error:

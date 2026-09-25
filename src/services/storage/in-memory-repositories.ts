@@ -36,7 +36,11 @@ export class InMemoryEventRepository implements EventRepository {
   }
 
   async findAll(filter?: EventFilter): Promise<WeatherEvent[]> {
-    let result = Array.from(this.events.values());
+    let result = Array.from(this.events.values()).filter(
+      (e) =>
+        !e.title?.toLowerCase().includes("test message") &&
+        !e.title?.toLowerCase().includes("monitoring message only")
+    );
 
     if (filter) {
       if (filter.category) {

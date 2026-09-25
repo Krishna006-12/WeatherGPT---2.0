@@ -4,7 +4,9 @@ import { AuthProvider } from "@/context/auth-context";
 import { LanguageProvider } from "@/context/language-context";
 import { LocationProvider } from "@/context/location-context";
 import { ThemeProvider } from "@/context/theme-context";
+import { NotificationProvider } from "@/context/notification-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { EmergencyToastBanner } from "@/components/notifications/emergency-toast-banner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +14,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         <LanguageProvider>
           <LocationProvider>
-            <DashboardLayout>{children}</DashboardLayout>
+            <NotificationProvider>
+              <DashboardLayout>{children}</DashboardLayout>
+              <EmergencyToastBanner />
+            </NotificationProvider>
           </LocationProvider>
         </LanguageProvider>
       </AuthProvider>

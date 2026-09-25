@@ -105,6 +105,20 @@ export class OfficialWeatherProvider implements FeedProvider {
       const props = feat.properties;
       if (!props || !props.event) continue;
 
+      // Filter out test messages, routine system tests, and drill broadcasts
+      const lowerEvent = (props.event || "").toLowerCase();
+      const lowerHeadline = (props.headline || "").toLowerCase();
+      const lowerDesc = (props.description || "").toLowerCase();
+      if (
+        lowerEvent.includes("test") ||
+        lowerHeadline.includes("test message") ||
+        lowerDesc.includes("monitoring message only") ||
+        lowerDesc.includes("please disregard") ||
+        lowerDesc.includes("this is a test")
+      ) {
+        continue;
+      }
+
       const title = sanitizeUntrustedText(
         props.headline || `${props.event} Alert - ${props.areaDesc || "Affected Region"}`
       );
