@@ -24,6 +24,7 @@ import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
 import { getWeatherMascot } from "@/lib/weather/mascot-helper";
 import { getLocalizedLocationName } from "@/lib/i18n/location-names";
+import { WeatherAmbientBackground } from "@/components/weather/weather-ambient-background";
 
 interface WeatherHeroProps {
   weather?: WeatherSnapshot;
@@ -279,20 +280,10 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
       aria-label="Current Weather Overview"
       className="wg-surface-hero relative w-full overflow-hidden p-5 sm:p-7 md:p-8 rounded-[28px] sm:rounded-[32px] transition-all duration-300 border border-[var(--border-subtle)]"
     >
-      {/* ── Atmospheric Ambient Backdrop Gradient (Contextual by Condition) ── */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-60 dark:opacity-40"
-        style={{
-          background:
-            conditionTheme === "cyan"
-              ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(56, 189, 248, 0.18), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(37, 99, 235, 0.10), transparent 60%)"
-              : conditionTheme === "amber"
-                ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(251, 191, 36, 0.20), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(245, 158, 11, 0.10), transparent 60%)"
-                : conditionTheme === "rose"
-                  ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(244, 63, 94, 0.18), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(168, 85, 247, 0.12), transparent 60%)"
-                  : "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(148, 163, 184, 0.15), transparent 70%)",
-        }}
+      {/* ── Dynamic Ambient Animated Weather Background ── */}
+      <WeatherAmbientBackground
+        condition={current.condition}
+        className="rounded-[28px] sm:rounded-[32px]"
       />
 
       {/* ── Top Provenance & Telemetry Metadata Header ── */}
