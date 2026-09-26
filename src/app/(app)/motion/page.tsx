@@ -25,13 +25,15 @@ import {
 } from "@/lib/motion/device-tier";
 import { triggerHaptic } from "@/lib/motion/haptics";
 import { calculateVelocityAwareSnap } from "@/lib/motion/easings";
-import { CloudRain, Wind, Thermometer, ShieldAlert, Sparkles, Activity, Compass } from "lucide-react";
+import { CloudRain, Wind, Thermometer, ShieldAlert, Sparkles, Activity, Compass, Play } from "lucide-react";
+import { WeatherSplashScreen } from "@/components/ui/weather-splash-screen";
 
 export default function MotionShowcasePage() {
   const detectedTier = useDeviceTier();
   const [simulatedTier, setSimulatedTier] = useState<DeviceTier | null>(null);
   const [stressCount, setStressCount] = useState(12);
   const [carouselOffset, setCarouselOffset] = useState(0);
+  const [showSplashPreview, setShowSplashPreview] = useState(false);
 
   const activeTierConfig = simulatedTier
     ? TIER_CAPABILITIES[simulatedTier]
@@ -69,11 +71,33 @@ export default function MotionShowcasePage() {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           Antigravity Physics & Motion Lab
         </h1>
-        <p className="text-sm text-slate-400 max-w-3xl">
-          Zero-gravity buoyancy simulation, exponential momentum decay ($v(t) = v_0 \cdot e^{"{-t/\\tau}"}$),
-          multi-harmonic Lissajous drift, and GPU-composited parallax layers operating strictly at $\ge 60$ FPS.
-        </p>
+        <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
+          <p className="text-sm text-slate-400 max-w-2xl">
+            Zero-gravity buoyancy simulation, exponential momentum decay ($v(t) = v_0 \cdot e^{"{-t/\\tau}"}$),
+            multi-harmonic Lissajous drift, and GPU-composited parallax layers operating strictly at $\ge 60$ FPS.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("heavy");
+              setShowSplashPreview(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Replay App Launch Animation
+          </button>
+        </div>
       </div>
+
+      {/* Interactive Splash Screen Preview Modal / Overlay */}
+      {showSplashPreview && (
+        <WeatherSplashScreen
+          forceShow={true}
+          autoDismiss={true}
+          onComplete={() => setShowSplashPreview(false)}
+        />
+      )}
 
       {/* 1. Device Tier Simulation Controls */}
       <section className="wg-card p-5 border border-white/10 rounded-2xl flex flex-col gap-4 bg-[var(--surface-1)]">
