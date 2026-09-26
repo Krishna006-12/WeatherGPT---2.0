@@ -114,10 +114,10 @@ export function FloatingCopilotWidget() {
           aria-expanded={false}
           aria-controls="floating-copilot-flyout"
           aria-haspopup="dialog"
-          className="fixed z-40 bottom-22 right-4 md:bottom-6 md:right-6 group select-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0c0f17] animate-[wg-pill-spring-in_260ms_cubic-bezier(0.34,1.35,0.64,1)_forwards] wg-tactile-press"
+          className="fixed z-40 bottom-20 right-3.5 sm:bottom-6 sm:right-6 group select-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0c0f17] animate-[wg-pill-spring-in_260ms_cubic-bezier(0.34,1.35,0.64,1)_forwards] wg-tactile-press"
         >
           {/* Pill Container */}
-          <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full backdrop-blur-2xl transition-all duration-300 border bg-white/90 dark:bg-[#0e1117]/90 border-black/10 dark:border-white/10 shadow-[0_12px_30px_-12px_rgba(14,165,233,0.35)] group-hover:shadow-[0_14px_38px_-8px_rgba(6,182,212,0.4)] group-hover:border-cyan-400/40 group-hover:scale-[1.025] active:scale-[0.98]">
+          <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full backdrop-blur-2xl transition-all duration-300 border bg-white/95 dark:bg-[#0c101a]/95 border-black/10 dark:border-white/12 shadow-[0_12px_32px_-8px_rgba(6,182,212,0.35)] group-hover:shadow-[0_16px_40px_-6px_rgba(6,182,212,0.45)] group-hover:border-cyan-400/50 group-hover:scale-[1.02] active:scale-[0.98]">
             {/* Live Meteorological Grounding Indicator (Jewel pulse) */}
             <div className="relative flex items-center justify-center w-2.5 h-2.5 shrink-0" aria-hidden="true">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75 duration-1000" />
@@ -132,15 +132,20 @@ export function FloatingCopilotWidget() {
               <Sparkles size={16} />
             </div>
 
-            {/* Label */}
-            <span className="text-xs sm:text-sm font-semibold tracking-tight text-neutral-800 dark:text-neutral-100 whitespace-nowrap">
-              {t("copilot.floating_btn", "Ask WeatherGPT")}
-            </span>
+            {/* Label and supporting microcopy */}
+            <div className="flex flex-col text-left">
+              <span className="text-xs sm:text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
+                {t("copilot.floating_btn", "Ask WeatherGPT")}
+              </span>
+              <span className="hidden xl:inline text-[10px] text-neutral-500 dark:text-neutral-400 font-normal leading-tight">
+                Understand risk, crops & forecast
+              </span>
+            </div>
 
             {/* Keyboard Shortcut Tag (Desktop only) */}
             <kbd
               aria-hidden="true"
-              className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 border border-neutral-200/80 dark:border-white/10 transition-colors group-hover:border-cyan-400/30"
+              className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-neutral-100 dark:bg-white/10 text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-white/10 transition-colors group-hover:border-cyan-400/30 ml-0.5"
             >
               ⌘K
             </kbd>

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type { WeatherSnapshot } from "@/types/weather";
 import type { NormalizedLocation } from "@/services/location/location-service";
 import {
@@ -10,8 +11,14 @@ import {
   CloudRain,
   Cloud,
   AlertTriangle,
-  Footprints,
   MapPin,
+  Sparkles,
+  ArrowUpRight,
+  ShieldAlert,
+  Compass,
+  Gauge,
+  Eye,
+  CheckCircle2,
 } from "lucide-react";
 import { FloatingElement } from "@/components/motion/FloatingElement";
 import { useLanguage } from "@/context/language-context";
@@ -25,15 +32,15 @@ interface WeatherHeroProps {
 }
 
 /**
- * 3D Volumetric Weather Centerpiece matching the reference design.
- * Rendered using high-fidelity layered SVG gradients and volumetric drop-shadows.
+ * High-fidelity 3D Volumetric Weather Icon representing the current atmospheric condition.
+ * Rendered using layered SVG gradients, specular highlights, and soft ambient drop shadows.
  */
 function VolumetricWeatherIcon({ condition }: { condition: string }) {
   const c = condition.toLowerCase();
 
   if (c.includes("thunder") || c.includes("storm")) {
     return (
-      <div className="relative w-44 h-40 sm:w-52 sm:h-44 flex items-center justify-center select-none">
+      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="cloudGradStorm" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -84,7 +91,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   if (c.includes("rain") || c.includes("drizzle")) {
     return (
-      <div className="relative w-44 h-40 sm:w-52 sm:h-44 flex items-center justify-center select-none">
+      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="cloudGradRain" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -128,7 +135,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   if (c.includes("cloud") || c.includes("overcast") || c.includes("fog") || c.includes("mist")) {
     return (
-      <div className="relative w-44 h-40 sm:w-52 sm:h-44 flex items-center justify-center select-none">
+      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="sunPartly" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -165,7 +172,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   // Pure Sunny / Clear (Default)
   return (
-    <div className="relative w-44 h-40 sm:w-52 sm:h-44 flex items-center justify-center select-none">
+    <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
       <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
         <defs>
           <radialGradient id="sunSphereGrad" cx="35%" cy="30%" r="65%">
@@ -205,7 +212,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   const locale = language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : "en-US";
 
   if (isLoading || !weather) {
-    return <div className="wg-skeleton w-full min-h-[360px] rounded-3xl" />;
+    return <div className="wg-skeleton w-full min-h-[380px] rounded-3xl" />;
   }
 
   const { current, daily } = weather;
@@ -225,217 +232,293 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   // Map condition to localized translation
   const condLower = current.condition.toLowerCase();
   let conditionLabel = t("condition.sunny", "Sunny");
-  if (condLower.includes("clear")) conditionLabel = t("condition.clear", "Clear");
-  else if (condLower.includes("partly")) conditionLabel = t("condition.partly_cloudy", "Partly Cloudy");
-  else if (condLower.includes("cloud")) conditionLabel = t("condition.cloudy", "Cloudy");
-  else if (condLower.includes("overcast")) conditionLabel = t("condition.overcast", "Overcast");
-  else if (condLower.includes("heavy") && condLower.includes("rain")) conditionLabel = t("condition.heavy_rain", "Heavy Rain");
-  else if (condLower.includes("rain")) conditionLabel = t("condition.rain", "Rain");
-  else if (condLower.includes("storm") || condLower.includes("thunder")) conditionLabel = t("condition.thunderstorm", "Thunderstorm");
-  else if (condLower.includes("snow")) conditionLabel = t("condition.snow", "Snow");
-  else if (condLower.includes("drizzle")) conditionLabel = t("condition.drizzle", "Drizzle");
+  let conditionTheme = "cyan"; // cyan | amber | rose | slate
+  if (condLower.includes("clear")) {
+    conditionLabel = t("condition.clear", "Clear");
+    conditionTheme = "amber";
+  } else if (condLower.includes("partly")) {
+    conditionLabel = t("condition.partly_cloudy", "Partly Cloudy");
+    conditionTheme = "amber";
+  } else if (condLower.includes("cloud") || condLower.includes("overcast")) {
+    conditionLabel = t("condition.cloudy", "Cloudy");
+    conditionTheme = "slate";
+  } else if (condLower.includes("heavy") && condLower.includes("rain")) {
+    conditionLabel = t("condition.heavy_rain", "Heavy Rain");
+    conditionTheme = "cyan";
+  } else if (condLower.includes("rain") || condLower.includes("drizzle")) {
+    conditionLabel = t("condition.rain", "Rain");
+    conditionTheme = "cyan";
+  } else if (condLower.includes("storm") || condLower.includes("thunder")) {
+    conditionLabel = t("condition.thunderstorm", "Thunderstorm");
+    conditionTheme = "rose";
+  } else if (condLower.includes("snow")) {
+    conditionLabel = t("condition.snow", "Snow");
+    conditionTheme = "cyan";
+  }
 
   // Environmental Indicator Estimates
   const uvVal = current.uvIndex ?? 4.5;
-  const uvLabel = uvVal > 6 ? t("hero.high_badge", "High") : uvVal > 3 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
+  const uvStatus = uvVal > 6 ? t("hero.high_badge", "High") : uvVal > 3 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
 
-  // Pollution / Air Quality estimate (Clean: Low, Hazy: Moderate)
-  const pollutionLabel = current.humidity > 75 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
+  // Humidity status
+  const humidityStatus = current.humidity > 70 ? "High" : current.humidity < 35 ? "Dry" : "Optimal";
 
-  // Pollen count (higher in dry sunny winds)
-  const pollenLabel = current.humidity < 45 && current.windSpeed > 15 ? t("hero.moderate_badge", "Moderate") : t("hero.low_badge", "Low");
+  // Precipitation probability
+  const precipProb = today?.precipitationProbability ?? (current.humidity > 60 ? 40 : 10);
+
+  // Apparent temperature calculation
+  const feelsLike = Math.round(current.feelsLike ?? current.temperature);
+  const tempHigh = Math.round(today?.temperatureHigh ?? current.temperature + 2);
+  const tempLow = Math.round(today?.temperatureLow ?? current.temperature - 3);
+
+  // Active weather alert (if present)
+  const activeAlert = weather.alerts && weather.alerts.length > 0 ? weather.alerts[0] : null;
 
   return (
     <section
       aria-label="Current Weather Overview"
-      className="wg-surface-hero relative w-full overflow-hidden p-6 sm:p-8 rounded-[32px] transition-all duration-300"
+      className="wg-surface-hero relative w-full overflow-hidden p-5 sm:p-7 md:p-8 rounded-[28px] sm:rounded-[32px] transition-all duration-300 border border-[var(--border-subtle)]"
     >
-      {/* Soft Sunny Atmosphere Radial Background */}
+      {/* ── Atmospheric Ambient Backdrop Gradient (Contextual by Condition) ── */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-40 select-none overflow-hidden"
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-60 dark:opacity-40"
         style={{
-          background: "radial-gradient(ellipse 60% 50% at 50% 30%, rgba(251, 191, 36, 0.15), transparent 70%)",
+          background:
+            conditionTheme === "cyan"
+              ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(56, 189, 248, 0.18), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(37, 99, 235, 0.10), transparent 60%)"
+              : conditionTheme === "amber"
+                ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(251, 191, 36, 0.20), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(245, 158, 11, 0.10), transparent 60%)"
+                : conditionTheme === "rose"
+                  ? "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(244, 63, 94, 0.18), transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(168, 85, 247, 0.12), transparent 60%)"
+                  : "radial-gradient(ellipse 65% 50% at 75% 25%, rgba(148, 163, 184, 0.15), transparent 70%)",
         }}
       />
 
-      {/* Main Container */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto">
-        {/* Degraded Mode Indicator */}
-        {weather.isDegraded && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="w-full mb-3 px-4 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-center gap-2 text-xs font-semibold"
-          >
-            <AlertTriangle size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>
-              {weather.staleWarning ||
-                `Data may be stale, last updated ${
-                  weather.staleSince
-                    ? new Date(weather.staleSince).toLocaleTimeString()
-                    : new Date(weather.observedAt).toLocaleTimeString()
-                }`}
-            </span>
-          </div>
-        )}
-
-        {/* Screen Reader Alert Announcements */}
-        {weather.alerts && weather.alerts.length > 0 && (
-          <div role="status" aria-live="assertive" className="sr-only">
-            {weather.alerts
-              .map((a) => `${a.severity} weather alert: ${a.title}. ${a.description}`)
-              .join(". ")}
-          </div>
-        )}
-
-        {/* Floating Badges (Left and Right, inspired by the reference image) */}
-        <div className="w-full flex items-center justify-between pointer-events-none mb-1">
-          {/* Left Floating Temp Tag */}
-          <FloatingElement id="hero-float-badge-left" massTier="light" envelopeScale={0.8} pressScale={false}>
-            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-[0_8px_25px_-12px_rgba(15,23,42,0.35)]">
-              <Sun size={13} className="text-amber-500" />
-              <span>{Math.round(today?.temperatureLow ?? current.temperature - 5)}°</span>
-            </div>
-          </FloatingElement>
-
-          {/* Right Floating Atmospheric Pill */}
-          <FloatingElement id="hero-float-badge-right" massTier="medium" envelopeScale={0.7} pressScale={false}>
-            <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-white/10 backdrop-blur-md border border-black/[0.04] dark:border-white/10 shadow-[0_8px_25px_-12px_rgba(15,23,42,0.35)]">
-              <Droplets size={13} className="text-blue-500" />
-              <span>{current.humidity}%</span>
-            </div>
-          </FloatingElement>
+      {/* ── Top Provenance & Telemetry Metadata Header ── */}
+      <div className="relative z-10 flex items-center justify-between gap-3 pb-4 mb-4 sm:mb-6 border-b border-[var(--border-subtle)] text-xs text-[var(--text-tertiary)] flex-wrap">
+        {/* Source & Grounding Provenance (Section 15: Trust & Data Provenance) */}
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-pulse" />
+            <span className="font-semibold text-[11px] tracking-wide uppercase">Open-Meteo Verified</span>
+          </span>
+          <span className="text-[var(--border-default)]">•</span>
+          <span className="text-[11px] font-mono text-[var(--text-tertiary)]">
+            ECMWF / GFS High-Res
+          </span>
         </div>
 
-        {/* 1. Centered Location Heading, Pin Subtitle & Condition */}
-        <div className="flex flex-col items-center">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-            {localizedLoc.cityName}
-          </h1>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] font-medium mt-1 flex-wrap justify-center">
-            <span className="flex items-center gap-1 text-[var(--text-tertiary)]">
+        {/* High / Low & Feels-Like Telemetry Pill */}
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] font-medium text-[11px] text-[var(--text-secondary)]">
+          <span>Feels like <strong className="text-[var(--text-primary)]">{feelsLike}°</strong></span>
+          <span className="text-[var(--text-tertiary)]">•</span>
+          <span>H: <strong className="text-[var(--text-primary)]">{tempHigh}°</strong></span>
+          <span className="text-[var(--text-tertiary)]">L: <strong className="text-[var(--text-primary)]">{tempLow}°</strong></span>
+        </div>
+      </div>
+
+      {/* Degraded Network Warning if applicable */}
+      {weather.isDegraded && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="relative z-10 w-full mb-4 px-3.5 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center gap-2 text-xs font-semibold"
+        >
+          <AlertTriangle size={15} className="shrink-0 text-amber-500" />
+          <span>
+            {weather.staleWarning ||
+              `Data may be cached from ${
+                weather.staleSince
+                  ? new Date(weather.staleSince).toLocaleTimeString()
+                  : new Date(weather.observedAt).toLocaleTimeString()
+              }`}
+          </span>
+        </div>
+      )}
+
+      {/* ── Core Hero Grid: Dominant Temperature Focal Point + Integrated Visual ── */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+        {/* Left Column (Focal Point): Location -> Giant Temperature -> Condition Details */}
+        <div className="lg:col-span-7 flex flex-col justify-center">
+          {/* Location & Time Hierarchy */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-tertiary)]">
               <MapPin size={13} className="text-[var(--accent)] shrink-0" />
               <span>{localizedLoc.fullDisplayName}</span>
-            </span>
-            <span className="text-[var(--text-tertiary)]">•</span>
-            <span className="text-[var(--text-tertiary)] capitalize">{dateString}</span>
+              <span>•</span>
+              <span className="capitalize">{dateString}</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[var(--text-primary)]">
+              {localizedLoc.cityName}
+            </h1>
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-[var(--accent)] mt-1.5 capitalize">
-            {conditionLabel}
-            {current.windSpeed > 20 && ` • ${t("metric.wind", "Wind")} ${Math.round(current.windSpeed)} km/h`}
-          </p>
+
+          {/* Primary Dominant Focal Point: Temperature & Current Weather */}
+          <div className="flex items-baseline gap-4 sm:gap-6 mt-3 sm:mt-4">
+            {/* Giant Clean Minimalist Temperature */}
+            <FloatingElement id="hero-dominant-temp" massTier="heavy" envelopeScale={0.3} pressScale={false}>
+              <span className="text-7xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-[var(--text-primary)] leading-none select-none">
+                {Math.round(current.temperature)}°
+              </span>
+            </FloatingElement>
+
+            {/* Condition Description & Status Badge */}
+            <div className="flex flex-col gap-1">
+              <span className="text-2xl sm:text-3xl font-semibold text-[var(--text-primary)] tracking-tight capitalize">
+                {conditionLabel}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)] w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                {current.humidity > 65
+                  ? t("hero.precip_active", "Precipitation in Progress")
+                  : t("hero.stable_atmosphere", "Atmospheric Equilibrium")}
+              </span>
+            </div>
+          </div>
+
+          {/* 4 Compact Telemetry Metric Cards (Section 10: Standardized Consistent Format) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 sm:mt-6">
+            {/* 1. Humidity */}
+            <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+                <span className="flex items-center gap-1">
+                  <Droplets size={12} className="text-blue-500" />
+                  <span>Humidity</span>
+                </span>
+                <span className="text-[10px] font-semibold text-blue-500">{humidityStatus}</span>
+              </div>
+              <span className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight">
+                {current.humidity}%
+              </span>
+            </div>
+
+            {/* 2. Wind */}
+            <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+                <span className="flex items-center gap-1">
+                  <Wind size={12} className="text-cyan-500" />
+                  <span>Wind</span>
+                </span>
+                <span className="text-[10px] font-semibold text-cyan-500">{current.windDirection ?? "NE"}</span>
+              </div>
+              <span className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight">
+                {Math.round(current.windSpeed)} <span className="text-xs font-normal text-[var(--text-tertiary)]">km/h</span>
+              </span>
+            </div>
+
+            {/* 3. Precipitation Probability */}
+            <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+                <span className="flex items-center gap-1">
+                  <CloudRain size={12} className="text-indigo-400" />
+                  <span>Precip.</span>
+                </span>
+                <span className="text-[10px] font-semibold text-indigo-400">{precipProb > 30 ? "Likely" : "Low"}</span>
+              </div>
+              <span className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight">
+                {Math.round(precipProb)}%
+              </span>
+            </div>
+
+            {/* 4. UV Index */}
+            <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+                <span className="flex items-center gap-1">
+                  <Sun size={12} className="text-amber-500" />
+                  <span>UV Index</span>
+                </span>
+                <span className="text-[10px] font-semibold text-amber-500">{uvStatus}</span>
+              </div>
+              <span className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight">
+                {uvVal.toFixed(1)}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* 2. Character Mascot & 3D Volumetric Weather Icon */}
-        <div className="my-2.5 sm:my-3 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
-          {/* Walking Mascot illustration corresponding to current location weather */}
-          <FloatingElement id="hero-mascot-character" massTier="light" envelopeScale={0.7} pressScale={true}>
-            <div
-              className="relative w-28 sm:w-36 h-40 sm:h-52 rounded-2xl overflow-hidden shadow-lg border border-black/10 dark:border-white/10 group cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
-              title={`${mascot.title}: ${mascot.activityTip}`}
-            >
+        {/* Right Column: Seamless Contextual Weather Atmosphere (Problem 1 & 2 Solved) */}
+        <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
+          <div className="relative flex items-center justify-center p-3 sm:p-5 rounded-3xl bg-[var(--surface-2)]/40 border border-[var(--border-subtle)] w-full max-w-sm">
+            {/* Integrated Volumetric Weather Visual */}
+            <FloatingElement id="hero-volumetric-visual" massTier="light" envelopeScale={0.6} pressScale={false}>
+              <VolumetricWeatherIcon condition={current.condition} />
+            </FloatingElement>
+
+            {/* Contextual Weather Asset: Softly blended into the environment without jarring card border */}
+            <div className="relative w-20 sm:w-24 h-28 sm:h-32 -ml-6 sm:-ml-8 shrink-0 drop-shadow-xl select-none pointer-events-none">
               <Image
                 src={mascot.imageSrc}
-                alt={`${mascot.title} character mascot`}
+                alt={`${mascot.title} atmospheric visual`}
                 fill
-                sizes="(max-width: 640px) 112px, 144px"
-                className="object-cover object-center"
+                sizes="(max-width: 640px) 80px, 96px"
+                className="object-contain object-bottom"
                 priority
               />
-              <div
-                className="absolute bottom-0 inset-x-0 py-1 px-1.5 text-[9px] font-bold text-white text-center tracking-wide uppercase shadow-xs"
-                style={{ background: "rgba(0, 0, 0, 0.65)", backdropFilter: "blur(4px)" }}
-              >
-                {mascot.badgeLabel}
-              </div>
             </div>
-          </FloatingElement>
-
-          {/* 3D Volumetric Weather Centerpiece */}
-          <FloatingElement id="hero-volumetric-centerpiece" massTier="light" envelopeScale={0.6} pressScale={true}>
-            <VolumetricWeatherIcon condition={current.condition} />
-          </FloatingElement>
-        </div>
-
-        {/* 3. Giant Minimalist Temperature */}
-        <div className="flex items-baseline justify-center">
-          <FloatingElement id="hero-giant-temp" massTier="heavy" envelopeScale={0.4} pressScale={true}>
-            <span className="text-[5.5rem] sm:text-[7rem] leading-none font-extralight tracking-tighter text-[var(--text-primary)] select-none">
-              {Math.round(current.temperature)}°
-            </span>
-          </FloatingElement>
-        </div>
-
-        {/* 4. Atmospheric Sub-Metrics (Rain Probability & Wind Speed) */}
-        <div className="flex items-center justify-center gap-6 sm:gap-8 mt-2 text-xs font-semibold text-[var(--text-secondary)]">
-          <div className="flex items-center gap-1.5">
-            <Droplets size={14} className="text-blue-500" />
-            <span>{current.humidity > 60 ? "35–40%" : "< 15%"}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Wind size={14} className="text-cyan-500" />
-            <span>{Math.round(current.windSpeed)} km/h</span>
-          </div>
-        </div>
-
-        {/* Mascot Activity & Outfit Contextual Pill */}
-        <div className="mt-3 px-4 py-2 rounded-full bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-md text-xs font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2 max-w-full">
-          <Footprints size={14} style={{ color: mascot.accentColor }} className="shrink-0" />
-          <span className="truncate">{mascot.activityTip}</span>
-        </div>
-
-        {/* 5. Environmental Pill Badges Row (UV, Pollution, Pollen) */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mt-5">
-          {/* UV Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-center wg-card-interactive cursor-default">
-            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">{uvLabel}</span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.uv_index", "UV")}</span>
           </div>
 
-          {/* Pollution / AQI Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-center wg-card-interactive cursor-default">
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{pollutionLabel}</span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollution", "Pollution")}</span>
-          </div>
-
-          {/* Pollen Badge */}
-          <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-center wg-card-interactive cursor-default">
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{pollenLabel}</span>
-            <span className="text-[11px] font-semibold text-[var(--text-secondary)] mt-0.5">{t("hero.pollen", "Pollen")}</span>
+          {/* Contextual Environmental Tip */}
+          <div className="mt-3 text-[11px] text-[var(--text-tertiary)] text-center flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: mascot.accentColor }} />
+            <span className="truncate">{mascot.activityTip}</span>
           </div>
         </div>
+      </div>
 
-        {/* 6. Mini Daily Forecast Row (Matching the reference cards carousel at the bottom) */}
-        <div className="w-full mt-6 pt-5 border-t border-[var(--border-subtle)]">
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 wg-hide-scroll">
-            {daily.slice(0, 4).map((d, i) => {
-              const dayDate = new Date(d.date);
-              const dayTitle =
-                i === 0
-                  ? t("timeline.today", "Today")
-                  : i === 1
-                    ? t("hero.tomorrow", "Tomorrow")
-                    : dayDate.toLocaleDateString(locale, { weekday: "short" });
+      {/* ── Section 9: Proper Live Weather Signal / Intelligence Insight ── */}
+      <div className="relative z-10 mt-6 pt-5 border-t border-[var(--border-subtle)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--surface-2)]/80 border border-[var(--border-subtle)]">
+          <div className="flex items-start gap-3">
+            <div
+              className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                activeAlert
+                  ? "bg-rose-500/15 text-rose-500 border border-rose-500/30"
+                  : "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+              }`}
+            >
+              {activeAlert ? <ShieldAlert size={18} /> : <Sparkles size={18} />}
+            </div>
 
-              return (
-                <div
-                  key={d.date}
-                  className="flex-1 min-w-[72px] p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)] flex flex-col items-center text-center shadow-sm wg-card-interactive wg-tactile-press cursor-pointer"
-                >
-                  <span className="text-xs font-bold text-[var(--text-primary)]">{Math.round(d.temperatureHigh)}°</span>
-                  <div className="my-1.5 text-amber-500">
-                    {d.condition.includes("rain") ? (
-                      <CloudRain size={16} className="text-blue-500" />
-                    ) : d.condition.includes("cloud") ? (
-                      <Cloud size={16} className="text-slate-400" />
-                    ) : (
-                      <Sun size={16} className="text-amber-500" />
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium text-[var(--text-tertiary)]">{dayTitle}</span>
-                </div>
-              );
-            })}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
+                  {activeAlert ? "Active Severe Advisory" : "Live Weather Signal"}
+                </span>
+                <span className="text-xs font-semibold text-[var(--text-primary)]">
+                  {activeAlert
+                    ? activeAlert.title
+                    : current.humidity > 65
+                      ? `Precipitation active around ${localizedLoc.cityName}`
+                      : `Favorable atmospheric conditions in ${localizedLoc.cityName}`}
+                </span>
+              </div>
+
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                {activeAlert
+                  ? activeAlert.description
+                  : `Wind steady at ${Math.round(current.windSpeed)} km/h (${current.windDirection ?? "NE"}). Precipitation likelihood at ${Math.round(precipProb)}% with ${Math.round(current.humidity)}% relative humidity.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+            <Link
+              href="#risk-section"
+              className="flex-1 sm:flex-none text-xs font-semibold px-3 py-2 rounded-xl bg-[var(--surface-3)] hover:bg-[var(--surface-4)] text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>View Risk</span>
+              <ArrowUpRight size={13} />
+            </Link>
+
+            <a
+              href="#copilot-section"
+              className="flex-1 sm:flex-none text-xs font-semibold px-3.5 py-2 rounded-xl bg-[var(--accent)] text-black hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+            >
+              <Sparkles size={13} />
+              <span>Ask Copilot</span>
+            </a>
           </div>
         </div>
       </div>

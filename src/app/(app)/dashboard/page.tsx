@@ -65,48 +65,33 @@ export default function DashboardPage() {
         onClose={() => setShowOnboarding(false)}
       />
 
-      {/* 1. PRIMARY: Dominant Weather Hero Centerpiece (Reference Matched) */}
+      {/* 1. PRIMARY: Dominant Weather Hero Centerpiece */}
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
 
-      {/* Quick AI Intelligence & Copilot Launcher (Heuristic 14: Copilot accessibility without scrolling) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3.5 rounded-2xl bg-[var(--surface-1)] border border-[var(--border-subtle)] items-center">
-        <div className="md:col-span-8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
-            <Sparkles size={16} />
-          </div>
-          <div>
-            <span className="text-xs font-semibold text-[var(--text-primary)] block">
-              WeatherGPT Meteorological Reasoning
-            </span>
-            <span className="text-xs text-[var(--text-secondary)]">
-              Ask AI about precipitation timing, road transit risks, or crop spraying advisory.
-            </span>
-          </div>
+      {/* Atmospheric Intelligence Provenance & Pilot Guide Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[var(--surface-1)] border border-[var(--border-subtle)] text-xs">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+          <Sparkles size={14} className="text-cyan-400 shrink-0" />
+          <span>
+            <strong className="text-[var(--text-primary)] font-semibold">Atmospheric Intelligence Engine:</strong> Multi-sensor ECMWF & GFS synthesis with automated risk profiling and agronomic decision support.
+          </span>
         </div>
 
-        <div className="md:col-span-4 flex items-center justify-end gap-2">
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           <button
             type="button"
             onClick={() => setShowOnboarding(true)}
-            className="wg-btn-ghost text-xs flex items-center gap-1.5"
+            className="wg-btn-ghost text-xs flex items-center gap-1.5 py-1 px-2.5"
             title="Open Stakeholder Guide"
           >
-            <HelpCircle size={14} />
+            <HelpCircle size={13} />
             <span>{t("pilot.onboarding_guide", "Pilot Guide")}</span>
           </button>
-
-          <a
-            href="#copilot-section"
-            className="wg-btn-primary text-xs"
-          >
-            <span>Ask Copilot</span>
-            <kbd className="hidden sm:inline px-1 py-0.2 rounded bg-white/20 text-[10px] font-mono">⌘K</kbd>
-          </a>
         </div>
       </div>
 
-      {/* 2. SECONDARY: Immediate Horizon & Live Intelligence (Heuristic 7: Removed all-caps, Heuristic 15: Removed duplicate mascot) */}
-      <div className="flex flex-col gap-3">
+      {/* 2. SECONDARY: Immediate Horizon & Live Intelligence */}
+      <div id="risk-section" className="flex flex-col gap-3 scroll-mt-20">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-sm font-semibold text-[var(--text-secondary)]">
             {t("dashboard.immediate_horizon", "Immediate Horizon & Risk Intelligence")}
