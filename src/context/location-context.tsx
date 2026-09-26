@@ -17,6 +17,12 @@ import {
   removeRecentLocation,
   clearRecentLocations,
 } from "@/lib/storage/location-storage";
+import {
+  CLOUD_SYNC_EVENT,
+  pushClientStateToCloud,
+  type CloudProfilePayload,
+} from "@/lib/storage/cloud-sync";
+import { loadStoredSession } from "@/lib/storage/auth-storage";
 
 export const DEFAULT_LOCATION: NormalizedLocation = {
   id: 1267995,
@@ -40,6 +46,17 @@ export interface LocationContextValue {
 }
 
 const LocationContext = createContext<LocationContextValue | undefined>(undefined);
+
+function triggerCloudSync() {
+  try {
+    const session = loadStoredSession();
+    if (session && !session.user.isGuest && session.user.id) {
+      pushClientStateToCloud(session.user.id);
+    }
+  } catch {
+    // Non-blocking
+  }
+}
 
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [selectedLocation, setSelectedLocationState] = useState<NormalizedLocation | null>(
@@ -66,6 +83,23 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
+  // Listen for cross-device cloud sync events
+  useEffect(() => {
+    const handleCloudSync = (e: Event) => {
+      const custom = e as CustomEvent<CloudProfilePayload>;
+      if (custom.detail?.selectedLocation) {
+        setSelectedLocationState(custom.detail.selectedLocation);
+      }
+      const updated = loadRecentLocations();
+      if (updated.length > 0) {
+        setRecentLocations(updated);
+      }
+    };
+
+    window.addEventListener(CLOUD_SYNC_EVENT, handleCloudSync);
+    return () => window.removeEventListener(CLOUD_SYNC_EVENT, handleCloudSync);
+  }, []);
+
   const setSelectedLocation = useCallback((location: NormalizedLocation | null) => {
     setSelectedLocationState(location);
     saveSelectedLocation(location);
@@ -74,21 +108,26 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       const updatedRecents = addRecentLocation(location);
       setRecentLocations(updatedRecents);
     }
+
+    triggerCloudSync();
   }, []);
 
   const addRecent = useCallback((location: NormalizedLocation) => {
     const updated = addRecentLocation(location);
     setRecentLocations(updated);
+    triggerCloudSync();
   }, []);
 
   const removeRecent = useCallback((identifier: number | string) => {
     const updated = removeRecentLocation(identifier);
     setRecentLocations(updated);
+    triggerCloudSync();
   }, []);
 
   const clearRecents = useCallback(() => {
     clearRecentLocations();
     setRecentLocations([]);
+    triggerCloudSync();
   }, []);
 
   return (

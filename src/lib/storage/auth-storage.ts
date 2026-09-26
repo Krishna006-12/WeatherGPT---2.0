@@ -94,8 +94,16 @@ export function createGoogleSession(
 ): UserSession {
   if (typeof profileOrEmail === "string") {
     const derived = deriveProfileFromEmail(profileOrEmail);
+    const clean = profileOrEmail.trim().toLowerCase();
+    let hash = 0;
+    for (let i = 0; i < clean.length; i++) {
+      hash = ((hash << 5) - hash) + clean.charCodeAt(i);
+      hash |= 0;
+    }
+    const detId = `usr_google_${Math.abs(hash).toString(36)}`;
+
     const user: AuthUser = {
-      id: `usr_google_${Math.random().toString(36).substring(2, 9)}`,
+      id: detId,
       email: profileOrEmail.trim(),
       name: customName?.trim() || derived.name,
       image: derived.avatarUrl,

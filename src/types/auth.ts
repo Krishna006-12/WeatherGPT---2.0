@@ -35,8 +35,12 @@ export interface AuthContextValue {
   signInWithGoogle: (profileOrEmail?: string | Partial<AuthUser>, name?: string, role?: UserRole) => Promise<void>;
   signInWithEmail: (email: string, name?: string, role?: UserRole) => Promise<void>;
   signInWithPhone: (phoneNumber: string, name?: string, role?: UserRole) => Promise<void>;
+  requestPhoneOtp?: (phoneNumber: string) => Promise<{ success: boolean; devOtp?: string; error?: string }>;
+  verifyPhoneOtpAndSignIn?: (phoneNumber: string, code: string, name?: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
+  syncNow?: () => Promise<void>;
   continueAsGuest: () => void;
   setRole: (role: UserRole) => void;
   updateProfile: (updates: Partial<AuthUser>) => void;
   signOut: () => void;
 }
+

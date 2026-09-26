@@ -46,3 +46,6 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Local storage & data files
+/.data/
