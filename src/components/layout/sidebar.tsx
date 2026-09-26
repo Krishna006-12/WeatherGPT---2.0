@@ -67,17 +67,17 @@ export function Sidebar() {
     {
       href: "/dashboard",
       label: t("sidebar.overview", "Dashboard Overview"),
-      icon: <Grid size={20} />,
+      icon: <Grid size={20} strokeWidth={1.8} />,
     },
     {
       href: "/weather",
       label: t("sidebar.weather", "Weather & Observations"),
-      icon: <Globe size={20} />,
+      icon: <Globe size={20} strokeWidth={1.8} />,
     },
     {
       href: "/intelligence",
       label: t("sidebar.intelligence", "Live Disaster Intelligence"),
-      icon: <AlertTriangle size={20} />,
+      icon: <AlertTriangle size={20} strokeWidth={1.8} />,
       badge: (
         <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
           Live
@@ -87,12 +87,12 @@ export function Sidebar() {
     {
       href: "/impact",
       label: t("sidebar.impact", "Regional Risk & Impact"),
-      icon: <Shield size={20} />,
+      icon: <Shield size={20} strokeWidth={1.8} />,
     },
     {
       href: "/chat",
       label: t("sidebar.copilot", "WeatherGPT AI Copilot"),
-      icon: <MessageSquare size={20} />,
+      icon: <MessageSquare size={20} strokeWidth={1.8} />,
       badge: (
         <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
           AI
@@ -102,17 +102,17 @@ export function Sidebar() {
     {
       href: "/evaluation",
       label: t("sidebar.evaluation", "Pilot & Evaluation Metrics"),
-      icon: <BarChart3 size={20} />,
+      icon: <BarChart3 size={20} strokeWidth={1.8} />,
     },
     {
       href: "/motion",
       label: t("sidebar.motion", "Antigravity Motion Lab"),
-      icon: <Sparkles size={20} />,
+      icon: <Sparkles size={20} strokeWidth={1.8} />,
     },
     {
       href: "/history",
       label: t("sidebar.history", "Forecast & Meteorological Timeline"),
-      icon: <History size={20} />,
+      icon: <History size={20} strokeWidth={1.8} />,
     },
   ];
 

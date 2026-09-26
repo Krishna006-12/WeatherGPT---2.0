@@ -420,15 +420,10 @@ export function AICopilotCard({
                             }}
                             title={isPlaying ? "Stop audio" : "Listen to briefing"}
                             aria-label={isPlaying ? "Stop audio" : "Listen to briefing"}
-                            className="wg-badge flex items-center gap-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-                            style={{
-                              background: isPlaying ? "hsla(192, 85%, 56%, 0.15)" : "var(--surface-3)",
-                              color: isPlaying ? "var(--accent)" : "var(--text-secondary)",
-                              border: isPlaying ? "1px solid var(--accent-border)" : "1px solid var(--border-subtle)",
-                            }}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer shadow-xs"
                           >
-                            {isPlaying ? <VolumeX size={11} /> : <Volume2 size={11} />}
-                            <span className="text-[10px] font-medium">{isPlaying ? "Stop Audio" : "Listen"}</span>
+                            {isPlaying ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} className="text-cyan-400" />}
+                            <span>{isPlaying ? "Stop Audio" : "Listen"}</span>
                           </button>
                           {m.response.intent === "agriculture" && (m.response.crop || m.response.metadata?.crop) && (
                             <span
@@ -444,14 +439,7 @@ export function AICopilotCard({
                             </span>
                           )}
                           {m.response.metadata?.isFallback && (
-                            <span
-                              className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
-                              style={{
-                                background: "var(--surface-3)",
-                                color: "var(--text-tertiary)",
-                                border: "1px solid var(--border-default)",
-                              }}
-                            >
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium text-[var(--text-secondary)] bg-[var(--surface-3)] border border-[var(--border-subtle)]">
                               Deterministic observation backup
                             </span>
                           )}
@@ -555,16 +543,16 @@ export function AICopilotCard({
 
           {/* Dynamic Contextual Follow-up Chips */}
           {!loading && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && (
-            <div className="space-y-2 pt-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-quaternary)] px-1">
-                Suggested Follow-up
+            <div className="space-y-2 pt-2 pb-1 border-t border-[var(--border-subtle)]/50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <span className="text-xs font-semibold text-[var(--text-tertiary)] block">
+                Suggested follow-ups
               </span>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {getFollowUpSuggestions(locationLabel, isFarmer).map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSendQuery(p)}
-                    className="text-[12px] font-medium px-3 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] hover:border-[var(--accent-border)] hover:bg-[var(--surface-3)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-150 flex items-center gap-1.5 text-left group shadow-xs"
+                    className="text-xs font-medium px-3 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] hover:border-[var(--accent-border)] hover:bg-[var(--surface-3)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-150 flex items-center gap-1.5 text-left group shadow-xs cursor-pointer"
                   >
                     <Sparkles size={11} className="text-[var(--accent)] shrink-0 group-hover:rotate-12 transition-transform" />
                     <span>{p}</span>
