@@ -54,7 +54,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-7 pb-16">
+    <div className="flex flex-col gap-4 sm:gap-6 lg:gap-7 pb-20 md:pb-16">
       <ScreenReaderAnnouncer
         alerts={weather?.alerts}
         isDegraded={weather?.isDegraded}
@@ -69,15 +69,15 @@ export default function DashboardPage() {
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
 
       {/* Atmospheric Intelligence Provenance & Pilot Guide Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[var(--surface-1)] border border-[var(--border-subtle)] text-xs">
-        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+      <div className="flex items-center justify-between gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-[var(--surface-1)] border border-[var(--border-subtle)] text-xs">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)] min-w-0">
           <Sparkles size={14} className="text-cyan-400 shrink-0" />
-          <span>
-            <strong className="text-[var(--text-primary)] font-semibold">Atmospheric Intelligence Engine:</strong> Multi-sensor ECMWF & GFS synthesis with automated risk profiling and agronomic decision support.
+          <span className="truncate">
+            <strong className="text-[var(--text-primary)] font-semibold">Atmospheric Engine:</strong> Multi-sensor ECMWF & GFS synthesis with automated risk profiling.
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setShowOnboarding(true)}
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             title="Open Stakeholder Guide"
           >
             <HelpCircle size={13} />
-            <span>{t("pilot.onboarding_guide", "Pilot Guide")}</span>
+            <span className="hidden sm:inline">{t("pilot.onboarding_guide", "Pilot Guide")}</span>
           </button>
         </div>
       </div>

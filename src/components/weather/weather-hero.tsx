@@ -36,12 +36,13 @@ interface WeatherHeroProps {
  * High-fidelity 3D Volumetric Weather Icon representing the current atmospheric condition.
  * Rendered using layered SVG gradients, specular highlights, and soft ambient drop shadows.
  */
-function VolumetricWeatherIcon({ condition }: { condition: string }) {
+function VolumetricWeatherIcon({ condition, className }: { condition: string; className?: string }) {
   const c = condition.toLowerCase();
+  const baseClass = className ?? "w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40";
 
   if (c.includes("thunder") || c.includes("storm")) {
     return (
-      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
+      <div className={`relative ${baseClass} flex items-center justify-center select-none`}>
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="cloudGradStorm" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -92,7 +93,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   if (c.includes("rain") || c.includes("drizzle")) {
     return (
-      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
+      <div className={`relative ${baseClass} flex items-center justify-center select-none`}>
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="cloudGradRain" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -136,7 +137,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   if (c.includes("cloud") || c.includes("overcast") || c.includes("fog") || c.includes("mist")) {
     return (
-      <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
+      <div className={`relative ${baseClass} flex items-center justify-center select-none`}>
         <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
           <defs>
             <linearGradient id="sunPartly" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -173,7 +174,7 @@ function VolumetricWeatherIcon({ condition }: { condition: string }) {
 
   // Pure Sunny / Clear (Default)
   return (
-    <div className="relative w-36 h-32 sm:w-44 sm:h-38 md:w-48 md:h-40 flex items-center justify-center select-none">
+    <div className={`relative ${baseClass} flex items-center justify-center select-none`}>
       <svg viewBox="0 0 200 180" className="w-full h-full drop-shadow-2xl overflow-visible">
         <defs>
           <radialGradient id="sunSphereGrad" cx="35%" cy="30%" r="65%">
@@ -347,25 +348,34 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           </div>
 
           {/* Primary Dominant Focal Point: Temperature & Current Weather */}
-          <div className="flex items-baseline gap-4 sm:gap-6 mt-3 sm:mt-4">
-            {/* Giant Clean Minimalist Temperature */}
-            <FloatingElement id="hero-dominant-temp" massTier="heavy" envelopeScale={0.3} pressScale={false}>
-              <span className="text-7xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-[var(--text-primary)] leading-none select-none">
-                {Math.round(current.temperature)}°
-              </span>
-            </FloatingElement>
+          <div className="flex items-center justify-between gap-4 mt-2 sm:mt-4">
+            <div className="flex items-baseline gap-3 sm:gap-6">
+              {/* Giant Clean Minimalist Temperature */}
+              <FloatingElement id="hero-dominant-temp" massTier="heavy" envelopeScale={0.3} pressScale={false}>
+                <span className="text-6xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-[var(--text-primary)] leading-none select-none">
+                  {Math.round(current.temperature)}°
+                </span>
+              </FloatingElement>
 
-            {/* Condition Description & Status Badge */}
-            <div className="flex flex-col gap-1">
-              <span className="text-2xl sm:text-3xl font-semibold text-[var(--text-primary)] tracking-tight capitalize">
-                {conditionLabel}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)] w-fit">
-                <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                {current.humidity > 65
-                  ? t("hero.precip_active", "Precipitation in Progress")
-                  : t("hero.stable_atmosphere", "Atmospheric Equilibrium")}
-              </span>
+              {/* Condition Description & Status Badge */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xl sm:text-3xl font-semibold text-[var(--text-primary)] tracking-tight capitalize">
+                  {conditionLabel}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)] w-fit">
+                  <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                  {current.humidity > 65
+                    ? t("hero.precip_active", "Precipitation in Progress")
+                    : t("hero.stable_atmosphere", "Atmospheric Equilibrium")}
+                </span>
+              </div>
+            </div>
+
+            {/* Mobile Atmospheric 3D Visual (Integrated beside temperature on phone, hidden on desktop where right column is present) */}
+            <div className="lg:hidden flex items-center justify-center shrink-0 pr-1">
+              <FloatingElement id="hero-mobile-visual" massTier="light" envelopeScale={0.4} pressScale={false}>
+                <VolumetricWeatherIcon condition={current.condition} className="w-20 h-20 sm:w-28 sm:h-26" />
+              </FloatingElement>
             </div>
           </div>
 
@@ -429,8 +439,8 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           </div>
         </div>
 
-        {/* Right Column: Seamless Contextual Weather Atmosphere (Problem 1 & 2 Solved) */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
+        {/* Right Column: Seamless Contextual Weather Atmosphere (Desktop only) */}
+        <div className="hidden lg:flex lg:col-span-5 flex-col items-center justify-center relative">
           <div className="relative flex items-center justify-center p-3 sm:p-5 rounded-3xl bg-[var(--surface-2)]/40 border border-[var(--border-subtle)] w-full max-w-sm">
             {/* Integrated Volumetric Weather Visual */}
             <FloatingElement id="hero-volumetric-visual" massTier="light" envelopeScale={0.6} pressScale={false}>

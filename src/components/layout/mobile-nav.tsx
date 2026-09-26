@@ -8,7 +8,6 @@ import {
   History,
   AlertTriangle,
   Bot,
-  Grid3X3,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/motion/haptics";
 import { useLanguage } from "@/context/language-context";
@@ -27,7 +26,6 @@ interface NavItemConfig {
   bgGradient: string;
   borderColor: string;
   matches: (path: string) => boolean;
-  isAction?: boolean;
 }
 
 export function MobileNav({ onOpenMenu }: MobileNavProps) {
@@ -48,7 +46,7 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
     },
     {
       href: "/weather",
-      fullLabel: t("nav.weather", "Weather & Radar"),
+      fullLabel: t("nav.weather", "Weather & Forecast"),
       shortLabel: t("nav.weather", "Weather"),
       icon: CloudSun,
       accentColor: "#fbbf24", // Solar Gold
@@ -59,7 +57,7 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
     },
     {
       href: "/intelligence",
-      fullLabel: t("nav.intelligence", "Live Disaster Intel"),
+      fullLabel: t("nav.intelligence", "Live Disaster Intel & Risks"),
       shortLabel: t("nav.intelligence", "Alerts"),
       icon: AlertTriangle,
       accentColor: "#f43f5e", // Crimson Rose
@@ -90,22 +88,6 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
       borderColor: "rgba(192, 132, 252, 0.4)",
       matches: (path) => path.startsWith("/history"),
     },
-    {
-      href: "#more",
-      fullLabel: t("nav.features", "All Features & Menu"),
-      shortLabel: t("nav.features", "More"),
-      icon: Grid3X3,
-      accentColor: "#a855f7", // Purple
-      glowFilter: "drop-shadow(0 0 8px rgba(168, 85, 247, 0.75)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.35))",
-      bgGradient: "linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.08) 100%)",
-      borderColor: "rgba(168, 85, 247, 0.4)",
-      matches: (path) =>
-        path.startsWith("/evaluation") ||
-        path.startsWith("/motion") ||
-        path.startsWith("/settings") ||
-        path.startsWith("/agriculture"),
-      isAction: true,
-    },
   ];
 
   const activeIndex = navItems.findIndex((item) => item.matches(pathname));
@@ -114,22 +96,22 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
 
   return (
     <nav
-      aria-label="Mobile Navigation Dock"
-      className="md:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.25rem)] max-w-[430px] select-none pointer-events-auto"
+      aria-label="Mobile Navigation"
+      className="md:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-[400px] select-none pointer-events-auto"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       {/* Floating Island Pill Dock with adaptive Glassmorphism */}
       <div
-        className="relative grid grid-cols-6 items-center p-1 sm:p-1.5 rounded-full backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300 bg-white/90 dark:bg-[#0e1016]/90 border border-black/10 dark:border-white/15 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.18),0_8px_16px_-4px_rgba(0,0,0,0.08),inset_0_1px_1px_0_rgba(255,255,255,0.9)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),0_8px_16px_-4px_rgba(0,0,0,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.16)]"
+        className="relative grid grid-cols-5 items-center p-1 sm:p-1.5 rounded-full backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300 bg-white/90 dark:bg-[#0e1016]/92 border border-black/10 dark:border-white/15 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.18),0_8px_16px_-4px_rgba(0,0,0,0.08),inset_0_1px_1px_0_rgba(255,255,255,0.9)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),0_8px_16px_-4px_rgba(0,0,0,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.16)]"
       >
         {/* Sliding Active-State Indicator (GPU transform accelerated) */}
         <div
           aria-hidden="true"
           className="absolute top-1 bottom-1 left-1 rounded-full pointer-events-none transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
           style={{
-            width: "calc((100% - 8px) / 6)",
+            width: "calc((100% - 8px) / 5)",
             transform: `translate3d(calc(${effectiveIndex} * 100%), 0, 0)`,
             background: activeItem.bgGradient,
             border: `1px solid ${activeItem.borderColor}`,
@@ -141,49 +123,6 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
         {navItems.map((item, idx) => {
           const Icon = item.icon;
           const isActive = idx === effectiveIndex;
-
-          if (item.isAction) {
-            return (
-              <button
-                key={item.href}
-                type="button"
-                onClick={() => {
-                  triggerHaptic("medium");
-                  onOpenMenu?.();
-                }}
-                title={item.fullLabel}
-                aria-label={item.fullLabel}
-                className="relative z-10 flex flex-col items-center justify-center min-h-[48px] sm:min-h-[52px] rounded-full px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 group"
-              >
-                <div className="relative flex items-center justify-center">
-                  <Icon
-                    size={19}
-                    className="transition-all duration-200 motion-reduce:transition-none shrink-0"
-                    style={{
-                      color: isActive ? item.accentColor : "var(--text-tertiary)",
-                      filter: isActive ? item.glowFilter : "none",
-                      transform: isActive ? "scale(1.06)" : "scale(1)",
-                    }}
-                  />
-                  {/* Subtle notification dot for all features */}
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-purple-400" />
-                </div>
-
-                <span
-                  className={`text-[9px] font-semibold tracking-tight transition-all duration-200 motion-reduce:transition-none truncate max-w-full leading-none mt-1 ${
-                    isActive
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-1 h-0 overflow-hidden pointer-events-none"
-                  }`}
-                  style={{
-                    color: isActive ? item.accentColor : "transparent",
-                  }}
-                >
-                  {item.shortLabel}
-                </span>
-              </button>
-            );
-          }
 
           return (
             <Link
@@ -197,12 +136,12 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
             >
               <div className="relative flex items-center justify-center">
                 <Icon
-                  size={19}
+                  size={20}
                   className="transition-all duration-200 motion-reduce:transition-none shrink-0"
                   style={{
                     color: isActive ? item.accentColor : "var(--text-tertiary)",
                     filter: isActive ? item.glowFilter : "none",
-                    transform: isActive ? "scale(1.06)" : "scale(1)",
+                    transform: isActive ? "scale(1.08)" : "scale(1)",
                   }}
                 />
                 {/* Live pulse for intelligence */}
@@ -216,7 +155,7 @@ export function MobileNav({ onOpenMenu }: MobileNavProps) {
 
               {/* Smooth fading micro-label only visible for active item */}
               <span
-                className={`text-[9px] font-semibold tracking-tight transition-all duration-200 motion-reduce:transition-none truncate max-w-full leading-none mt-1 ${
+                className={`text-[10px] font-semibold tracking-tight transition-all duration-200 motion-reduce:transition-none truncate max-w-full leading-none mt-1 ${
                   isActive
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-1 h-0 overflow-hidden pointer-events-none"

@@ -114,7 +114,7 @@ export function FloatingCopilotWidget() {
           aria-expanded={false}
           aria-controls={isOpen ? "floating-copilot-flyout" : undefined}
           aria-haspopup="dialog"
-          className="fixed z-40 bottom-20 right-3.5 sm:bottom-6 sm:right-6 group select-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0c0f17] animate-[wg-pill-spring-in_260ms_cubic-bezier(0.34,1.35,0.64,1)_forwards] wg-tactile-press"
+          className="hidden md:flex fixed z-40 bottom-6 right-6 group select-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0c0f17] animate-[wg-pill-spring-in_260ms_cubic-bezier(0.34,1.35,0.64,1)_forwards] wg-tactile-press"
         >
           {/* Pill Container */}
           <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full backdrop-blur-2xl transition-all duration-300 border bg-white/95 dark:bg-[#0c101a]/95 border-black/10 dark:border-white/12 shadow-[0_12px_32px_-8px_rgba(6,182,212,0.35)] group-hover:shadow-[0_16px_40px_-6px_rgba(6,182,212,0.45)] group-hover:border-cyan-400/50 group-hover:scale-[1.02] active:scale-[0.98]">

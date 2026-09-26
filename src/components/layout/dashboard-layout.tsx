@@ -40,7 +40,7 @@ export function DashboardLayout({
           selectedLocation={activeSelectedLocation}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto px-3.5 py-3.5 sm:p-5 md:p-6 lg:p-8 pb-28 md:pb-8">
           <div className="mx-auto max-w-[1400px] w-full">{children}</div>
         </main>
       </div>
