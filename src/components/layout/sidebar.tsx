@@ -23,6 +23,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   badge?: React.ReactNode;
+  badgeVariant?: "rose" | "cyan";
 }
 
 export function Sidebar() {
@@ -83,6 +84,7 @@ export function Sidebar() {
           Live
         </span>
       ),
+      badgeVariant: "rose",
     },
     {
       href: "/impact",
@@ -98,6 +100,7 @@ export function Sidebar() {
           AI
         </span>
       ),
+      badgeVariant: "cyan",
     },
     {
       href: "/evaluation",
@@ -226,6 +229,7 @@ export function Sidebar() {
                 active={isItemActive(item.href)}
                 isOpen={isOpen}
                 badge={item.badge}
+                badgeVariant={item.badgeVariant}
                 onClick={handleLinkClick}
               />
             ))}
@@ -255,6 +259,7 @@ function NavLink({
   active,
   isOpen,
   badge,
+  badgeVariant = "rose",
   onClick,
 }: {
   href: string;
@@ -263,6 +268,7 @@ function NavLink({
   active?: boolean;
   isOpen?: boolean;
   badge?: React.ReactNode;
+  badgeVariant?: "rose" | "cyan";
   onClick?: () => void;
 }) {
   return (
@@ -275,7 +281,7 @@ function NavLink({
         isOpen
           ? "px-3 py-2.5 gap-3.5 w-full justify-start text-xs font-medium min-h-[44px]"
           : "justify-center w-11 h-11 min-h-[44px] min-w-[44px] mx-auto"
-      }`}
+      } ${active ? "border border-[var(--accent)]/20 shadow-sm" : "border border-transparent"}`}
       style={{
         color: active ? "var(--accent)" : "var(--text-secondary)",
         background: active ? "var(--accent-surface)" : "transparent",
@@ -288,10 +294,10 @@ function NavLink({
         }}
       />
 
-      {/* Refined vertical active indicator bar */}
-      {active && (
+      {/* Refined vertical active indicator bar (only in expanded mode to maintain centered concentric geometry in collapsed rail) */}
+      {active && isOpen && (
         <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
+          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full"
           style={{ background: "var(--accent)" }}
         />
       )}
@@ -301,26 +307,32 @@ function NavLink({
         style={{ color: active ? "var(--accent)" : "inherit" }}
       >
         {icon}
-        {/* If collapsed and has badge, show pulsing indicator */}
+        {/* If collapsed and has badge, show matching pulsing indicator */}
         {!isOpen && badge && (
           <span className="absolute -top-1 -right-1 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            <span
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                badgeVariant === "cyan" ? "bg-cyan-400" : "bg-rose-400"
+              }`}
+            />
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                badgeVariant === "cyan" ? "bg-cyan-500" : "bg-rose-500"
+              }`}
+            />
           </span>
         )}
       </div>
 
-      {/* Label and badge when expanded with smooth slide and fade in */}
-      <div
-        className={`relative z-10 flex items-center justify-between flex-1 min-w-0 transition-all duration-200 ${
-          isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3 pointer-events-none absolute left-12"
-        }`}
-      >
-        <span className="truncate whitespace-nowrap text-xs font-medium text-[var(--text-primary)]">
-          {label}
-        </span>
-        {badge}
-      </div>
+      {/* Label and badge when expanded with smooth fade in */}
+      {isOpen && (
+        <div className="relative z-10 flex items-center justify-between flex-1 min-w-0 transition-opacity duration-200">
+          <span className="truncate whitespace-nowrap text-xs font-medium text-[var(--text-primary)]">
+            {label}
+          </span>
+          {badge}
+        </div>
+      )}
 
       {/* Tooltip when collapsed */}
       {!isOpen && (

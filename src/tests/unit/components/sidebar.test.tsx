@@ -104,4 +104,19 @@ describe("Sidebar Navigation Component", () => {
     const settingsLink = screen.getByRole("link", { name: /System Intelligence Settings/i });
     expect(settingsLink.style.color).toBe("var(--accent)");
   });
+
+  it("renders matching badge indicators for Copilot (cyan) and Live intelligence (rose) in collapsed state", () => {
+    const { container } = render(<Sidebar />);
+
+    // In collapsed rail, Copilot has a cyan dot and Intelligence has a rose dot
+    const cyanPings = container.querySelectorAll(".bg-cyan-400");
+    const cyanDots = container.querySelectorAll(".bg-cyan-500");
+    expect(cyanPings.length).toBeGreaterThan(0);
+    expect(cyanDots.length).toBeGreaterThan(0);
+
+    const rosePings = container.querySelectorAll(".bg-rose-400");
+    const roseDots = container.querySelectorAll(".bg-rose-500");
+    expect(rosePings.length).toBeGreaterThan(0);
+    expect(roseDots.length).toBeGreaterThan(0);
+  });
 });
