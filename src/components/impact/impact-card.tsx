@@ -36,10 +36,10 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
   const isElevated = impact?.relevanceStatus === "likely" || impact?.relevanceStatus === "possible";
 
   const relevanceStyles = isConfirmed
-    ? { color: "#F87171", bg: "rgba(239, 68, 68, 0.15)", border: "rgba(239, 68, 68, 0.35)" }
+    ? { color: "var(--status-danger)", bg: "rgba(239, 68, 68, 0.15)", border: "rgba(239, 68, 68, 0.35)" }
     : isElevated
-    ? { color: "#FBBF24", bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.35)" }
-    : { color: "var(--text-tertiary)", bg: "var(--surface-3)", border: "var(--border-subtle)" };
+    ? { color: "var(--status-warning)", bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.35)" }
+    : { color: "var(--text-secondary)", bg: "var(--surface-3)", border: "var(--border-subtle)" };
 
   return (
     <section
@@ -53,7 +53,7 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
             <ShieldAlert
               size={16}
               style={{
-                color: relevanceStyles.color !== "var(--text-tertiary)" ? relevanceStyles.color : "var(--text-secondary)",
+                color: relevanceStyles.color !== "var(--text-secondary)" ? relevanceStyles.color : "var(--text-secondary)",
               }}
             />
             <h3 className="text-xs uppercase font-bold tracking-wider text-[var(--text-primary)]">
@@ -61,14 +61,7 @@ export function ImpactCard({ location }: { location?: NormalizedLocation | null 
             </h3>
           </div>
 
-          <span
-            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-            style={{
-              background: "var(--accent-surface)",
-              color: "var(--accent)",
-              border: "1px solid var(--accent-border)",
-            }}
-          >
+          <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
             <CheckCircle2 size={11} strokeWidth={2.5} /> {t("impact.grounded", "Grounded")}
           </span>
         </div>

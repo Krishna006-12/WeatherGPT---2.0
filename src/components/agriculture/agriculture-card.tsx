@@ -81,15 +81,8 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
             <h3 className="wg-section-label">{t("agri.title", "Agriculture")}</h3>
           </div>
 
-          <span
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
-            style={{
-              background: "hsla(160, 60%, 50%, 0.1)",
-              color: "var(--status-success)",
-              border: "1px solid hsla(160, 60%, 50%, 0.2)",
-            }}
-          >
-            <CheckCircle2 size={10} strokeWidth={2.5} /> {t("risk.verified", "Grounded")}
+          <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+            <CheckCircle2 size={11} strokeWidth={2.5} /> {t("risk.verified", "Grounded")}
           </span>
         </div>
 
@@ -145,10 +138,11 @@ export function AgricultureCard({ location }: { location?: NormalizedLocation | 
                     <span>{act.label}</span>
                   </div>
                   <span
-                    className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
-                    style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}
+                    className="flex items-center gap-1 text-[11px] font-semibold capitalize"
+                    style={{ color: st.color }}
                   >
-                    {act.data.status}
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.color }} />
+                    <span>{act.data.status}</span>
                   </span>
                 </div>
                 <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
