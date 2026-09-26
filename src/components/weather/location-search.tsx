@@ -77,9 +77,9 @@ export function LocationSearch({
               setSearchTerm("");
               setIsOpen(true);
             }}
-            className="absolute right-2.5 p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors"
+            className="absolute right-1.5 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-colors"
           >
-            <X size={13} />
+            <X size={14} />
           </button>
         )}
       </div>

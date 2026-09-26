@@ -291,11 +291,11 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         {/* Source & Grounding Provenance (Section 15: Trust & Data Provenance) */}
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-pulse" />
+            <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-pulse" />
             <span className="font-semibold text-[11px] tracking-wide uppercase">Open-Meteo Verified</span>
           </span>
           <span className="text-[var(--border-default)]">•</span>
-          <span className="text-[11px] font-mono text-[var(--text-tertiary)]">
+          <span className="text-[11px] font-mono text-[var(--text-secondary)]">
             ECMWF / GFS High-Res
           </span>
         </div>
@@ -303,9 +303,9 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         {/* High / Low & Feels-Like Telemetry Pill */}
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)] font-medium text-[11px] text-[var(--text-secondary)]">
           <span>Feels like <strong className="text-[var(--text-primary)]">{feelsLike}°</strong></span>
-          <span className="text-[var(--text-tertiary)]">•</span>
+          <span className="text-[var(--text-secondary)]">•</span>
           <span>H: <strong className="text-[var(--text-primary)]">{tempHigh}°</strong></span>
-          <span className="text-[var(--text-tertiary)]">L: <strong className="text-[var(--text-primary)]">{tempLow}°</strong></span>
+          <span className="text-[var(--text-secondary)]">L: <strong className="text-[var(--text-primary)]">{tempLow}°</strong></span>
         </div>
       </div>
 
@@ -334,7 +334,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
         <div className="lg:col-span-7 flex flex-col justify-center">
           {/* Location & Time Hierarchy */}
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-tertiary)]">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)]">
               <MapPin size={13} className="text-[var(--accent)] shrink-0" />
               <span>{localizedLoc.fullDisplayName}</span>
               <span>•</span>
@@ -361,7 +361,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                 {conditionLabel}
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)] w-fit">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                 {current.humidity > 65
                   ? t("hero.precip_active", "Precipitation in Progress")
                   : t("hero.stable_atmosphere", "Atmospheric Equilibrium")}
@@ -373,7 +373,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 sm:mt-6">
             {/* 1. Humidity */}
             <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] mb-1">
                 <span className="flex items-center gap-1">
                   <Droplets size={12} className="text-blue-500" />
                   <span>Humidity</span>
@@ -387,7 +387,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
             {/* 2. Wind */}
             <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] mb-1">
                 <span className="flex items-center gap-1">
                   <Wind size={12} className="text-cyan-500" />
                   <span>Wind</span>
@@ -395,13 +395,13 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                 <span className="text-[10px] font-semibold text-cyan-500">{current.windDirection ?? "NE"}</span>
               </div>
               <span className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight">
-                {Math.round(current.windSpeed)} <span className="text-xs font-normal text-[var(--text-tertiary)]">km/h</span>
+                {Math.round(current.windSpeed)} <span className="text-xs font-normal text-[var(--text-secondary)]">km/h</span>
               </span>
             </div>
 
             {/* 3. Precipitation Probability */}
             <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] mb-1">
                 <span className="flex items-center gap-1">
                   <CloudRain size={12} className="text-indigo-400" />
                   <span>Precip.</span>
@@ -415,7 +415,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
             {/* 4. UV Index */}
             <div className="flex flex-col p-2.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-              <div className="flex items-center justify-between text-[11px] text-[var(--text-tertiary)] mb-1">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] mb-1">
                 <span className="flex items-center gap-1">
                   <Sun size={12} className="text-amber-500" />
                   <span>UV Index</span>
@@ -451,8 +451,8 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           </div>
 
           {/* Contextual Environmental Tip */}
-          <div className="mt-3 text-[11px] text-[var(--text-tertiary)] text-center flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: mascot.accentColor }} />
+          <div className="mt-3 text-[11px] text-[var(--text-secondary)] text-center flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+            <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full" style={{ background: mascot.accentColor }} />
             <span className="truncate">{mascot.activityTip}</span>
           </div>
         </div>
@@ -460,7 +460,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
       {/* ── Section 9: Proper Live Weather Signal / Intelligence Insight ── */}
       <div className="relative z-10 mt-6 pt-5 border-t border-[var(--border-subtle)]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--surface-2)]/80 border border-[var(--border-subtle)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-subtle)]">
           <div className="flex items-start gap-3">
             <div
               className={`p-2 rounded-xl shrink-0 mt-0.5 ${

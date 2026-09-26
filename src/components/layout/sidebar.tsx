@@ -216,7 +216,7 @@ export function Sidebar() {
           )}
 
           {/* Main navigation list */}
-          <nav aria-label="Main Sections" className="flex flex-col gap-1.5 w-full">
+          <nav aria-label="Main Sections" className="flex flex-col gap-2 w-full">
             {navItems.map((item) => (
               <NavLink
                 key={item.href}
@@ -271,10 +271,10 @@ function NavLink({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`relative flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group transition-all duration-200 overflow-hidden ${
+      className={`relative flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group transition-all duration-200 overflow-hidden shrink-0 ${
         isOpen
-          ? "px-3 py-2.5 gap-3.5 w-full justify-start text-xs font-medium"
-          : "justify-center w-11 h-11 mx-auto"
+          ? "px-3 py-2.5 gap-3.5 w-full justify-start text-xs font-medium min-h-[44px]"
+          : "justify-center w-11 h-11 min-h-[44px] min-w-[44px] mx-auto"
       }`}
       style={{
         color: active ? "var(--accent)" : "var(--text-secondary)",

@@ -50,7 +50,10 @@ export function HourlyForecastCard({ weather, isLoading }: { weather?: WeatherSn
         <div className="absolute left-0 right-0 top-[46px] h-px bg-[var(--border-subtle)] pointer-events-none" />
 
         <div
-          className="flex overflow-x-auto pb-2 pt-1 gap-1 wg-hide-scroll snap-x scroll-smooth"
+          tabIndex={0}
+          role="region"
+          aria-label={t("forecast.hourly_timeline", "Hourly forecast timeline")}
+          className="flex overflow-x-auto pb-2 pt-1 gap-1 wg-hide-scroll snap-x scroll-smooth focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-xl"
           style={{ scrollBehavior: "smooth" }}
         >
           {hourly.map((h) => {

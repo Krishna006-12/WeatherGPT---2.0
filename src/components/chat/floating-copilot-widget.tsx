@@ -112,7 +112,7 @@ export function FloatingCopilotWidget() {
           onClick={handleToggle}
           aria-label="Open WeatherGPT AI Copilot"
           aria-expanded={false}
-          aria-controls="floating-copilot-flyout"
+          aria-controls={isOpen ? "floating-copilot-flyout" : undefined}
           aria-haspopup="dialog"
           className="fixed z-40 bottom-20 right-3.5 sm:bottom-6 sm:right-6 group select-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0c0f17] animate-[wg-pill-spring-in_260ms_cubic-bezier(0.34,1.35,0.64,1)_forwards] wg-tactile-press"
         >
