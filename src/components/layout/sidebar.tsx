@@ -128,11 +128,11 @@ export function Sidebar() {
 
   return (
     <>
-      {/* High-performance background overlay when sidebar expands on hover */}
+      {/* Subtle glass background blur overlay when sidebar expands on hover */}
       <div
         aria-hidden="true"
         onClick={() => setIsHovered(false)}
-        className={`fixed inset-0 z-25 bg-black/20 transition-opacity duration-200 ease-out hidden md:block ${
+        className={`fixed inset-0 z-25 backdrop-blur-[2px] bg-black/25 transition-opacity duration-200 ease-out hidden md:block will-change-[opacity] ${
           isBackdropActive
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
