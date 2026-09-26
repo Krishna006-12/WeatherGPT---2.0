@@ -11,6 +11,10 @@ export interface AICompletionOptions {
   maxTokens?: number;
   timeoutMs?: number;
   jsonMode?: boolean;
+  image?: {
+    mimeType: string;
+    data: string; // Base64 encoded string
+  };
 }
 
 /**

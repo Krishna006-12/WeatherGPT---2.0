@@ -369,10 +369,31 @@ export class AIOrchestrator {
       let updatedContext: ConversationContext;
 
       try {
+        let imageOption: { mimeType: string; data: string } | undefined;
+        if (request.image) {
+          const match = request.image.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            imageOption = {
+              mimeType: match[1],
+              data: match[2],
+            };
+          } else {
+            imageOption = {
+              mimeType: "image/jpeg",
+              data: request.image,
+            };
+          }
+          citations.unshift({
+            title: "Visual Sky & Cloud Formation Analysis",
+            source: "Multimodal Gemini Vision",
+            publishedAt: generatedAt,
+          });
+        }
+
         const rawCompletion = await this.aiProvider.generateCompletion(
           prompt,
           systemInstruction,
-          { jsonMode: true }
+          { jsonMode: true, image: imageOption }
         );
 
         const parsed = this.parseModelOutput(rawCompletion);

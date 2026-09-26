@@ -179,4 +179,5 @@ export interface ChatRequest {
   channel?: PromptChannel;
   language?: SupportedLanguage;
   persona?: PersonaId;
+  image?: string;
 }

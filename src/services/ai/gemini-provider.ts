@@ -75,11 +75,22 @@ export class GeminiProvider implements AIProvider {
         : cleanModel || DEFAULT_MODEL;
     const timeout = options.timeoutMs || this.timeoutMs;
 
+    const userParts: Array<Record<string, unknown>> = [{ text: prompt }];
+
+    if (options.image && options.image.data) {
+      userParts.unshift({
+        inlineData: {
+          mimeType: options.image.mimeType || "image/jpeg",
+          data: options.image.data,
+        },
+      });
+    }
+
     const body: Record<string, unknown> = {
       contents: [
         {
           role: "user",
-          parts: [{ text: prompt }],
+          parts: userParts,
         },
       ],
       generationConfig: {

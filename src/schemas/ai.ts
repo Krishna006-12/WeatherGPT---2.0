@@ -112,13 +112,14 @@ export const chatLocationSchema = z.object({
 });
 
 export const chatRequestSchema = z.object({
-  message: z.string().min(1, "Message cannot be empty").max(1000, "Message too long (max 1000 chars)"),
+  message: z.string().min(1, "Message cannot be empty").max(2000, "Message too long (max 2000 chars)"),
   location: chatLocationSchema.optional(),
   context: conversationContextSchema.optional(),
   sessionId: z.string().optional(),
   channel: promptChannelSchema.optional(),
   language: z.enum(["en", "hi", "pa", "hi-en"]).optional(),
-  persona: z.enum(["general_public", "farmer", "disaster_manager"]).optional(),
+  persona: z.enum(["general_public", "farmer", "disaster_manager", "runner", "pilot"]).optional(),
+  image: z.string().max(8000000, "Image data too large").optional(), // Base64 data URL
 });
 
 
