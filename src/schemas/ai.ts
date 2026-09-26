@@ -118,7 +118,7 @@ export const chatRequestSchema = z.object({
   sessionId: z.string().optional(),
   channel: promptChannelSchema.optional(),
   language: z.enum(["en", "hi", "pa", "hi-en"]).optional(),
-  persona: z.enum(["general_public", "farmer", "disaster_manager", "runner", "pilot"]).optional(),
+  persona: z.enum(["general_public", "farmer", "disaster_manager"]).optional(),
   image: z.string().max(8000000, "Image data too large").optional(), // Base64 data URL
 });
 

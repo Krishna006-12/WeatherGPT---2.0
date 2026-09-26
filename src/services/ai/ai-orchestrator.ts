@@ -372,7 +372,7 @@ export class AIOrchestrator {
         let imageOption: { mimeType: string; data: string } | undefined;
         if (request.image) {
           const match = request.image.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
+          if (match && match[1] && match[2]) {
             imageOption = {
               mimeType: match[1],
               data: match[2],
