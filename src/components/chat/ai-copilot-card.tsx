@@ -249,10 +249,10 @@ export function AICopilotCard({
               <MessageSquare size={16} />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-[14px] sm:text-[15px] flex items-center gap-1.5 sm:gap-2 tracking-tight truncate" style={{ color: "var(--accent)" }}>
+              <h2 className="font-bold text-sm sm:text-base flex items-center gap-1.5 sm:gap-2 tracking-tight truncate" style={{ color: "var(--accent)" }}>
                 {t("copilot.title", "Copilot")}
                 <span
-                  className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider shrink-0"
+                  className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase tracking-wider shrink-0"
                   style={{
                     background: "var(--accent-surface)",
                     color: "var(--accent)",
@@ -260,8 +260,8 @@ export function AICopilotCard({
                 >
                   Live
                 </span>
-              </h3>
-              <p className="text-[11px] sm:text-xs font-medium truncate" style={{ color: "var(--text-tertiary)" }}>
+              </h2>
+              <p className="text-xs font-medium truncate" style={{ color: "var(--text-tertiary)" }}>
                 {isFarmer ? t("user.farmer_mode", "Farmer Intelligence") : "Intelligence"} for {locationLabel}
               </p>
             </div>

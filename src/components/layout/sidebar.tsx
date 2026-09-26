@@ -140,7 +140,7 @@ export function Sidebar() {
       {/* Persistent rail placeholder in document flow so main dashboard doesn't jump */}
       <div
         className={`hidden md:block shrink-0 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isPinned ? "w-60" : "w-[72px]"
+          isPinned ? "w-64" : "w-[72px]"
         }`}
       >
         {/* Dynamic expanding sidebar */}
@@ -150,7 +150,7 @@ export function Sidebar() {
           aria-label="Sidebar Navigation"
           className={`fixed top-0 left-0 h-full flex flex-col py-5 select-none z-30 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isOpen
-              ? "w-60 px-3 items-stretch shadow-[12px_0_36px_rgba(0,0,0,0.5)]"
+              ? "w-64 px-3 items-stretch shadow-[12px_0_36px_rgba(0,0,0,0.5)]"
               : "w-[72px] px-2 items-center shadow-none"
           }`}
           style={{
@@ -316,7 +316,7 @@ function NavLink({
           isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3 pointer-events-none absolute left-12"
         }`}
       >
-        <span className="truncate text-xs font-medium text-[var(--text-primary)]">
+        <span className="truncate whitespace-nowrap text-xs font-medium text-[var(--text-primary)]">
           {label}
         </span>
         {badge}

@@ -82,12 +82,12 @@ export function LiveEventCard() {
                 }`}
               />
             </span>
-            <h3
+            <h2
               className="text-xs uppercase font-bold tracking-wider"
               style={{ color: isHighSeverity ? "var(--status-danger)" : "var(--text-primary)" }}
             >
               {t("intel.bulletin", "Live Intelligence Bulletin")}
-            </h3>
+            </h2>
           </div>
 
           <span
@@ -106,9 +106,9 @@ export function LiveEventCard() {
           <span className="text-xs font-semibold text-[var(--text-tertiary)] block mb-1">
             {t("intel.hazard_condition", "Hazard Condition")}
           </span>
-          <h4 className="text-base sm:text-lg font-semibold leading-snug text-[var(--text-primary)]">
+          <h3 className="text-base sm:text-lg font-semibold leading-snug text-[var(--text-primary)]">
             {event.title}
-          </h4>
+          </h3>
           <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] mt-1.5">
             <MapPin size={13} className="text-[var(--text-tertiary)] shrink-0" />
             <span className="font-medium">{locationText}</span>

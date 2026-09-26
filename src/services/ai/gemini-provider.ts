@@ -74,10 +74,6 @@ export class GeminiProvider implements AIProvider {
         ? DEFAULT_MODEL
         : cleanModel || DEFAULT_MODEL;
     const timeout = options.timeoutMs || this.timeoutMs;
-    const endpoint = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
 
     const body: Record<string, unknown> = {
       contents: [
@@ -99,66 +95,105 @@ export class GeminiProvider implements AIProvider {
       };
     }
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
+    const candidateModels = [
+      model,
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ].filter((m, i, arr) => arr.indexOf(m) === i);
 
-      clearTimeout(timer);
+    let lastError: unknown;
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new AppError("AI_RATE_LIMITED", "Gemini API rate limit exceeded", 429);
+    for (const activeModel of candidateModels) {
+      const endpoint = `${GEMINI_API_BASE_URL}/models/${activeModel}:generateContent?key=${encodeURIComponent(key)}`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timer);
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new AppError("AI_RATE_LIMITED", "Gemini API rate limit exceeded", 429);
+          }
+
+          const errorText = await response.text().catch(() => "Unknown error");
+          console.warn(`[GeminiProvider] API request to ${activeModel} failed (status ${response.status}): ${errorText.slice(0, 160)}`);
+
+          // If model was not found (404) or bad request due to unsupported model/config (400), try fallback model
+          if ((response.status === 404 || response.status === 400) && activeModel !== candidateModels[candidateModels.length - 1]) {
+            lastError = new AppError(
+              "AI_PROVIDER_UNAVAILABLE",
+              `Gemini API model ${activeModel} returned status ${response.status}`,
+              502
+            );
+            continue;
+          }
+
+          throw new AppError(
+            "AI_PROVIDER_UNAVAILABLE",
+            `Gemini API returned status ${response.status}: ${errorText.slice(0, 200)}`,
+            502
+          );
         }
 
-        const errorText = await response.text().catch(() => "Unknown error");
-        console.error(`[GeminiProvider] API request to ${model} failed (status ${response.status}):`, errorText);
-        throw new AppError(
-          "AI_PROVIDER_UNAVAILABLE",
-          `Gemini API returned status ${response.status}: ${errorText.slice(0, 200)}`,
-          502
-        );
+        const data = await response.json();
+        const candidate = data.candidates?.[0];
+
+        if (!candidate || !candidate.content?.parts?.[0]?.text) {
+          const finishReason = candidate?.finishReason || "NO_CANDIDATES";
+          console.warn(`[GeminiProvider] Candidate missing text. Finish reason: ${finishReason}`);
+          throw new AppError(
+            "AI_RESPONSE_INVALID",
+            `Gemini response did not contain valid text candidates (finishReason: ${finishReason})`,
+            422
+          );
+        }
+
+        return candidate.content.parts[0].text;
+      } catch (err: unknown) {
+        clearTimeout(timer);
+        lastError = err;
+
+        if (err instanceof AppError && err.code === "AI_RATE_LIMITED") {
+          throw err;
+        }
+
+        // If abort timeout, throw directly
+        if (err instanceof Error && err.name === "AbortError") {
+          throw new AppError(
+            "AI_PROVIDER_UNAVAILABLE",
+            `Gemini API request timed out after ${timeout}ms`,
+            504
+          );
+        }
+
+        // If more candidate models exist and error was 404/400, continue to next model
+        if (err instanceof AppError && err.statusCode === 502 && activeModel !== candidateModels[candidateModels.length - 1]) {
+          continue;
+        }
+
+        throw err instanceof AppError
+          ? err
+          : new AppError(
+              "AI_PROVIDER_UNAVAILABLE",
+              err instanceof Error ? err.message : "Network error contacting Gemini API",
+              502
+            );
       }
-
-      const data = await response.json();
-      const candidate = data.candidates?.[0];
-
-      if (!candidate || !candidate.content?.parts?.[0]?.text) {
-        const finishReason = candidate?.finishReason || "NO_CANDIDATES";
-        console.warn(`[GeminiProvider] Candidate missing text. Finish reason: ${finishReason}`);
-        throw new AppError(
-          "AI_RESPONSE_INVALID",
-          `Gemini response did not contain valid text candidates (finishReason: ${finishReason})`,
-          422
-        );
-      }
-
-      return candidate.content.parts[0].text;
-    } catch (err: unknown) {
-      clearTimeout(timer);
-
-      if (err instanceof AppError) {
-        throw err;
-      }
-
-      if (err instanceof Error && err.name === "AbortError") {
-        throw new AppError(
-          "AI_PROVIDER_UNAVAILABLE",
-          `Gemini API request timed out after ${timeout}ms`,
-          504
-        );
-      }
-
-      throw new AppError(
-        "AI_PROVIDER_UNAVAILABLE",
-        err instanceof Error ? err.message : "Network error contacting Gemini API",
-        502
-      );
     }
+
+    throw lastError instanceof AppError
+      ? lastError
+      : new AppError("AI_PROVIDER_UNAVAILABLE", "All candidate Gemini models failed", 502);
   }
 }

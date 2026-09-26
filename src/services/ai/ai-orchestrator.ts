@@ -176,7 +176,7 @@ export class AIOrchestrator {
       let modelConsensus: ModelConsensusReport | undefined;
       let activitySuitability: ActivitySuitabilityReport | undefined;
 
-      // If location is unknown, fail fast with insufficient evidence without executing weather tools
+      // If location is unknown, or agricultural query without coordinates, return deterministic fallback
       if (locationState.locationNotFound || (intent === "agriculture" && !targetLocation?.coordinates)) {
         return this.generateDeterministicFallback({
           userQuery: message,
@@ -1162,16 +1162,36 @@ export class AIOrchestrator {
         answer += `\n\n${personaAdvisory}`;
       }
     } else if (context.language === "hi") {
+      const qLower = (context.userQuery || "").toLowerCase();
+      const isIrrig = /\b(irrigation|irragitaion|irrigate|watering|sinchai|paani|pani)\b/i.test(qLower);
+      const isAgri = isIrrig || /\b(sowing|sow|planting|harvesting|spray|kheti|khet|fasal|crop|crops|mitti|soil)\b/i.test(qLower);
+
       if (isGreeting) {
-        answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ, आपका मौसम और आपदा खुफिया सहायक। आप मुझसे मौसम, पूर्वानुमान या क्षेत्रीय आपदा प्रभाव के बारे में पूछ सकते हैं।`;
-      } else if (context.locationNotFound) {
-        answer = `"${locName}" के लिए सत्यापित भौगोलिक स्थान या मौसम अवलोकन नहीं मिल सका। कृपया स्थान के नाम की पुष्टि करें और पुनः प्रयास करें।`;
+        answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ, आपका मौसम और आपदा खुफिया सहायक। आप मुझसे मौसम, पूर्वानुमान या कृषि सलाह के बारे में पूछ सकते हैं।`;
+      } else if (context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)) {
+        if (isIrrig) {
+          answer = `${locName && locName !== "your location" ? `${locName} में ` : ""}सिंचाई करनी चाहिए या नहीं, यह मुख्य रूप से मिट्टी की नमी और आगामी मौसम पर निर्भर करता है।\n\nमहत्वपूर्ण सुझाव:\n1. मिट्टी की नमी की जांच: 2-3 इंच गहराई तक मिट्टी जांचें। यदि मिट्टी भुरभुरी है और लड्डू नहीं बनता, तो हल्की सिंचाई करें।\n2. बारिश का पूर्वानुमान: यदि अगले 24-48 घंटों में बारिश की संभावना है, तो सिंचाई रोकें ताकि जलभराव न हो।\n3. सही समय: सिंचाई हमेशा सुबह जल्दी या शाम के समय करें जिससे वाष्पीकरण कम हो।`;
+        } else if (isAgri) {
+          answer = `${locName && locName !== "your location" ? `${locName} में ` : ""}कृषि कार्यों के लिए खेत की मिट्टी की नमी और अगले 48 घंटों में बारिश के अनुमान को ध्यान में रखकर ही निर्णय लें।`;
+        } else {
+          answer = `"${locName}" के लिए मौसम अवलोकन प्राप्त करने का प्रयास कर रहा हूँ। कृपया विशिष्ट क्षेत्र या मौसम का सवाल पूछें।`;
+        }
       }
     } else if (context.language === "hi-en") {
+      const qLower = (context.userQuery || "").toLowerCase();
+      const isIrrig = /\b(irrigation|irragitaion|irrigate|watering|sinchai|paani|pani)\b/i.test(qLower);
+      const isAgri = isIrrig || /\b(sowing|sow|planting|harvesting|spray|kheti|khet|fasal|crop|crops|mitti|soil)\b/i.test(qLower);
+
       if (isGreeting) {
-        answer = `Namaste! Main WeatherGPT Copilot hoon, aapka weather aur disaster intelligence assistant. Aap mujhse live weather, forecast ya regional disaster impact ke baare me pooch sakte hain.`;
-      } else if (context.locationNotFound) {
-        answer = `"${locName}" ke liye verified geographical location ya weather observations nahi mil sake. Please location name check karke dobara try karein.`;
+        answer = `Namaste! Main WeatherGPT Copilot hoon, aapka weather aur agriculture intelligence assistant. Aap mujhse live weather, forecast ya kheti/fasal advisory ke baare me pooch sakte hain.`;
+      } else if (context.locationNotFound || (context.targetLocation && !context.weather && !context.targetLocation.coordinates)) {
+        if (isIrrig) {
+          answer = `${locName && locName !== "your location" ? `${locName} me ` : ""}abhi irrigation karna hai ya nahi, yeh is baat par depend karta hai ki mitti me kitni nami (soil moisture) hai aur aane wale dino ka weather kaisa hai.\n\nKuch practical baatein:\n1. Mitti ki nami check karein: Khet ya garden ki mitti ko 2-3 inch gehraai se check karein. Agar mitti haath me lene par bikharti hai, to paani dena chahiye.\n2. Rain forecast: Agar agle 24-48 ghanto me barish ki sambhavna hai, to abhi paani mat dijiye taaki root waterlogging na ho.\n3. Sahi samay: Irrigation hamesha subah jaldi ya shaam ko karein taaki dhoop se evaporation kam ho.`;
+        } else if (isAgri) {
+          answer = `${locName && locName !== "your location" ? `${locName} me ` : ""}kheti/fasal ke kaam ke liye topsoil moisture aur agle 48 ghante me rainfall forecast dekhkar hi faisla lein.`;
+        } else {
+          answer = `"${locName}" ke liye location check ki ja rahi hai. Aap weather, barish ya farming advisory ke baare me pooch sakte hain.`;
+        }
       }
     }
 

@@ -137,7 +137,7 @@ export function FloatingCopilotWidget() {
               <span className="text-xs sm:text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
                 {t("copilot.floating_btn", "Ask WeatherGPT")}
               </span>
-              <span className="hidden xl:inline text-[10px] text-neutral-500 dark:text-neutral-400 font-normal leading-tight">
+              <span className="hidden xl:inline text-xs text-neutral-500 dark:text-neutral-400 font-normal leading-tight">
                 Understand risk, crops & forecast
               </span>
             </div>
@@ -145,7 +145,7 @@ export function FloatingCopilotWidget() {
             {/* Keyboard Shortcut Tag (Desktop only) */}
             <kbd
               aria-hidden="true"
-              className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-neutral-100 dark:bg-white/10 text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-white/10 transition-colors group-hover:border-cyan-400/30 ml-0.5"
+              className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-mono font-medium rounded bg-neutral-100 dark:bg-white/10 text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-white/10 transition-colors group-hover:border-cyan-400/30 ml-0.5"
             >
               ⌘K
             </kbd>

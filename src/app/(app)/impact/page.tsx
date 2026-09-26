@@ -26,7 +26,7 @@ export default function ImpactPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 sm:pb-32">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-1">
           {t("impact.title", "Regional Risk & Impact Analysis")}
@@ -39,19 +39,19 @@ export default function ImpactPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Disaster & Infrastructure Impact */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[var(--text-primary)] font-medium text-sm">
+          <h2 className="flex items-center gap-2 text-[var(--text-primary)] font-medium text-sm">
             <Shield size={18} className="text-cyan-400" />
             <span>{t("impact.hazard_vuln", "Hazard & Event Vulnerability")}</span>
-          </div>
+          </h2>
           <ImpactCard location={selectedLocation} />
         </div>
 
         {/* Agricultural & Crop Intelligence */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[var(--text-primary)] font-medium text-sm">
+          <h2 className="flex items-center gap-2 text-[var(--text-primary)] font-medium text-sm">
             <Sprout size={18} className="text-emerald-400" />
             <span>{t("impact.agri_vuln", "Agronomic & Agricultural Vulnerability")}</span>
-          </div>
+          </h2>
           <AgricultureCard location={selectedLocation} />
         </div>
       </div>

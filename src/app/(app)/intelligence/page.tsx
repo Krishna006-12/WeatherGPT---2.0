@@ -29,10 +29,12 @@ export default function IntelligencePage() {
               <ShieldCheck size={15} />
               <span className="font-medium">{t("intel.push_active", "Emergency Push Active")}</span>
               <button
+                type="button"
                 onClick={() => testEmergencyNotification()}
-                className="ml-1 text-[10px] text-cyan-400 hover:underline flex items-center gap-0.5"
+                aria-label="Test emergency notification sound and push"
+                className="ml-1.5 px-2 py-0.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-xs text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <Volume2 size={11} />
+                <Volume2 size={13} />
                 <span>Test</span>
               </button>
             </div>

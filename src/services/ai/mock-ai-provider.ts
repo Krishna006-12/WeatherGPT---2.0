@@ -20,6 +20,10 @@ export class MockAIProvider implements AIProvider {
     this.options = options;
   }
 
+  hasValidKey(): boolean {
+    return this.options.simulateError !== "unavailable";
+  }
+
   setOptions(options: MockAIProviderOptions): void {
     this.options = options;
   }

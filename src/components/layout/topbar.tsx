@@ -97,7 +97,7 @@ export function Topbar({
             <span>{t("topbar.synoptic_grid", "Synoptic Grid Active")}</span>
           </div>
           <span className="text-[var(--border-default)]">•</span>
-          <span className="text-[11px] text-[var(--text-secondary)] font-mono">
+          <span className="text-xs text-[var(--text-secondary)] font-mono">
             {t("topbar.model_blend", "ECMWF / GFS")}
           </span>
         </div>
