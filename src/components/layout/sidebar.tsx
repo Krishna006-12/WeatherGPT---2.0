@@ -55,7 +55,7 @@ export function Sidebar() {
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsHovered(false);
-    }, 120);
+    }, 80);
   };
 
   const handleLinkClick = () => {
@@ -128,12 +128,11 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Subtle background blur overlay when sidebar expands on hover */}
+      {/* High-performance background overlay when sidebar expands on hover */}
       <div
         aria-hidden="true"
         onClick={() => setIsHovered(false)}
-        onMouseEnter={() => setIsHovered(false)}
-        className={`fixed inset-0 z-25 backdrop-blur-[2.5px] bg-black/25 transition-opacity duration-300 ease-out hidden md:block ${
+        className={`fixed inset-0 z-25 bg-black/20 transition-opacity duration-200 ease-out hidden md:block ${
           isBackdropActive
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -142,54 +141,65 @@ export function Sidebar() {
 
       {/* Persistent rail placeholder in document flow so main dashboard doesn't jump */}
       <div
-        className={`hidden md:block shrink-0 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`hidden md:block shrink-0 transition-[width] duration-200 ease-out will-change-[width] ${
           isPinned ? "w-64" : "w-[72px]"
         }`}
       >
-        {/* Dynamic expanding sidebar */}
+        {/* Dynamic expanding sidebar with hardware-accelerated width and zero-reflow shadow */}
         <aside
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           aria-label="Sidebar Navigation"
-          className={`fixed top-0 left-0 h-full flex flex-col py-5 select-none z-30 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`fixed top-0 left-0 h-full flex flex-col py-5 select-none z-30 transition-[width] duration-200 ease-out will-change-[width] ${
             isOpen
-              ? "w-64 px-3 items-stretch shadow-[12px_0_36px_rgba(0,0,0,0.5)]"
-              : "w-[72px] px-2 items-center shadow-none"
+              ? "w-64 px-3 items-stretch"
+              : "w-[72px] px-2 items-center"
           }`}
           style={{
             background: "var(--surface-1)",
             borderRight: "1px solid var(--border-subtle)",
           }}
         >
+          {/* Hardware-accelerated smooth elevation shadow that uses opacity to avoid layout reflows */}
+          <div
+            className={`absolute inset-0 -z-10 shadow-[12px_0_36px_rgba(0,0,0,0.45)] transition-opacity duration-200 pointer-events-none ${
+              isOpen && !isPinned ? "opacity-100" : "opacity-0"
+            }`}
+          />
+
           {/* Brand Logo & Header */}
-          {isOpen ? (
-            <div className="flex items-center justify-between px-2 mb-6 w-full animate-in fade-in duration-200">
-              <Link
-                href="/dashboard"
-                onClick={handleLinkClick}
-                aria-label="WeatherGPT Home"
-                title="WeatherGPT Home"
-                className="p-1 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105 flex items-center gap-2.5 min-w-0"
-              >
-                <img
-                  src="/icon.svg"
-                  alt="WeatherGPT 2.0"
-                  width={28}
-                  height={28}
-                  className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)] shrink-0"
-                />
-                <span className="font-bold text-sm tracking-tight text-[var(--text-primary)] truncate">
+          <div className="flex items-center justify-between px-1.5 mb-6 w-full min-h-[36px]">
+            <Link
+              href="/dashboard"
+              onClick={handleLinkClick}
+              aria-label="WeatherGPT Home"
+              title="WeatherGPT Home"
+              className={`rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative flex items-center gap-2.5 transition-transform duration-150 hover:scale-105 ${
+                isOpen ? "p-1 min-w-0 flex-1" : "p-1 mx-auto justify-center"
+              }`}
+            >
+              <img
+                src="/icon.svg"
+                alt="WeatherGPT 2.0"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)] shrink-0"
+              />
+              {isOpen && (
+                <span className="font-bold text-sm tracking-tight text-[var(--text-primary)] truncate animate-in fade-in duration-150">
                   WeatherGPT <span className="text-[var(--accent)] text-xs font-semibold">2.0</span>
                 </span>
-              </Link>
+              )}
+            </Link>
 
+            {isOpen && (
               <button
                 type="button"
                 onClick={() => setIsPinned(!isPinned)}
                 aria-expanded={isOpen}
                 aria-label={isPinned ? "Unpin navigation sidebar" : "Pin navigation sidebar"}
                 title={isPinned ? "Unpin sidebar" : "Pin sidebar to stay open"}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors shrink-0 animate-in fade-in duration-150 ${
                   isPinned
                     ? "text-[var(--accent)] bg-[var(--accent-surface)]"
                     : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)]"
@@ -197,26 +207,9 @@ export function Sidebar() {
               >
                 {isPinned ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
               </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2.5 mb-6">
-              <Link
-                href="/dashboard"
-                onClick={handleLinkClick}
-                aria-label="WeatherGPT Home"
-                title="WeatherGPT Home"
-                className="p-1.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group relative transition-all duration-150 hover:scale-105"
-              >
-                <img
-                  src="/icon.svg"
-                  alt="WeatherGPT 2.0"
-                  width={28}
-                  height={28}
-                  className="w-7 h-7 object-contain rounded-lg drop-shadow-[0_2px_10px_rgba(56,189,248,0.35)]"
-                />
-              </Link>
-            </div>
-          )}
+            )}
+          </div>
+
 
           {/* Main navigation list */}
           <nav aria-label="Main Sections" className="flex flex-col gap-2 w-full">
