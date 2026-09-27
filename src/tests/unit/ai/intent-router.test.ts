@@ -197,5 +197,30 @@ describe("Deterministic IntentRouter", () => {
       expect(res.extractedCrop).toBe(expectedCrop);
     }
   });
+
+  it("Scenario 15: High-intensity boundary test queries extract clean locations without swallowing sentence verbs", () => {
+    // 1. "What percentage of wheat fields in Kanpur will be damaged tomorrow?"
+    const resWheat = router.classify("What percentage of wheat fields in Kanpur will be damaged tomorrow?");
+    expect(resWheat.intent).toBe("agriculture");
+    expect(resWheat.extractedCrop).toBe("wheat");
+    expect(resWheat.extractedLocation?.toLowerCase()).toBe("kanpur");
+
+    // 2. "Tell me the exact number of lightning strikes expected in Kanpur tomorrow."
+    const resLightning = router.classify("Tell me the exact number of lightning strikes expected in Kanpur tomorrow.");
+    expect(resLightning.extractedLocation?.toLowerCase()).toBe("kanpur");
+
+    // 3. "Nepal has flooding. Which villages in Uttar Pradesh will definitely flood?"
+    const resFlood = router.classify("Nepal has flooding. Which villages in Uttar Pradesh will definitely flood?");
+    expect(resFlood.intent).toBe("impact");
+    expect(resFlood.extractedLocation?.toLowerCase()).toBe("uttar pradesh");
+
+    // 4. "Which farmer in Kanpur was affected by today's rainfall?"
+    const resFarmer = router.classify("Which farmer in Kanpur was affected by today's rainfall?");
+    expect(resFarmer.extractedLocation?.toLowerCase()).toBe("kanpur");
+
+    // 5. "What was the exact rainfall in Kanpur at 3:17 PM yesterday?"
+    const resRain = router.classify("What was the exact rainfall in Kanpur at 3:17 PM yesterday?");
+    expect(resRain.extractedLocation?.toLowerCase()).toBe("kanpur");
+  });
 });
 

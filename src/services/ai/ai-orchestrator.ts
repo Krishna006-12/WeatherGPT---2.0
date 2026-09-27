@@ -679,12 +679,14 @@ export class AIOrchestrator {
         (selName === qLoc ||
           selCity === qLoc ||
           selName.startsWith(qLoc) ||
-          (selCity && qLoc.startsWith(selCity)))
+          (selCity && qLoc.startsWith(selCity)) ||
+          (selCity && qLoc.includes(selCity)) ||
+          (selName && qLoc.includes(selName)))
       ) {
         return {
           resolvedLocation: selectedLocation,
           selectedLocation,
-          queryLocationName: displayQueryLoc,
+          queryLocationName: selectedLocation.name,
           isExplicitQueryLocation: true,
           locationNotFound: false,
         };
@@ -722,6 +724,22 @@ export class AIOrchestrator {
         }
       } catch (err) {
         console.warn(`[AIOrchestrator] Geocoding lookup failed for query location "${trimmedQueryLoc}":`, err);
+      }
+
+      // If geocoding yielded no results on an overly specific or noisy phrase, but the user's message
+      // or dashboard context matches selectedLocation, gracefully retain selectedLocation
+      if (
+        selectedLocation?.coordinates &&
+        ((selCity && request.message.toLowerCase().includes(selCity)) ||
+          (selName && request.message.toLowerCase().includes(selName)))
+      ) {
+        return {
+          resolvedLocation: selectedLocation,
+          selectedLocation,
+          queryLocationName: selectedLocation.name,
+          isExplicitQueryLocation: true,
+          locationNotFound: false,
+        };
       }
 
       // Geocoding yielded no results (e.g. unknown/fictional location):

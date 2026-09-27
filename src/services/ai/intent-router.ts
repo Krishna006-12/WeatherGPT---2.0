@@ -359,7 +359,7 @@ export class IntentRouter {
       const extractedCrop = this.extractCrop(clean);
       const extractedActivity = this.extractActivity(clean);
       const cleanForLoc = clean.replace(
-        /\b(?:wheat|gehun|rice|paddy|dhan|chawal|maize|corn|makka|bhutta|potato|potatoes|aloo|mustard|sarson|rai|cotton|kapas|rui|sugarcane|ganna|eekh|chickpea|chana|gram|soybean|soya|soyabean|groundnut|mungfali|peanut|peanuts|tomato|tomatoes|tamatar|onion|onions|pyaz|kanda|chili|chilli|chilies|chillies|mirch|mirchi|tea|chai|coffee|kafi|barley|jau|sorghum|jowar|chari|pearl_millet|bajra|bajre|pigeon_pea|arhar|tur|tuvar|toor|lentil|masoor|garlic|lahsun|lehsan|jute|patson|san|mango|mangoes|aam|banana|bananas|kela|crop|crops|field|farming|farm|agriculture|agricultural|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|insecticide|fertilizer|fertilizers|harvesting|harvest|sowing|sow|planting|plant|seed|seeding|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan|bona|boyein|boye|katai|katna|kaatein|sinchai|paani|chhidkav|dawai|outdoor|precautions|precaution|weather|mausam|affect|impact|kya|aaj|kal|parso|mujhe|hoga|chahiye|chaiye)\b/gi,
+        /\b(?:wheat|gehun|rice|paddy|dhan|chawal|maize|corn|makka|bhutta|potato|potatoes|aloo|mustard|sarson|rai|cotton|kapas|rui|sugarcane|ganna|eekh|chickpea|chana|gram|soybean|soya|soyabean|groundnut|mungfali|peanut|peanuts|tomato|tomatoes|tamatar|onion|onions|pyaz|kanda|chili|chilli|chilies|chillies|mirch|mirchi|tea|chai|coffee|kafi|barley|jau|sorghum|jowar|chari|pearl_millet|bajra|bajre|pigeon_pea|arhar|tur|tuvar|toor|lentil|masoor|garlic|lahsun|lehsan|jute|patson|san|mango|mangoes|aam|banana|bananas|kela|crop|crops|field|fields|farming|farm|farmer|farmers|agriculture|agricultural|fasal|kheti|irrigation|spraying|spray|pesticide|pesticides|fungicide|insecticide|fertilizer|fertilizers|harvesting|harvest|sowing|sow|planting|plant|seed|seeding|lagani|lagana|lagayein|lagaye|lagau|ugana|ugayein|ropai|ropan|bona|boyein|boye|katai|katna|kaatein|sinchai|paani|chhidkav|dawai|outdoor|precautions|precaution|weather|mausam|affect|affected|impact|impacted|damage|damaged|damages|damaging|percentage|percent|exact|number|kya|aaj|kal|parso|mujhe|hoga|chahiye|chaiye)\b/gi,
         " "
       );
       const location = this.extractLocation(cleanForLoc);
@@ -587,6 +587,7 @@ export class IntentRouter {
       /\b(affect|effect|impacting|impacted|impacts|impact)\b/i,
       /\b(reach|threaten|threatens|threatening|hit|hitting|hits)\b/i,
       /\b(damage|damages|damaging|spread to|spread)\b/i,
+      /\b(will\s+(?:definitely\s+)?(?:flood|submerge)|face\s+flood(?:ing)?|get\s+flooded)\b/i,
       /\b(asar|prabhav|effect hoga|asar hoga|asar padega|asar hai|effect hai)\b/i,
       /\b(flooded from|flooding from|affected by|impacted by|flooded due to)\b/i,
     ];
@@ -827,7 +828,7 @@ export class IntentRouter {
       // "what about London", "how about Kanpur", "what about Nepal"
       /\b(?:what\s+about|how\s+about|and\s+for|and\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // Prepositional phrases: "over in Nepal today", "in New Delhi?", "for London", "at Mumbai", "across Bihar", "near Delhi"
-      /\b(?:over\s+in|over\s+at|in|for|at|around|near|across|of)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
+      /\b(?:over\s+in|over\s+at|in|for|at|around|near|across)\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:will|is|are|was|were|can|could|would|should|might|may|has|have|had|be|been|being|flood|flooded|flooding|damage|damaged|damaging|hit|affect|affected|impact|impacted|expected|facing|by|with|to|from|at|on|during|between)|\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|yesterday|tonight|next\s+week|this\s+week|weekend|kal|aaj|parso|now|aur|and)\b|$)/i,
       // "weather in London", "temp in New Delhi", "forecast for Delhi"
       /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // "weather London", "forecast Tokyo" — with negative lookahead so question phrases like "kasa hau", "kaisa hai" are never matched as locations
@@ -857,6 +858,7 @@ export class IntentRouter {
    */
   private extractImpactTargetLocation(text: string): string | undefined {
     const targetPatterns = [
+      /\b(?:which|what)\s+(?:villages|areas|cities|places|districts|regions|sectors)\s+in\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:will|are|face|facing|flood|flooded|get)|\?|\.|$)/i,
       /\b(?:is|will|can|could)\s+([a-zA-Z0-9\s\-_]+?)\s+(?:impacted|affected|hit|threatened|facing|flooded|submerged)\b/i,
       /\b(?:affect|impacting|impact|hit|hitting|reach|threatening|threaten|damage)\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:today|tomorrow|now|soon)|\?|\.|$)/i,
       /\b(?:effect on|impact on|asar on|effect in|impact in|asar in)\s+([a-zA-Z0-9\s\-_]+?)(?:\s+(?:par|aur|mein)|\?|\.|$)/i,
