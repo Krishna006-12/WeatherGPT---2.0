@@ -107,6 +107,10 @@ export class GeminiProvider implements AIProvider {
       };
     }
 
+    if (options.enableGrounding) {
+      body.tools = [{ googleSearch: {} }];
+    }
+
     const candidateModels = [
       model,
       "gemini-3.1-flash-lite",
