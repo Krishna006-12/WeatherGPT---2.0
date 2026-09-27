@@ -30,6 +30,14 @@ describe("detectInputLanguage — Per-Message Language Identification", () => {
     expect(detectInputLanguage("Current temperature in Paris", "hi")).toBe("hi");
   });
 
+  it("prioritizes active UI language preference over regex word matching", () => {
+    expect(detectInputLanguage("kanpur ka mausam kasa h", "hi")).toBe("hi");
+    expect(detectInputLanguage("kya kal baarish hogi", "hi")).toBe("hi");
+    expect(detectInputLanguage("kanpur ka mausam kasa h", "pa")).toBe("pa");
+    expect(detectInputLanguage("kanpur ka mausam kasa h", "hi-en")).toBe("hi-en");
+    expect(detectInputLanguage("kanpur ka mausam kasa h", "en")).toBe("hi-en");
+  });
+
   it("handles null, empty, or whitespace-only inputs gracefully", () => {
     expect(detectInputLanguage("")).toBe("en");
     expect(detectInputLanguage("   ")).toBe("en");

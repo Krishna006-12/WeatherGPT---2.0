@@ -24,6 +24,7 @@ export interface PersonaAdvisoryContext {
   crop?: string;
   rainfallMm?: number;
   windSpeedKmh?: number;
+  language?: import("@/lib/i18n/translations").SupportedLanguage;
 }
 
 export interface PersonaProfile {

@@ -45,6 +45,13 @@ export function detectInputLanguage(
     return fallbackLanguage;
   }
 
+  // If user explicitly configured an active language in the app (e.g. Hindi, Punjabi, or Hinglish),
+  // honor their active preference so the chatbox dynamically adapts to the selected app language.
+  if (fallbackLanguage && fallbackLanguage !== "en") {
+    return fallbackLanguage;
+  }
+
+  // Auto-detection when app language is English / default:
   // 1. Devanagari script detection
   if (/[\u0900-\u097F]/.test(trimmed)) {
     return "hi";

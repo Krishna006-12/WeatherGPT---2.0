@@ -323,7 +323,10 @@ export class AIOrchestrator {
       }
 
       // 5. Grounded Context Construction with XML Boundaries
-      const resolvedLanguage = detectInputLanguage(message, request.language);
+      const resolvedLanguage =
+        request.language && request.language !== "en"
+          ? request.language
+          : detectInputLanguage(message, request.language);
       const groundedContext: GroundedContext = {
         userQuery: message,
         intent,
@@ -1158,6 +1161,7 @@ export class AIOrchestrator {
         crop: context.crop,
         rainfallMm: context.weather.daily?.[0]?.precipitationSum ?? context.weather.current.precipitation,
         windSpeedKmh: context.weather.current.windSpeed,
+        language: context.language,
       });
 
       const isGeneralWeatherQuery = context.intent === "weather" || context.intent === "general";
@@ -1168,7 +1172,14 @@ export class AIOrchestrator {
         } else if (isGeneralWeatherQuery) {
           answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
         } else {
-          answer += `\n\n${personaAdvisory}`;
+          answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
+        }
+      } else if (context.language === "pa") {
+        const c = context.weather.current;
+        if (isGreeting) {
+          answer = `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ WeatherGPT ਕੋਪਾਇਲਟ ਹਾਂ। ${locName} ਲਈ ਮੌਜੂਦਾ ਮੌਸਮ: ਤਾਪਮਾਨ ${c.temperature}°C, ਸਥਿਤੀ: ${c.condition}। ਨਮੀ: ${c.humidity}%, ਹਵਾ: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
+        } else {
+          answer = `${locName} ਲਈ ਮੌਸਮ ਅੱਪਡੇਟ: ਤਾਪਮਾਨ ${c.temperature}°C, ਸਥਿਤੀ: ${c.condition}। ਨਮੀ: ${c.humidity}%, ਹਵਾ: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
         }
       } else if (context.language === "hi-en") {
         const c = context.weather.current;

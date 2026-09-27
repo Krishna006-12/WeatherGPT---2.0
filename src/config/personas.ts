@@ -45,6 +45,45 @@ export const GENERAL_PUBLIC_PERSONA: PersonaProfile = {
     const hasRain = ctx.alerts?.some((a) => a.category === "heavy_rain") || (ctx.rainfallMm ?? 0) > 5;
     const hasStorm = ctx.alerts?.some((a) => a.category === "thunderstorm" || a.category === "cyclone");
 
+    if (ctx.language === "hi") {
+      if (hasStorm) {
+        return "सुरक्षा सलाह: आपके क्षेत्र में गंभीर तूफान की चेतावनी सक्रिय है। अनावश्यक बाहरी यात्रा से बचें और सुरक्षित स्थान पर रहें।";
+      }
+      if (hasHeat) {
+        return "स्वास्थ्य सलाह: अत्यधिक गर्मी की स्थिति। पर्याप्त मात्रा में पानी पिएं और दोपहर के समय सीधी धूप से बचें।";
+      }
+      if (hasRain) {
+        return "यात्रा सलाह: बारिश की संभावना है। छाता साथ रखें और सुरक्षित यात्रा करें।";
+      }
+      return `दैनिक सलाह: ${ctx.locationName} में बाहरी गतिविधियों और दैनिक कार्यों के लिए मौसम अनुकूल है।`;
+    }
+
+    if (ctx.language === "pa") {
+      if (hasStorm) {
+        return "ਸੁਰੱਖਿਆ ਸਲਾਹ: ਤੁਹਾਡੇ ਖੇਤਰ ਵਿੱਚ ਗੰਭੀਰ ਤੂਫ਼ਾਨ ਦੀ ਚੇਤਾਵਨੀ ਹੈ। ਬੇਲੋੜੀ ਬਾਹਰੀ ਯਾਤਰਾ ਤੋਂ ਬਚੋ ਅਤੇ ਸੁਰੱਖਿਅਤ ਰਹੋ।";
+      }
+      if (hasHeat) {
+        return "ਸਿਹਤ ਸਲਾਹ: ਵਧੇਰੇ ਗਰਮੀ ਹੈ। ਖੂਬ ਪਾਣੀ ਪੀਓ ਅਤੇ ਦੁਪਹਿਰ ਦੀ ਧੁੱਪ ਤੋਂ ਬਚੋ।";
+      }
+      if (hasRain) {
+        return "ਯਾਤਰਾ ਸਲਾਹ: ਮੀਂਹ ਦੀ ਸੰਭਾਵਨਾ ਹੈ। ਛਤਰੀ ਨਾਲ ਰੱਖੋ।";
+      }
+      return `ਰੋਜ਼ਾਨਾ ਸਲਾਹ: ${ctx.locationName} ਵਿੱਚ ਬਾਹਰੀ ਕੰਮਾਂ ਲਈ ਮੌਸਮ ਅਨੁਕੂਲ ਹੈ।`;
+    }
+
+    if (ctx.language === "hi-en") {
+      if (hasStorm) {
+        return "Safety Advisory: Area me active severe storm alert hai. Unnecessary outdoor travel avoid karein aur indoors safe rahein.";
+      }
+      if (hasHeat) {
+        return "Health Advisory: Elevated heat conditions hain. Paani khoob piyein aur direct afternoon sun exposure avoid karein.";
+      }
+      if (hasRain) {
+        return "Commute Advisory: Barish expected hai. Umbrella saath rakhein aur safely commute karein.";
+      }
+      return `Daily Advisory: ${ctx.locationName} me outdoor activities aur daily commute ke liye pleasant mausam hai.`;
+    }
+
     if (hasStorm) {
       return "Safety Advisory: Active severe storm warnings in your area. Avoid unnecessary outdoor travel and stay indoors.";
     }
@@ -96,6 +135,40 @@ export const FARMER_PERSONA: PersonaProfile = {
     const hasHeat = ctx.alerts?.some((a) => a.category === "heat");
     const hasCold = ctx.alerts?.some((a) => a.category === "cold_wave");
 
+    if (ctx.language === "hi") {
+      const cropLabelHi = ctx.crop ? ` (${ctx.crop} फसल)` : "";
+      if (hasFlood || rain >= 30) {
+        return `कृषि सलाह${cropLabelHi}: भारी वर्षा का जोखिम (${rain} mm)। सिंचाई तुरंत रोकें और जल निकासी नाली साफ रखें ताकि जड़ों में जलभराव न हो। कीटनाशक छिड़काव स्थगित करें।`;
+      }
+      if (hasCold || ctx.temperature <= 4) {
+        return `कृषि सलाह${cropLabelHi}: शीतलहर/पाला पड़ने का गंभीर खतरा (${ctx.temperature}°C)। फसलों की सुरक्षा के लिए शाम को हल्की सिंचाई करें।`;
+      }
+      if (hasHeat || ctx.temperature >= 38) {
+        return `कृषि सलाह${cropLabelHi}: उच्च तापमान तनाव (${ctx.temperature}°C)। नमी बनाए रखने और वाष्पीकरण से बचने के लिए सुबह जल्दी सिंचाई करें।`;
+      }
+      if (wind >= 20) {
+        return `कृषि सलाह${cropLabelHi}: हवा की गति ${wind} km/h होने से स्प्रे के बह जाने का खतरा है। मौसम शांत होने तक छिड़काव टालें।`;
+      }
+      return `कृषि सलाह${cropLabelHi}: ${ctx.locationName} में नियमित कृषि कार्यों, जुताई और खेत की देखभाल के लिए मौसम अनुकूल है।`;
+    }
+
+    if (ctx.language === "pa") {
+      const cropLabelPa = ctx.crop ? ` (${ctx.crop} ਫ਼ਸਲ)` : "";
+      if (hasFlood || rain >= 30) {
+        return `ਖੇਤੀਬਾੜੀ ਸਲਾਹ${cropLabelPa}: ਭਾਰੀ ਮੀਂਹ ਦਾ ਖ਼ਤਰਾ (${rain} mm)। ਸਿੰਚਾਈ ਤੁਰੰਤ ਰੋਕੋ ਅਤੇ ਨਿਕਾਸੀ ਨਾਲੀਆਂ ਸਾਫ਼ ਕਰੋ।`;
+      }
+      if (hasCold || ctx.temperature <= 4) {
+        return `ਖੇਤੀਬਾੜੀ ਸਲਾਹ${cropLabelPa}: ਕੋਰੇ/ਠੰਢ ਦਾ ਖ਼ਤਰਾ (${ctx.temperature}°C)। ਫ਼ਸਲਾਂ ਦੀ ਸੁਰੱਖਿਆ ਲਈ ਸ਼ਾਮ ਨੂੰ ਹਲਕੀ ਸਿੰਚਾਈ ਕਰੋ।`;
+      }
+      if (hasHeat || ctx.temperature >= 38) {
+        return `ਖੇਤੀਬਾੜੀ ਸਲਾਹ${cropLabelPa}: ਵਧੇਰੇ ਗਰਮੀ ਦਾ ਤਣਾਅ (${ctx.temperature}°C)। ਸਵੇਰੇ ਜਲਦੀ ਸਿੰਚਾਈ ਕਰੋ।`;
+      }
+      if (wind >= 20) {
+        return `ਖੇਤੀਬਾੜੀ ਸਲਾਹ${cropLabelPa}: ਹਵਾ ਦੀ ਰਫ਼ਤਾਰ ${wind} km/h ਹੋਣ ਕਰਕੇ ਸਪਰੇਅ ਕਰਨ ਤੋਂ ਬਚੋ।`;
+      }
+      return `ਖੇਤੀਬਾੜੀ ਸਲਾਹ${cropLabelPa}: ${ctx.locationName} ਵਿੱਚ ਖੇਤੀਬਾੜੀ ਦੇ ਕੰਮਾਂ ਲਈ ਮੌਸਮ ਅਨੁਕੂਲ ਹੈ।`;
+    }
+
     if (hasFlood || rain >= 30) {
       return `Agronomic Advisory${cropLabel}: Heavy precipitation risk (${rain} mm). Suspend irrigation immediately and clear drainage channels to prevent root-zone waterlogging. Delay chemical spraying.`;
     }
@@ -144,6 +217,32 @@ export const DISASTER_MANAGER_PERSONA: PersonaProfile = {
     const hasCyclone = ctx.alerts?.some((a) => a.category === "cyclone");
     const hasFlood = ctx.alerts?.some((a) => a.category === "flood" || a.category === "heavy_rain");
     const hasHeat = ctx.alerts?.some((a) => a.category === "heat" && (a.severity === "extreme" || a.severity === "severe"));
+
+    if (ctx.language === "hi") {
+      if (hasCyclone) {
+        return `आपदा नियंत्रण सलाह: ${ctx.locationName} के लिए सक्रिय चक्रवात चेतावनी। बहु-एजेंसी प्रतिक्रिया शुरू करें और आपातकालीन आश्रय केंद्र तैयार रखें।`;
+      }
+      if (hasFlood || (ctx.rainfallMm ?? 0) >= 30) {
+        return `आपदा नियंत्रण सलाह: गंभीर बाढ़ का जोखिम (${ctx.rainfallMm ?? 0} mm बारिश)। जल निकासी नालों की जांच करें और बचाव इकाइयों को अलर्ट पर रखें।`;
+      }
+      if (hasHeat || ctx.temperature >= 42) {
+        return `आपदा नियंत्रण सलाह: अत्यधिक गर्मी का प्रकोप (${ctx.temperature}°C)। नागरिक कूलिंग केंद्र खोलें और चिकित्सा सेवाओं को सतर्क करें।`;
+      }
+      return `आपदा नियंत्रण सलाह: सामान्य परिचालन स्थिति। ${ctx.locationName} के क्षेत्रीय टेलीमेट्री में कोई चेतावनी सीमा पार नहीं हुई है।`;
+    }
+
+    if (ctx.language === "pa") {
+      if (hasCyclone) {
+        return `ਆਫ਼ਤ ਪ੍ਰਬੰਧਨ ਸਲਾਹ: ${ctx.locationName} ਲਈ ਚੱਕਰਵਾਤ ਚੇਤਾਵਨੀ। ਐਮਰਜੈਂਸੀ ਸ਼ੈਲਟਰ ਤਿਆਰ ਕਰੋ।`;
+      }
+      if (hasFlood || (ctx.rainfallMm ?? 0) >= 30) {
+        return `ਆਫ਼ਤ ਪ੍ਰਬੰਧਨ ਸਲਾਹ: ਹੜ੍ਹ ਦਾ ਗੰਭੀਰ ਖ਼ਤਰਾ (${ctx.rainfallMm ?? 0} mm ਮੀਂਹ)। ਡਰੇਨੇਜ ਦੀ ਜਾਂਚ ਕਰੋ।`;
+      }
+      if (hasHeat || ctx.temperature >= 42) {
+        return `ਆਫ਼ਤ ਪ੍ਰਬੰਧਨ ਸਲਾਹ: ਅੱਤ ਦੀ ਗਰਮੀ ਦਾ ਖ਼ਤਰਾ (${ctx.temperature}°C)। ਕੂਲਿੰਗ ਸੈਂਟਰ ਖੋਲ੍ਹੋ।`;
+      }
+      return `ਆਫ਼ਤ ਪ੍ਰਬੰਧਨ ਸਲਾਹ: ਆਮ ਸੰਚਾਲਨ ਸਥਿਤੀ। ${ctx.locationName} ਵਿੱਚ ਸਥਿਤੀ ਆਮ ਹੈ।`;
+    }
 
     if (hasCyclone) {
       return `Incident Command Advisory: Active Cyclone Warning for ${ctx.locationName}. Initiate Tier-1 multi-agency response, inspect coastal barriers, and prepare emergency shelter evacuation centers.`;

@@ -30,10 +30,11 @@ export class GeminiProvider implements AIProvider {
       .trim()
       .replace(/^["']|["']$/g, "");
     const cleanDefault = rawDefault.startsWith("models/") ? rawDefault.replace(/^models\//, "") : rawDefault;
-    this.defaultModel =
-      cleanDefault === "gemini-2.5-flash" || cleanDefault === "gemini-2.0-flash" || cleanDefault.startsWith("gemini-1.5")
-        ? DEFAULT_MODEL
-        : cleanDefault || DEFAULT_MODEL;
+    const isLegacyModel =
+      cleanDefault.startsWith("gemini-2.") ||
+      cleanDefault.startsWith("gemini-1.") ||
+      cleanDefault === "gemini-pro";
+    this.defaultModel = isLegacyModel ? DEFAULT_MODEL : cleanDefault || DEFAULT_MODEL;
     this.timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
   }
 
@@ -108,10 +109,19 @@ export class GeminiProvider implements AIProvider {
 
     const candidateModels = [
       model,
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ].filter((m, i, arr) => arr.indexOf(m) === i);
+      "gemini-3.6-flash",
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash",
+      "gemini-3.1-flash-lite",
+    ].filter(
+      (m, i, arr) =>
+        arr.indexOf(m) === i &&
+        !m.startsWith("gemini-2.") &&
+        !m.startsWith("gemini-1.") &&
+        m !== "gemini-pro"
+    );
 
     let lastError: unknown;
 

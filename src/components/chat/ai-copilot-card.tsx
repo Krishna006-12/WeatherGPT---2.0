@@ -249,7 +249,8 @@ export function AICopilotCard({
       cancelSpeech();
       return;
     }
-    const detectedLang = detectInputLanguage(messageText, language);
+    const detectedLang =
+      language && language !== "en" ? language : detectInputLanguage(messageText, language);
     const targetVoiceLocale = supportedLanguageToVoiceLocale(detectedLang);
     speak(messageText, targetVoiceLocale);
   };
@@ -364,7 +365,8 @@ export function AICopilotCard({
     clearAttachedImage();
     setLoading(true);
 
-    const effectiveLanguage = detectInputLanguage(trimmed, language);
+    const effectiveLanguage =
+      language && language !== "en" ? language : detectInputLanguage(trimmed, language);
 
     try {
       const res = await fetch("/api/chat", {
@@ -428,7 +430,8 @@ export function AICopilotCard({
 
         // If user asked via voice, vocalize the response automatically in the matching language
         if (channel === "voice") {
-          const detectedLang = detectInputLanguage(aiData.answer, language);
+          const detectedLang =
+            language && language !== "en" ? language : detectInputLanguage(aiData.answer, language);
           speak(aiData.answer, supportedLanguageToVoiceLocale(detectedLang));
         }
       }
