@@ -370,10 +370,10 @@ ${conversationHistorySection}<verified_data>
 ${contextSections.join("\n\n")}
 </verified_data>
 
-Provide a natural language response strictly adhering to the verified data above.
+Provide a natural, engaging conversational response strictly adhering to the verified data above.
 Respond in the following JSON format ONLY:
 {
-  "answer": "Your concise, direct response to the user query based solely on verified data",
+  "answer": "Your warm, natural, and helpful response as a personal weather assistant, delivering verified facts with practical lifestyle advice (clothing, comfort, commute, plans)",
   "groundingStatus": "${initialGroundingStatus}",
   "uncertainty": "Optional note on unverified aspects or data limitations, or null if fully grounded",
   "keyPoints": ["Factual key point 1", "Factual key point 2"]

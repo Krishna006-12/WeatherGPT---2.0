@@ -94,7 +94,7 @@ export class GeminiProvider implements AIProvider {
         },
       ],
       generationConfig: {
-        temperature: options.temperature ?? 0.2,
+        temperature: options.temperature ?? 0.64,
         maxOutputTokens: options.maxTokens ?? 1024,
         responseMimeType: options.jsonMode !== false ? "application/json" : "text/plain",
       },
@@ -196,10 +196,10 @@ export class GeminiProvider implements AIProvider {
         throw err instanceof AppError
           ? err
           : new AppError(
-              "AI_PROVIDER_UNAVAILABLE",
-              err instanceof Error ? err.message : "Network error contacting Gemini API",
-              502
-            );
+            "AI_PROVIDER_UNAVAILABLE",
+            err instanceof Error ? err.message : "Network error contacting Gemini API",
+            502
+          );
       }
     }
 
