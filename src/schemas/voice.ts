@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { coordinatesSchema } from "./weather";
 
-export const voiceLanguageSchema = z.enum(["en-US", "hi-IN", "en-IN"]);
+export const voiceLanguageSchema = z.enum(["en-US", "hi-IN", "en-IN", "pa-IN"]);
 
 export const voicePlaybackStateSchema = z.enum([
   "idle",

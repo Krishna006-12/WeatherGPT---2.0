@@ -6,7 +6,7 @@
 import type { Coordinates, ISOTimestamp } from "./common";
 
 /** Supported speech synthesis and recognition locales. */
-export type VoiceLanguage = "en-US" | "hi-IN" | "en-IN";
+export type VoiceLanguage = "en-US" | "hi-IN" | "en-IN" | "pa-IN" | (string & {});
 
 /** Interactive voice assistant playback state. */
 export type VoicePlaybackState = "idle" | "listening" | "processing" | "speaking" | "paused";

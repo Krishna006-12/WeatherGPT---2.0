@@ -10,12 +10,36 @@ import type { ActivitySuitabilityReport } from "@/types/activity";
 import type { VoiceAssistantReport, VoiceBriefingScript, VoiceLanguage } from "@/types/voice";
 import { generateDeterministicHash } from "@/lib/deduplicator";
 
+import type { SupportedLanguage } from "@/lib/i18n/translations";
+
+/**
+ * Maps WeatherGPT app language code to speech synthesis BCP-47 locale tag.
+ */
+export function supportedLanguageToVoiceLocale(lang?: string | null): VoiceLanguage {
+  if (!lang) return "en-US";
+  switch (lang.toLowerCase()) {
+    case "hi":
+    case "hi-in":
+      return "hi-IN";
+    case "pa":
+    case "pa-in":
+      return "pa-IN";
+    case "hi-en":
+      return "hi-IN";
+    case "en":
+    case "en-in":
+    case "en-us":
+    default:
+      return "en-US";
+  }
+}
+
 export class VoiceService {
   /**
    * Cleans raw text or markdown so it sounds natural when vocalized by SpeechSynthesis.
    * Expands abbreviations, eliminates markdown artifacts, tables, and emojis.
    */
-  cleanForSpeech(rawText: string): string {
+  cleanForSpeech(rawText: string, lang?: VoiceLanguage): string {
     if (!rawText) return "";
 
     let text = rawText;
@@ -33,10 +57,11 @@ export class VoiceService {
     text = text.replace(/(\*|_)(.*?)\1/g, "$2");
     text = text.replace(/~~(.*?)~~/g, "$1");
 
-    // 4. Remove blockquotes and list bullets
+    // 4. Remove blockquotes, citations, and list bullets
     text = text.replace(/^\s*>\s*/gm, "");
     text = text.replace(/^\s*[-*+]\s+/gm, "");
     text = text.replace(/^\s*\d+\.\s+/gm, "");
+    text = text.replace(/\[\d+\]/g, ""); // strip [1], [2] citations
 
     // 5. Remove HTML tags
     text = text.replace(/<[^>]*>/g, " ");
@@ -47,18 +72,40 @@ export class VoiceService {
       ""
     );
 
-    // 7. Expand meteorological abbreviations and units
-    text = text.replace(/\b(\d+)\s*°\s*C\b/gi, "$1 degrees Celsius");
-    text = text.replace(/°\s*C\b/gi, " degrees Celsius");
-    text = text.replace(/\b(\d+)\s*°\s*F\b/gi, "$1 degrees Fahrenheit");
-    text = text.replace(/°\s*F\b/gi, " degrees Fahrenheit");
-    text = text.replace(/\b(\d+(?:\.\d+)?)\s*km\/h\b/gi, "$1 kilometers per hour");
-    text = text.replace(/\b(\d+(?:\.\d+)?)\s*mph\b/gi, "$1 miles per hour");
-    text = text.replace(/\b(\d+(?:\.\d+)?)\s*mm\b/gi, "$1 millimeters");
-    text = text.replace(/\b(\d+)\s*hPa\b/gi, "$1 hectopascals");
-    text = text.replace(/\b(\d+(?:\.\d+)?)\s*%/g, "$1 percent");
+    // 7. Expand meteorological abbreviations and units with script awareness
+    const isDevanagari = /[\u0900-\u097F]/.test(text) || lang === "hi-IN";
+    const isGurmukhi = /[\u0A00-\u0A7F]/.test(text) || lang === "pa-IN";
 
-    // 8. Collapse whitespace and clean punctuation
+    if (isDevanagari && /[\u0900-\u097F]/.test(text)) {
+      // Pure Hindi / Devanagari units
+      text = text.replace(/\b(\d+)\s*°\s*C\b/gi, "$1 डिग्री सेल्सियस");
+      text = text.replace(/°\s*C\b/gi, " डिग्री सेल्सियस");
+      text = text.replace(/\b(\d+)\s*°\s*F\b/gi, "$1 डिग्री फ़ारेनहाइट");
+      text = text.replace(/°\s*F\b/gi, " डिग्री फ़ारेनहाइट");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*km\/h\b/gi, "$1 किलोमीटर प्रति घंटा");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*mm\b/gi, "$1 मिलीमीटर");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*%/g, "$1 प्रतिशत");
+    } else if (isGurmukhi && /[\u0A00-\u0A7F]/.test(text)) {
+      // Punjabi / Gurmukhi units
+      text = text.replace(/\b(\d+)\s*°\s*C\b/gi, "$1 ਡਿਗਰੀ ਸੈਲਸੀਅਸ");
+      text = text.replace(/°\s*C\b/gi, " ਡਿਗਰੀ ਸੈਲਸੀਅਸ");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*km\/h\b/gi, "$1 ਕਿਲੋਮੀਟਰ ਪ੍ਰਤੀ ਘੰਟਾ");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*mm\b/gi, "$1 ਮਿਲੀਮੀਟਰ");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*%/g, "$1 ਪ੍ਰਤੀਸ਼ਤ");
+    } else {
+      // Standard English / Romanized Hinglish units
+      text = text.replace(/\b(\d+)\s*°\s*C\b/gi, "$1 degrees Celsius");
+      text = text.replace(/°\s*C\b/gi, " degrees Celsius");
+      text = text.replace(/\b(\d+)\s*°\s*F\b/gi, "$1 degrees Fahrenheit");
+      text = text.replace(/°\s*F\b/gi, " degrees Fahrenheit");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*km\/h\b/gi, "$1 kilometers per hour");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*mph\b/gi, "$1 miles per hour");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*mm\b/gi, "$1 millimeters");
+      text = text.replace(/\b(\d+)\s*hPa\b/gi, "$1 hectopascals");
+      text = text.replace(/\b(\d+(?:\.\d+)?)\s*%/g, "$1 percent");
+    }
+
+    // 8. Collapse whitespace and clean punctuation for natural speech pauses
     text = text.replace(/[ \t]+/g, " ");
     text = text.replace(/\n\s*\n/g, ". ");
     text = text.replace(/\n/g, " ");
@@ -70,18 +117,23 @@ export class VoiceService {
   }
 
   /**
-   * Detects if the given text or query is in Hindi or Hinglish.
+   * Detects if the given text or query is in Punjabi, Hindi, Hinglish, or English.
    */
   detectLanguage(text: string): VoiceLanguage {
     if (!text) return "en-US";
 
-    // Devanagari script range
+    // Gurmukhi script range -> Punjabi
+    if (/[\u0A00-\u0A7F]/.test(text)) {
+      return "pa-IN";
+    }
+
+    // Devanagari script range -> Hindi
     if (/[\u0900-\u097F]/.test(text)) {
       return "hi-IN";
     }
 
-    // Common Hinglish weather terms
-    const hinglishPattern = /\b(mausam|kaisa|kya|hai|baarish|barish|aaj|kal|parso|garmi|sardi|bataiye|hoga|karein|chahiye)\b/i;
+    // Common Hinglish weather terms -> Hindi/Hinglish
+    const hinglishPattern = /\b(mausam|mosam|kaisa|kaisi|kaise|kya|kyu|kyun|hai|hain|baarish|barish|aaj|kal|parso|garmi|sardi|bataiye|batao|hoga|hogi|karein|chahiye|taapman|tapman)\b/i;
     if (hinglishPattern.test(text)) {
       return "hi-IN";
     }

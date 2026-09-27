@@ -79,6 +79,49 @@ export interface UseVoiceAssistantReturn {
   cancel: () => void;
 }
 
+import { globalVoiceService } from "@/services/voice/voice-service";
+
+/**
+ * Intelligent voice selector prioritizing human-sounding Neural and Natural voices.
+ */
+function selectBestVoice(
+  availableVoices: SpeechSynthesisVoice[],
+  targetLocale: string
+): SpeechSynthesisVoice | null {
+  if (!availableVoices || availableVoices.length === 0) return null;
+
+  const langCode = targetLocale.split("-")[0]?.toLowerCase() || "en";
+  const fullTarget = targetLocale.toLowerCase().replace("_", "-");
+
+  // Filter voices matching the requested language or region
+  const matchingVoices = availableVoices.filter((v) => {
+    const vLang = v.lang.toLowerCase().replace("_", "-");
+    return vLang === fullTarget || vLang.startsWith(langCode);
+  });
+
+  const pool = matchingVoices.length > 0 ? matchingVoices : availableVoices;
+
+  // 1. Prioritize ultra-realistic Natural / Neural / Online voices (Edge & Chrome)
+  const naturalVoice = pool.find((v) =>
+    /natural|neural|online|multilingual/i.test(v.name)
+  );
+  if (naturalVoice) return naturalVoice;
+
+  // 2. High-quality cloud / platform voices (Google, Siri, Lekha)
+  const highQualityVoice = pool.find((v) =>
+    /google|siri|premium|enhanced|lekha|swara|madhur/i.test(v.name)
+  );
+  if (highQualityVoice) return highQualityVoice;
+
+  // 3. Fallback to any voice in matching language
+  if (matchingVoices.length > 0) {
+    return matchingVoices[0]!;
+  }
+
+  // 4. Default system voice
+  return availableVoices.find((v) => v.default) || availableVoices[0] || null;
+}
+
 export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVoiceAssistantReturn {
   const { language = "en-US", onFinalTranscript, onError } = options;
 
@@ -90,21 +133,50 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVo
   const [isSupported, setIsSupported] = useState(false);
   const [isTtsSupported, setIsTtsSupported] = useState(false);
 
+  // Available Voices State
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+
   // TTS State
   const [playbackState, setPlaybackState] = useState<VoicePlaybackState>("idle");
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const keepAliveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Check browser API support safely on mount
+  // Load and cache high-quality speech synthesis voices
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hasRecognition = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
       const hasSynthesis = typeof window.speechSynthesis !== "undefined";
       setIsSupported(hasRecognition);
       setIsTtsSupported(hasSynthesis);
+
+      if (hasSynthesis) {
+        const updateVoices = () => {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices && voices.length > 0) {
+            setAvailableVoices(voices);
+          }
+        };
+
+        updateVoices();
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+
+        return () => {
+          if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = null;
+          }
+        };
+      }
     }
   }, []);
+
+  const clearKeepAlive = () => {
+    if (keepAliveTimerRef.current) {
+      clearInterval(keepAliveTimerRef.current);
+      keepAliveTimerRef.current = null;
+    }
+  };
 
   // Stop listening helper
   const stopListening = useCallback(() => {
@@ -211,6 +283,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVo
 
   // Cancel playback helper
   const cancel = useCallback(() => {
+    clearKeepAlive();
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -218,28 +291,50 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVo
     activeUtteranceRef.current = null;
   }, []);
 
-  // Speak handler
+  // Speak handler with natural voice selection & clean pronunciation
   const speak = useCallback(
     (text: string, lang?: VoiceLanguage) => {
       if (typeof window === "undefined" || !window.speechSynthesis) {
         return;
       }
 
-      // Stop any current utterance
+      // Stop any active playback
+      clearKeepAlive();
       window.speechSynthesis.cancel();
 
-      if (!text.trim()) {
+      const targetLocale = lang || language;
+      // Pre-clean speech text (strips markdown, code blocks, emojis, expands meteorological units)
+      const cleaned = globalVoiceService.cleanForSpeech(text, targetLocale);
+
+      if (!cleaned.trim()) {
         setPlaybackState("idle");
         return;
       }
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang || language;
+      const utterance = new SpeechSynthesisUtterance(cleaned);
+      utterance.lang = targetLocale;
+
+      // Select human-sounding natural/neural voice
+      const currentVoices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+      const bestVoice = selectBestVoice(currentVoices, targetLocale);
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+
+      // Natural speech cadence & pitch
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
 
       utterance.onstart = () => {
         setPlaybackState("speaking");
+        // Chrome keep-alive to avoid speech cutting off on longer answers (>15s)
+        clearKeepAlive();
+        keepAliveTimerRef.current = setInterval(() => {
+          if (typeof window !== "undefined" && window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          }
+        }, 10000);
       };
 
       utterance.onpause = () => {
@@ -251,11 +346,13 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVo
       };
 
       utterance.onend = () => {
+        clearKeepAlive();
         setPlaybackState("idle");
         activeUtteranceRef.current = null;
       };
 
       utterance.onerror = () => {
+        clearKeepAlive();
         setPlaybackState("idle");
         activeUtteranceRef.current = null;
       };
@@ -263,7 +360,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}): UseVo
       activeUtteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     },
-    [language]
+    [availableVoices, language]
   );
 
   const pause = useCallback(() => {

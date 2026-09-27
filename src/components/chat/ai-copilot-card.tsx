@@ -37,6 +37,7 @@ import { useVoiceAssistant } from "@/hooks/use-voice-assistant";
 import { useAuth } from "@/context/auth-context";
 import { useLanguage } from "@/context/language-context";
 import { detectInputLanguage } from "@/lib/i18n/language-detector";
+import { supportedLanguageToVoiceLocale } from "@/services/voice/voice-service";
 import { MarkdownContent } from "./markdown-content";
 
 interface ChatMessage {
@@ -225,6 +226,8 @@ export function AICopilotCard({
     } catch {}
   };
 
+  const activeVoiceLocale = supportedLanguageToVoiceLocale(language);
+
   const {
     isListening,
     isSupported: isSpeechSupported,
@@ -234,11 +237,22 @@ export function AICopilotCard({
     speak,
     cancel: cancelSpeech,
   } = useVoiceAssistant({
+    language: activeVoiceLocale,
     onFinalTranscript: (spokenText) => {
       setQuery(spokenText);
       handleSendQuery(spokenText, "voice");
     },
   });
+
+  const handlePlayMessageAudio = (messageText: string) => {
+    if (isPlaying) {
+      cancelSpeech();
+      return;
+    }
+    const detectedLang = detectInputLanguage(messageText, language);
+    const targetVoiceLocale = supportedLanguageToVoiceLocale(detectedLang);
+    speak(messageText, targetVoiceLocale);
+  };
 
   useEffect(() => {
     if (expanded && inputRef.current) {
@@ -411,6 +425,12 @@ export function AICopilotCard({
         ]);
 
         streamAssistantAnswer(assistantMsgId, aiData.answer, aiData);
+
+        // If user asked via voice, vocalize the response automatically in the matching language
+        if (channel === "voice") {
+          const detectedLang = detectInputLanguage(aiData.answer, language);
+          speak(aiData.answer, supportedLanguageToVoiceLocale(detectedLang));
+        }
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Network error contacting weather service";
@@ -694,13 +714,7 @@ export function AICopilotCard({
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (isPlaying) {
-                                cancelSpeech();
-                              } else {
-                                speak(m.content);
-                              }
-                            }}
+                            onClick={() => handlePlayMessageAudio(m.content)}
                             title={isPlaying ? "Stop audio" : "Listen to briefing"}
                             aria-label={isPlaying ? "Stop audio" : "Listen to briefing"}
                             className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-[var(--text-tertiary)] hover:text-cyan-400 cursor-pointer"
@@ -728,13 +742,7 @@ export function AICopilotCard({
 
                           <button
                             type="button"
-                            onClick={() => {
-                              if (isPlaying) {
-                                cancelSpeech();
-                              } else {
-                                speak(m.content);
-                              }
-                            }}
+                            onClick={() => handlePlayMessageAudio(m.content)}
                             title={isPlaying ? "Stop audio" : "Listen to briefing"}
                             aria-label={isPlaying ? "Stop audio" : "Listen to briefing"}
                             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer shadow-xs"
@@ -1020,7 +1028,7 @@ export function AICopilotCard({
                   if (isListening) {
                     stopListening();
                   } else {
-                    startListening();
+                    startListening(activeVoiceLocale);
                   }
                 }}
                 disabled={loading}
