@@ -28,7 +28,7 @@ interface NavItemConfig {
   matches: (path: string) => boolean;
 }
 
-export function MobileNav({ onOpenMenu }: MobileNavProps) {
+export function MobileNav({ onOpenMenu }: MobileNavProps = {}) {
   const pathname = usePathname();
   const { t } = useLanguage();
 

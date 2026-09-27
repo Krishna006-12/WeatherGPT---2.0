@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, Menu } from "lucide-react";
+import { Settings } from "lucide-react";
 import { LocationSearch } from "@/components/weather/location-search";
 import { UserMenu } from "@/components/auth/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -33,21 +33,18 @@ export function Topbar({
     >
       {/* Mobile Topbar (< md screens) */}
       <div className="flex md:hidden flex-col px-3 py-2.5 gap-2 w-full">
-        {/* Row 1: Logo + All Features Button on Left, Quick Controls on Right */}
+        {/* Row 1: Logo + Settings Button on Left, Quick Controls on Right */}
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic("medium");
-                onOpenMobileMenu?.();
-              }}
-              aria-label="Open All Features Menu"
-              title="All Features & Settings"
+            <Link
+              href="/settings"
+              onClick={() => triggerHaptic("light")}
+              aria-label={t("sidebar.settings", "System Intelligence Settings")}
+              title={t("sidebar.settings", "System Intelligence Settings")}
               className="p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] focus:outline-none transition-colors"
             >
-              <Menu size={18} />
-            </button>
+              <Settings size={18} />
+            </Link>
 
             <Link
               href="/dashboard"

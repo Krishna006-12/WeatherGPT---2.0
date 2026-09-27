@@ -30,7 +30,7 @@ export const GENERAL_PUBLIC_PERSONA: PersonaProfile = {
     "direct physical safety and storm shelter",
   ],
   instructionAddendum: `// ============================================================
-// ACTIVE PERSONA: GENERAL PUBLIC (Personal Weather AI Assistant)
+// ACTIVE PERSONA: GENERAL PUBLIC (Daily Citizen)
 // ============================================================
 - Audience: Everyday citizens, commuters, families, and individuals.
 - Persona: Warm, intuitive personal weather companion looking out for the user's daily plans.
