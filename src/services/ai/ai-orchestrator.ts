@@ -418,6 +418,8 @@ export class AIOrchestrator {
           {
             jsonMode: true,
             image: imageOption,
+            maxTokens: 8192,
+            timeoutMs: 25000,
             // Grounding with search is scoped strictly to factual/weather queries, never forced on casual/general chat
             enableGrounding: isWeatherDependentIntent && !request.image,
           }
@@ -897,8 +899,8 @@ export class AIOrchestrator {
       }
     }
 
-    // 2. If text is a raw JSON string like {"answer": "...", ...}, extract the answer property
-    if (text.startsWith("{") && text.includes('"answer"')) {
+    // 2. If text is a raw or truncated JSON string like {"answer": "...", ...}, extract the answer property
+    if (text.includes('"answer"')) {
       try {
         const parsed = JSON.parse(text);
         if (parsed && typeof parsed.answer === "string") {
@@ -913,6 +915,14 @@ export class AIOrchestrator {
           } catch {
             text = answerMatch[1];
           }
+        } else {
+          // Truncated JSON recovery: extract from after "answer": " to end of text
+          const truncatedMatch = text.match(/"answer"\s*:\s*"([\s\S]*)$/);
+          if (truncatedMatch && truncatedMatch[1]) {
+            text = truncatedMatch[1];
+            // Remove trailing JSON artifacts if any
+            text = text.replace(/"\s*,\s*"[a-zA-Z]+".*$/, "").replace(/"\s*}\s*$/, "");
+          }
         }
       }
     }
@@ -926,6 +936,12 @@ export class AIOrchestrator {
 
     // Clean up literal unescaped \"
     text = text.replace(/\\"/g, '"');
+
+    // 4. If a code block was opened with ``` but never closed (due to truncation), close it cleanly
+    const fenceCount = (text.match(/```/g) || []).length;
+    if (fenceCount % 2 === 1) {
+      text += "\n```";
+    }
 
     return text.trim();
   }

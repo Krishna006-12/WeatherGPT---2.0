@@ -96,7 +96,7 @@ export class GeminiProvider implements AIProvider {
       ],
       generationConfig: {
         temperature: options.temperature ?? 0.64,
-        maxOutputTokens: options.maxTokens ?? 1024,
+        maxOutputTokens: options.maxTokens ?? 8192,
         responseMimeType: options.jsonMode !== false ? "application/json" : "text/plain",
       },
     };
@@ -131,7 +131,7 @@ export class GeminiProvider implements AIProvider {
     for (const activeModel of candidateModels) {
       const endpoint = `${GEMINI_API_BASE_URL}/models/${activeModel}:generateContent?key=${encodeURIComponent(key)}`;
       const controller = new AbortController();
-      const perAttemptTimeout = Math.min(timeout, 8000);
+      const perAttemptTimeout = options.timeoutMs || timeout || 25000;
       const timer = setTimeout(() => controller.abort(), perAttemptTimeout);
 
       try {

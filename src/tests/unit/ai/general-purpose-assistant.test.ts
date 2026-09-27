@@ -177,5 +177,27 @@ describe("General-Purpose AI Assistant (WeatherGPT 2.0)", () => {
     expect(result.data.answer).toContain("Here is the summary:");
     expect(result.data.answer).toContain("\n\nLine 1\nLine 2");
   });
+
+  it("6. Truncated output recovery: Recovers answer text from cut-off JSON and cleanly closes opened code fences", async () => {
+    const mockAiProvider = new MockAIProvider();
+    // Simulate cut-off raw model output where response stopped mid-code without closing quote/brace
+    mockAiProvider.setResponse(
+      '{"answer": "Here is the matrix transpose program in C:\\n\\n```c\\n#include <stdio.h>\\nint main() {\\n    printf(\\"Transpose\\");'
+    );
+
+    const orchestrator = new AIOrchestrator({ aiProvider: mockAiProvider });
+    const result = await orchestrator.processQuery({
+      message: "write me transpose of matrix in C",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.data.answer).toContain("Here is the matrix transpose program in C:");
+    expect(result.data.answer).toContain("#include <stdio.h>");
+    expect(result.data.answer).toContain('printf("Transpose");');
+    // Verifies that unclosed ```c fence was automatically closed with ```
+    expect(result.data.answer.endsWith("```")).toBe(true);
+  });
 });
 
