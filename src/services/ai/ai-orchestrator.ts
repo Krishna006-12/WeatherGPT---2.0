@@ -1158,16 +1158,47 @@ export class AIOrchestrator {
     } else if (context.intent === "weather_event" && context.events && context.events.length > 0 && context.events[0]) {
       const ev = context.events[0];
       answer = `Active event alert: ${ev.title} (${ev.hazard}, severity: ${ev.severity}). Reported in ${ev.location.name}, ${ev.location.country}.`;
-    } else if (context.weather) {
-      const c = context.weather.current;
-      answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
     } else {
-      answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
+      const qLower = (context.userQuery || "").toLowerCase();
+      const c = context.weather?.current;
+      const dailyRain = context.weather?.daily?.[0]?.precipitationSum ?? c?.precipitation ?? 0;
+
+      const isHistoricalRainQuery =
+        /\b(?:rain|rainfall|precipitation|barish|barsat)\b/i.test(qLower) &&
+        (/\b(?:yesterday|past|kal|last\s+night|\d{1,2}:\d{2})\b/i.test(qLower) || context.temporalResolution?.target === "yesterday");
+
+      const isLightningCountQuery = /\b(?:lightning|lightning\s+strikes|lightning\s+bolts|thunderbolt|bijli)\b/i.test(qLower);
+      const isCitizenPiiQuery = /\b(?:which\s+farmer|farmer\s+name|who\s+was\s+affected|list\s+of\s+farmers|names\s+of\s+farmers)\b/i.test(qLower);
+
+      if (isHistoricalRainQuery && (/\b(?:exact|\d{1,2}:\d{2}|minute|pm|am)\b/i.test(qLower) || /\byesterday\b/i.test(qLower) || context.temporalResolution?.target === "yesterday")) {
+        const rainDetails = c ? ` In ${locName}, recorded precipitation shows ${dailyRain} mm. Current conditions are ${c.temperature}°C, ${c.condition} with ${c.humidity}% humidity.` : ` Telemetry for ${locName} is being synchronized.`;
+        answer = `Standard meteorological stations log precipitation in hourly accumulations rather than continuous minute-by-minute records, so an exact reading for that precise minute is not recorded.${rainDetails}`;
+      } else if (isLightningCountQuery) {
+        const condDetail = c ? ` In ${locName}, current conditions are ${c.temperature}°C, ${c.condition}.` : "";
+        answer = `Atmospheric convective storms are stochastic physical processes; meteorological models compute thunderstorm probability and CAPE convective energy rather than discrete lightning strike counts.${condDetail}`;
+      } else if (isCitizenPiiQuery) {
+        const condDetail = c ? ` For ${locName}, current observations show ${c.temperature}°C and ${c.condition}.` : "";
+        answer = `WeatherGPT tracks meteorological telemetry, regional risk indices, and agronomic vulnerability—it does not track personal citizen records or private landholder identities.${condDetail}`;
+      } else if (c && /\b(?:rain|rainfall|precipitation|barish|barsat|chhate|umbrella)\b/i.test(qLower)) {
+        answer = `Rainfall observation for ${locName}: Current precipitation rate is ${c.precipitation} mm/h with ${c.condition} conditions. 24-hour precipitation total is ${dailyRain} mm. Humidity is ${c.humidity}% and wind is ${c.windSpeed} km/h.`;
+      } else if (c && /\b(?:temp|temperature|garmi|sardi|hot|cold|heat)\b/i.test(qLower)) {
+        answer = `Temperature observation for ${locName}: It is currently ${c.temperature}°C (${c.condition}), with ${c.humidity}% relative humidity and winds at ${c.windSpeed} km/h.`;
+      } else if (c && /\b(?:wind|hawa|gust|breeze)\b/i.test(qLower)) {
+        answer = `Wind conditions for ${locName}: Current wind speed is ${c.windSpeed} km/h. Conditions are ${c.temperature}°C and ${c.condition}.`;
+      } else if (c) {
+        answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
+      } else {
+        answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
+      }
     }
 
     // Append persona-specific advisory and handle multilingual language formatting
     const personaProfile = getPersonaProfile(context.persona);
     if (context.weather) {
+      const qLower = (context.userQuery || "").toLowerCase();
+      const isHyperSpecificQuery =
+        /\b(?:exact|\d{1,2}:\d{2}|yesterday|lightning|farmer\s+name|who|which\s+farmer)\b/i.test(qLower);
+
       const deterministicAlerts = globalAlertRulesEngine.evaluate(context.weather, {
         locationName: locName,
       });
@@ -1187,28 +1218,28 @@ export class AIOrchestrator {
         const c = context.weather.current;
         if (isGreeting) {
           answer = `नमस्ते! मैं WeatherGPT कोपायलट हूँ। ${locName} के लिए वर्तमान मौसम: ${c.temperature}°C, ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
-        } else if (isGeneralWeatherQuery) {
+        } else if (isGeneralWeatherQuery && !isHyperSpecificQuery) {
           answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
-        } else {
+        } else if (!isHyperSpecificQuery) {
           answer = `${locName} के लिए मौसम विवरण: तापमान ${c.temperature}°C, स्थिति: ${c.condition}। आर्द्रता: ${c.humidity}%, हवा: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
         }
       } else if (context.language === "pa") {
         const c = context.weather.current;
         if (isGreeting) {
           answer = `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ WeatherGPT ਕੋਪਾਇਲਟ ਹਾਂ। ${locName} ਲਈ ਮੌਜੂਦਾ ਮੌਸਮ: ਤਾਪਮਾਨ ${c.temperature}°C, ਸਥਿਤੀ: ${c.condition}। ਨਮੀ: ${c.humidity}%, ਹਵਾ: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
-        } else {
+        } else if (!isHyperSpecificQuery) {
           answer = `${locName} ਲਈ ਮੌਸਮ ਅੱਪਡੇਟ: ਤਾਪਮਾਨ ${c.temperature}°C, ਸਥਿਤੀ: ${c.condition}। ਨਮੀ: ${c.humidity}%, ਹਵਾ: ${c.windSpeed} km/h।\n\n${personaAdvisory}`;
         }
       } else if (context.language === "hi-en") {
         const c = context.weather.current;
         if (isGreeting) {
           answer = `Namaste! Main WeatherGPT Copilot hoon. ${locName} ke liye current weather: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
-        } else if (isGeneralWeatherQuery) {
+        } else if (isGeneralWeatherQuery && !isHyperSpecificQuery) {
           answer = `${locName} ka current weather update: Temperature ${c.temperature}°C, condition: ${c.condition}. Humidity: ${c.humidity}%, Wind speed: ${c.windSpeed} km/h.\n\n${personaAdvisory}`;
-        } else {
+        } else if (!isHyperSpecificQuery) {
           answer += `\n\n${personaAdvisory}`;
         }
-      } else {
+      } else if (!isHyperSpecificQuery) {
         answer += `\n\n${personaAdvisory}`;
       }
     } else if (context.language === "hi") {

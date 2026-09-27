@@ -109,12 +109,11 @@ export class GeminiProvider implements AIProvider {
 
     const candidateModels = [
       model,
+      "gemini-3.1-flash-lite",
       "gemini-3.6-flash",
       "gemini-3.8-flash",
-      "gemini-3.7-flash",
       "gemini-flash-latest",
       "gemini-3.5-flash",
-      "gemini-3.1-flash-lite",
     ].filter(
       (m, i, arr) =>
         arr.indexOf(m) === i &&
@@ -128,7 +127,8 @@ export class GeminiProvider implements AIProvider {
     for (const activeModel of candidateModels) {
       const endpoint = `${GEMINI_API_BASE_URL}/models/${activeModel}:generateContent?key=${encodeURIComponent(key)}`;
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeout);
+      const perAttemptTimeout = Math.min(timeout, 8000);
+      const timer = setTimeout(() => controller.abort(), perAttemptTimeout);
 
       try {
         const response = await fetch(endpoint, {
@@ -143,21 +143,21 @@ export class GeminiProvider implements AIProvider {
         clearTimeout(timer);
 
         if (!response.ok) {
-          if (response.status === 429) {
-            throw new AppError("AI_RATE_LIMITED", "Gemini API rate limit exceeded", 429);
-          }
-
           const errorText = await response.text().catch(() => "Unknown error");
           console.warn(`[GeminiProvider] API request to ${activeModel} failed (status ${response.status}): ${errorText.slice(0, 160)}`);
 
-          // If model was not found (404) or bad request due to unsupported model/config (400), try fallback model
-          if ((response.status === 404 || response.status === 400) && activeModel !== candidateModels[candidateModels.length - 1]) {
+          // If more candidates exist, cascade to the next candidate model on 503, 502, 500, 429, 404, or 400
+          if (activeModel !== candidateModels[candidateModels.length - 1]) {
             lastError = new AppError(
-              "AI_PROVIDER_UNAVAILABLE",
-              `Gemini API model ${activeModel} returned status ${response.status}`,
-              502
+              response.status === 429 ? "AI_RATE_LIMITED" : "AI_PROVIDER_UNAVAILABLE",
+              `Gemini API model ${activeModel} returned status ${response.status}: ${errorText.slice(0, 120)}`,
+              response.status === 429 ? 429 : 502
             );
             continue;
+          }
+
+          if (response.status === 429) {
+            throw new AppError("AI_RATE_LIMITED", "Gemini API rate limit exceeded", 429);
           }
 
           throw new AppError(
@@ -173,6 +173,16 @@ export class GeminiProvider implements AIProvider {
         if (!candidate || !candidate.content?.parts?.[0]?.text) {
           const finishReason = candidate?.finishReason || "NO_CANDIDATES";
           console.warn(`[GeminiProvider] Candidate missing text. Finish reason: ${finishReason}`);
+
+          if (activeModel !== candidateModels[candidateModels.length - 1]) {
+            lastError = new AppError(
+              "AI_RESPONSE_INVALID",
+              `Gemini response did not contain valid text candidates (finishReason: ${finishReason})`,
+              422
+            );
+            continue;
+          }
+
           throw new AppError(
             "AI_RESPONSE_INVALID",
             `Gemini response did not contain valid text candidates (finishReason: ${finishReason})`,
@@ -185,22 +195,23 @@ export class GeminiProvider implements AIProvider {
         clearTimeout(timer);
         lastError = err;
 
+        // If more candidates exist, try next candidate model on timeout or network error
+        if (activeModel !== candidateModels[candidateModels.length - 1]) {
+          console.warn(`[GeminiProvider] Model ${activeModel} attempt failed (${err instanceof Error ? err.message : String(err)}). Trying next candidate...`);
+          continue;
+        }
+
         if (err instanceof AppError && err.code === "AI_RATE_LIMITED") {
           throw err;
         }
 
-        // If abort timeout, throw directly
+        // If abort timeout and no more models, throw timeout error
         if (err instanceof Error && err.name === "AbortError") {
           throw new AppError(
             "AI_PROVIDER_UNAVAILABLE",
             `Gemini API request timed out after ${timeout}ms`,
             504
           );
-        }
-
-        // If more candidate models exist and error was 404/400, continue to next model
-        if (err instanceof AppError && err.statusCode === 502 && activeModel !== candidateModels[candidateModels.length - 1]) {
-          continue;
         }
 
         throw err instanceof AppError

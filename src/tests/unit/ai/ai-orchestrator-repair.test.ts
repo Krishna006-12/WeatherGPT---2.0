@@ -149,26 +149,79 @@ describe("GeminiProvider Configuration Sanitization", () => {
     vi.unstubAllGlobals();
   });
 
-  it("automatically migrates obsolete gemini-2.5-flash model override to gemini-3.6-flash", async () => {
-    const fetchSpy = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        candidates: [{ content: { parts: [{ text: JSON.stringify({ answer: "Migrated test response" }) }] } }],
-      }),
-    });
+  it("cascades from 503 high-demand model to gemini-3.1-flash-lite successfully", async () => {
+    const fetchSpy = vi.fn()
+      // First attempt on gemini-3.6-flash returns 503 High Demand
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        text: async () => JSON.stringify({ error: { code: 503, message: "This model is currently experiencing high demand." } }),
+      })
+      // Second attempt on gemini-3.1-flash-lite succeeds with 200
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({ answer: "Cascade success from flash-lite" }) }] } }],
+        }),
+      });
     vi.stubGlobal("fetch", fetchSpy);
 
-    const provider = new GeminiProvider({
-      apiKey: "test-key",
-      defaultModel: "gemini-2.5-flash",
-    });
+    const provider = new GeminiProvider({ apiKey: "test-key", defaultModel: "gemini-3.6-flash" });
+    const result = await provider.generateCompletion("Test prompt");
 
-    await provider.generateCompletion("Test prompt");
-
-    expect(fetchSpy).toHaveBeenCalled();
-    const requestUrl = (fetchSpy.mock.calls[0]?.[0] || "") as string;
-    expect(requestUrl).toContain("/models/gemini-3.6-flash:generateContent");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[0]![0]).toContain("gemini-3.6-flash");
+    expect(fetchSpy.mock.calls[1]![0]).toContain("gemini-3.1-flash-lite");
+    expect(result).toBe(JSON.stringify({ answer: "Cascade success from flash-lite" }));
 
     vi.unstubAllGlobals();
   });
+
+  it("handles hyper-specific historical rainfall queries with accurate observation limits in fallback", async () => {
+    const orchestrator = new AIOrchestrator({
+      aiProvider: new FailingAIProvider(),
+      weatherService: new (await import("@/services/weather/weather-service")).WeatherService({
+        name: "mock",
+        getWeather: async () => ({
+          location: { name: "Kanpur", region: "Uttar Pradesh", country: "India", coordinates: { latitude: 26.4499, longitude: 80.3319 } },
+          observedAt: new Date().toISOString(),
+          current: {
+            temperature: 25.4,
+            feelsLike: 26,
+            humidity: 80,
+            precipitation: 0,
+            windSpeed: 5,
+            windDirection: 90,
+            pressure: 1012,
+            visibility: 10000,
+            uvIndex: 4,
+            cloudCover: 20,
+            condition: "clear",
+            description: "Clear sky",
+            observedAt: new Date().toISOString(),
+          },
+          hourly: [],
+          daily: [{ date: "2026-09-26", temperatureHigh: 30, temperatureLow: 22, condition: "clear", precipitationProbability: 10, precipitationSum: 0, sunrise: "06:00", sunset: "18:00" }],
+          alerts: [],
+          provenance: [{ provider: "Open-Meteo", retrievedAt: new Date().toISOString() }],
+        }),
+      } as any),
+    });
+
+    const result = await orchestrator.processQuery({
+      message: "What was the exact rainfall in Kanpur at 3:17 PM yesterday?",
+      persona: "farmer",
+      location: { name: "Kanpur, Uttar Pradesh, India", lat: 26.4499, lon: 80.3319 },
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.data.metadata?.isFallback).toBe(true);
+    // Answer must explain standard observational station limits (hourly vs minute)
+    expect(result.data.answer).toContain("hourly accumulations rather than continuous minute-by-minute records");
+    // Must NOT have irrelevant generic agronomic advisory tacked on
+    expect(result.data.answer).not.toContain("Agronomic Advisory: Favorable conditions for routine field operations");
+  });
 });
+

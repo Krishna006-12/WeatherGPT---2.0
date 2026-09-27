@@ -9,6 +9,7 @@
 
 export type TemporalTarget =
   | "current"
+  | "yesterday"
   | "today"
   | "tonight"
   | "tomorrow"
@@ -140,6 +141,21 @@ export class TemporalResolver {
         timezone,
         isFuture: true,
         cleanQuery: query.replace(/\b(?:tomorrow\s+evening|tomorrow\s+night|kal\s+shaam|kal\s+raat)\b/gi, "").trim(),
+      };
+    }
+
+    // 1.5. Yesterday
+    if (
+      /\b(?:yesterday|beeta\s+hua\s+kal|last\s+day)\b/i.test(text) ||
+      (/\bkal\b/i.test(text) && /\b(?:beeta|tha|the|thi|gaya|pehle|was|were|did|had)\b/i.test(text))
+    ) {
+      return {
+        target: "yesterday",
+        label: "Yesterday",
+        targetDate: addDaysToParts(parts, -1),
+        timezone,
+        isFuture: false,
+        cleanQuery: query.replace(/\b(?:yesterday|beeta\s+hua\s+kal|last\s+day)\b/gi, "").trim(),
       };
     }
 
