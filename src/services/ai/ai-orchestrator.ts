@@ -880,6 +880,57 @@ export class AIOrchestrator {
   }
 
   /**
+   * Sanitizes user-facing answer text according to Output Format Integrity:
+   * Strips any accidental JSON wrapper syntax, unescapes double-escaped newlines,
+   * and ensures no wrapper artifacts leak to the user.
+   */
+  private cleanUserFacingAnswer(raw: string): string {
+    if (!raw) return "";
+    let text = raw.trim();
+
+    // 1. Strip outer code fences if wrapping an entire JSON object
+    const codeBlockMatch = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      const inner = codeBlockMatch[1].trim();
+      if (inner.startsWith("{") && inner.endsWith("}")) {
+        text = inner;
+      }
+    }
+
+    // 2. If text is a raw JSON string like {"answer": "...", ...}, extract the answer property
+    if (text.startsWith("{") && text.includes('"answer"')) {
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.answer === "string") {
+          text = parsed.answer;
+        }
+      } catch {
+        // Fallback regex extraction if JSON is slightly malformed
+        const answerMatch = text.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (answerMatch && answerMatch[1]) {
+          try {
+            text = JSON.parse(`"${answerMatch[1]}"`);
+          } catch {
+            text = answerMatch[1];
+          }
+        }
+      }
+    }
+
+    // 3. Clean up unescaped literal \n (e.g. string contains literal backslash followed by n instead of actual newline)
+    if (text.includes("\\n") && !text.includes("\n")) {
+      text = text.replace(/\\n/g, "\n");
+    } else if (text.includes("\\n") && text.includes("\n")) {
+      text = text.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n");
+    }
+
+    // Clean up literal unescaped \"
+    text = text.replace(/\\"/g, '"');
+
+    return text.trim();
+  }
+
+  /**
    * Parse JSON output from model with resilient fallback.
    */
   private parseModelOutput(
@@ -907,7 +958,7 @@ export class AIOrchestrator {
         }
 
         return {
-          answer: parsed.answer,
+          answer: this.cleanUserFacingAnswer(parsed.answer),
           groundingStatus: status,
           uncertainty: parsed.uncertainty || null,
         };
@@ -938,7 +989,7 @@ export class AIOrchestrator {
             }
 
             return {
-              answer: parsed.answer,
+              answer: this.cleanUserFacingAnswer(parsed.answer),
               groundingStatus: status,
               uncertainty: parsed.uncertainty || null,
             };
@@ -968,7 +1019,7 @@ export class AIOrchestrator {
           }
 
           return {
-            answer: parsed.answer,
+            answer: this.cleanUserFacingAnswer(parsed.answer),
             groundingStatus: status,
             uncertainty: parsed.uncertainty || null,
           };
@@ -982,7 +1033,7 @@ export class AIOrchestrator {
       defaultGrounding === "general_knowledge" ? "general_knowledge" : "partially_grounded";
 
     return {
-      answer: raw.trim(),
+      answer: this.cleanUserFacingAnswer(raw),
       groundingStatus: nonJsonFallbackStatus,
     };
   }

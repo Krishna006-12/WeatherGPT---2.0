@@ -136,4 +136,46 @@ describe("General-Purpose AI Assistant (WeatherGPT 2.0)", () => {
     expect(result.data.answer).not.toContain("°C");
     expect(result.data.answer).not.toContain("umbrella");
   });
+
+  it("4. System Prompt: Enforces Additional Rules v2 (multi-part, temporal honesty, output format integrity)", () => {
+    const builder = new ContextBuilder();
+    const promptObj = builder.buildPrompt({
+      userQuery: "What is the latest news and weather in Kanpur?",
+      intent: "weather",
+      channel: "chat",
+      builtAt: new Date().toISOString(),
+    });
+
+    expect(promptObj.systemInstruction).toContain("# ADDITIONAL RULES (v2 — post-testing fixes)");
+    expect(promptObj.systemInstruction).toContain("## Multi-part query handling");
+    expect(promptObj.systemInstruction).toContain("## Temporal honesty (critical)");
+    expect(promptObj.systemInstruction).toContain("## Output format integrity");
+    expect(promptObj.systemInstruction).toContain("Never silently drop a sub-question");
+    expect(promptObj.systemInstruction).toContain("This may be outdated — I don't have live data confirming this is current");
+  });
+
+  it("5. Output Format Integrity: Orchestrator automatically strips raw JSON wrappers and unescapes newlines", async () => {
+    const mockAiProvider = new MockAIProvider();
+    // Simulate model output that accidentally returned an escaped JSON string wrapper or raw fence
+    mockAiProvider.setResponse(
+      JSON.stringify({
+        answer: '{"answer": "Here is the summary:\\n\\nLine 1\\nLine 2"}',
+        groundingStatus: "general_knowledge",
+      })
+    );
+
+    const orchestrator = new AIOrchestrator({ aiProvider: mockAiProvider });
+    const result = await orchestrator.processQuery({
+      message: "Explain recursion in programming",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    // Must be cleanly unwrapped and newlines formatted, never exposing {"answer": ...} wrapper
+    expect(result.data.answer.startsWith('{"answer":')).toBe(false);
+    expect(result.data.answer).toContain("Here is the summary:");
+    expect(result.data.answer).toContain("\n\nLine 1\nLine 2");
+  });
 });
+
