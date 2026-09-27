@@ -48,6 +48,10 @@ describe("General-Purpose AI Assistant (WeatherGPT 2.0)", () => {
 
   it("1. Intent Classification: Routes non-weather topics to 'general' without falsely extracting locations", () => {
     // Coding queries
+    const codingQuery = router.classify("can you write me a C language code to write tranpose of a matrix");
+    expect(codingQuery.intent).toBe("general");
+    expect(codingQuery.extractedLocation).toBeUndefined();
+
     expect(router.classify("Write a python function to reverse a string").intent).toBe("general");
     expect(router.classify("How does memory allocation work in C?").intent).toBe("general");
     expect(router.classify("Explain recursion in Python").intent).toBe("general");
@@ -198,6 +202,26 @@ describe("General-Purpose AI Assistant (WeatherGPT 2.0)", () => {
     expect(result.data.answer).toContain('printf("Transpose");');
     // Verifies that unclosed ```c fence was automatically closed with ```
     expect(result.data.answer.endsWith("```")).toBe(true);
+  });
+
+  it("7. General Query Fallback: If AI provider fails, general queries never output location errors like 'Can You Write ke liye location check...'", async () => {
+    const mockAiProvider = new MockAIProvider({ simulateError: "unavailable" });
+
+    const orchestrator = new AIOrchestrator({ aiProvider: mockAiProvider });
+    const result = await orchestrator.processQuery({
+      message: "can you write me a C language code to write tranpose of a matrix",
+      language: "hi-en",
+      persona: "farmer",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.data.intent).toBe("general");
+    expect(result.data.answer).not.toContain("Can You Write");
+    expect(result.data.answer).not.toContain("location check");
+    expect(result.data.answer).not.toContain("Unable to find verified geographic location");
+    expect(result.data.answer).toContain("high traffic");
   });
 });
 

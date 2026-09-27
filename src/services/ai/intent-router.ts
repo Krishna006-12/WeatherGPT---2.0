@@ -309,6 +309,15 @@ function sanitizeExtractedLocation(raw?: string): string | undefined {
     return undefined;
   }
 
+  // Reject candidates containing conversational English verbs, pronouns, and coding/request phrasing
+  if (
+    /\b(?:can|could|would|should|will|you|your|write|code|program|matrix|transpose|language|function|explain|translate|solve|create|make|draft|generate|answer|tell|give|show|teach|ask|help|please|why|what|how|who|where|when)\b/i.test(
+      clean
+    )
+  ) {
+    return undefined;
+  }
+
   // Check if every word in the candidate is a stop word
   const words = clean.split(/\s+/);
   if (words.every((w) => STOP_WORDS.includes(w.toLowerCase()))) {
@@ -585,7 +594,7 @@ export class IntentRouter {
       intent: "general",
       intents: ["general"],
       confidence: 0.5,
-      extractedLocation: fallbackLocation,
+      extractedLocation: undefined,
       isConsensusQuery: false,
       isActivityQuery: false,
     };
@@ -867,8 +876,9 @@ export class IntentRouter {
       /\b(?:weather\s+in|temp\s+in|temperature\s+in|forecast\s+for|mausam\s+in)\s+([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
       // "weather London", "forecast Tokyo" — with negative lookahead so question phrases like "kasa hau", "kaisa hai" are never matched as locations
       /\b(?:weather|forecast|temperature|temp|mausam)\s+(?!kaisa\b|kasa\b|kaise\b|kese\b|kya\b|kab\b|kitna\b|batao\b|bataiye\b|sunao\b|haal\b|update\b|hau\b|hai\b|h\b)([a-zA-Z0-9\s\-_]+?)(?:\?|\.|\,|!|;|\b(?:right\s+now|currently|tomorrow|today|now)\b|$)/i,
-      // Hinglish: "Kanpur mein kal mausam", "Kanpur mein: Ignore..."
-      /\b([a-zA-Z0-9\s\-_]+?)\s+(?:mein|me)(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?(?:\b|$|\?|\.|\,)/i,
+      // Hinglish: "Kanpur mein kal mausam", "Kanpur mein: Ignore...", "Delhi me baarish"
+      // Explicitly protect against English pronoun "me" preceded by verbs (e.g. "write me", "tell me", "give me", "show me")
+      /\b(?!(?:can\s+you\s+)?(?:write|tell|give|show|send|ask|help|teach|call|hear|listen|for|with|to|from|about)\s+me\b)([a-zA-Z0-9\s\-_]+?)\s+(?:mein|(?<!\b(?:write|tell|give|show|send|ask|help|teach|call|hear|listen|for|with|to|from|about)\s+)me)(?::|\s+|$|\?|\.|\,)\s*(?:kal|aaj|parso)?\s*(?:weather|mausam|rain|baarish)?(?:\b|$|\?|\.|\,)/i,
       // "London weather", "New Delhi forecast" (excluding temporal/stop words)
       /\b(?!hourly\b|daily\b|weekly\b|today\b|tomorrow\b|current\b|live\b|detailed\b|forecast\b|weather\b)([a-zA-Z0-9\s\-_]+?)\s+(?:weather|temperature|forecast|mausam)\b/i,
     ];

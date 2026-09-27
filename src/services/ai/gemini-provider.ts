@@ -8,8 +8,8 @@
 import type { AIProvider, AICompletionOptions } from "./ai-provider";
 import { AppError } from "@/lib/errors";
 
-const DEFAULT_MODEL = "gemini-3.6-flash";
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_MODEL = "gemini-3.1-flash-lite";
+const DEFAULT_TIMEOUT_MS = 12000;
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 export interface GeminiProviderConfig {
@@ -114,8 +114,8 @@ export class GeminiProvider implements AIProvider {
     const candidateModels = [
       model,
       "gemini-3.1-flash-lite",
-      "gemini-3.6-flash",
       "gemini-3.8-flash",
+      "gemini-3.6-flash",
       "gemini-flash-latest",
       "gemini-3.5-flash",
     ].filter(
@@ -131,7 +131,7 @@ export class GeminiProvider implements AIProvider {
     for (const activeModel of candidateModels) {
       const endpoint = `${GEMINI_API_BASE_URL}/models/${activeModel}:generateContent?key=${encodeURIComponent(key)}`;
       const controller = new AbortController();
-      const perAttemptTimeout = options.timeoutMs || timeout || 25000;
+      const perAttemptTimeout = Math.min(options.timeoutMs || timeout || 12000, 12000);
       const timer = setTimeout(() => controller.abort(), perAttemptTimeout);
 
       try {

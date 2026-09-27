@@ -419,7 +419,7 @@ export class AIOrchestrator {
             jsonMode: true,
             image: imageOption,
             maxTokens: 8192,
-            timeoutMs: 25000,
+            timeoutMs: 12000,
             // Grounding with search is scoped strictly to factual/weather queries, never forced on casual/general chat
             enableGrounding: isWeatherDependentIntent && !request.image,
           }
@@ -674,10 +674,14 @@ export class AIOrchestrator {
     if (typeof classification === "string") {
       queryLocationName = classification;
     } else if (classification) {
-      queryLocationName =
-        classification.intent === "impact"
-          ? classification.targetImpactLocation || classification.extractedLocation
-          : classification.extractedLocation;
+      if (classification.intent === "general") {
+        queryLocationName = undefined;
+      } else {
+        queryLocationName =
+          classification.intent === "impact"
+            ? classification.targetImpactLocation || classification.extractedLocation
+            : classification.extractedLocation;
+      }
       isFollowUp = !!classification.isFollowUp;
     }
 
@@ -1098,6 +1102,29 @@ export class AIOrchestrator {
       } else {
         answer = `Hello! I am WeatherGPT Copilot, your personal AI assistant. How can I help you today?`;
       }
+    } else if (context.intent === "general") {
+      if (context.language === "hi") {
+        answer = "AI सहायक सेवा इस समय अत्यधिक मांग (high traffic) का सामना कर रही है। कृपया एक क्षण बाद पुनः अपना प्रश्न पूछें।";
+      } else if (context.language === "hi-en") {
+        answer = "AI assistant service abhi high traffic par hai. Kripya ek pal baad dobara apna sawaal poochhein.";
+      } else if (context.language === "pa") {
+        answer = "AI ਸਹਾਇਕ ਸੇਵਾ ਇਸ ਸਮੇਂ ਬਹੁਤ ਜ਼ਿਆਦਾ ਟ੍ਰੈਫਿਕ ਦਾ ਸਾਹਮਣਾ ਕਰ ਰਹੀ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹੀ ਦੇਰ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।";
+      } else {
+        answer = "The AI service is currently experiencing high demand. Please try asking your question again in a moment.";
+      }
+
+      return {
+        success: true,
+        data: {
+          id,
+          answer,
+          intent: "general",
+          groundingStatus: "general_knowledge",
+          citations: context.citations || [],
+          generatedAt: context.generatedAt,
+          model: "deterministic_fallback",
+        },
+      };
     } else if (
       context.locationNotFound ||
       (context.targetLocation && !context.weather && !context.targetLocation.coordinates)
@@ -1331,10 +1358,7 @@ export class AIOrchestrator {
         answer = `Temperature observation for ${locName}: It is currently ${c.temperature}°C (${c.condition}), with ${c.humidity}% relative humidity and winds at ${c.windSpeed} km/h.`;
       } else if (c && /\b(?:wind|hawa|gust|breeze)\b/i.test(qLower)) {
         answer = `Wind conditions for ${locName}: Current wind speed is ${c.windSpeed} km/h. Conditions are ${c.temperature}°C and ${c.condition}.`;
-      } else if (c) {
         answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
-      } else if (context.intent === "general") {
-        answer = `I am currently operating in offline mode and could not connect to the generative AI service. Please try asking your question again in a moment.`;
       } else {
         answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
       }
