@@ -559,9 +559,18 @@ export class IntentRouter {
       };
     }
 
-    // Default fallback: if a location is mentioned, default to weather; else general
+    // Default fallback:
+    // Only default to weather if:
+    // a) The query contains weather/meteorological keywords, OR
+    // b) The query is a short, standalone location lookup (e.g. "Paris", "Tokyo, Japan", "Kanpur")
+    const words = clean.split(/\s+/).filter(Boolean);
+    const hasAnyWeatherTerm =
+      /\b(weather|mausam|temperature|temp|taapman|rain|rainfall|baarish|humidity|wind|hawa|storm|toofan|cyclone|forecast|monsoon|sunny|cloudy|cold|hot|garmi|sardi|aqi|chilly|breeze|snow|fog|kohra|dhoop|badal|lightning|thunder|flood|flooding)\b/i.test(
+        clean
+      );
+
     const fallbackLocation = this.extractLocation(clean);
-    if (fallbackLocation) {
+    if (fallbackLocation && (hasAnyWeatherTerm || words.length <= 3)) {
       return {
         intent: "weather",
         intents: ["weather"],
@@ -576,6 +585,7 @@ export class IntentRouter {
       intent: "general",
       intents: ["general"],
       confidence: 0.5,
+      extractedLocation: fallbackLocation,
       isConsensusQuery: false,
       isActivityQuery: false,
     };
@@ -767,21 +777,45 @@ export class IntentRouter {
   }
 
   private isForecastQuery(text: string): boolean {
-    const forecastKeywords = [
-      /\b(tomorrow|kal|parso|next week|weekend|upcoming|days ahead|next 24|next 48|48 hours|24 hours)\b/i,
+    const explicitForecastKeywords = [
       /\b(forecast|extended forecast|outlook)\b/i,
-      /\b(will it rain|going to rain|chances of rain|probability of rain|rain today|rain tomorrow)\b/i,
-      /\b(will it snow|will it storm|rain expected)\b/i,
+      /\b(will it rain|going to rain|chances of rain|probability of rain|rain today|rain tomorrow|baarish hogi|barish hogi|baarish hone wali hai)\b/i,
+      /\b(will it snow|will it storm|rain expected|snow expected|storm expected)\b/i,
+      /\b(kaisa rahega mausam|mausam kaisa rahega)\b/i,
     ];
 
-    if (forecastKeywords.some((pattern) => pattern.test(text))) {
+    if (explicitForecastKeywords.some((pattern) => pattern.test(text))) {
+      return true;
+    }
+
+    // Multi-hour / multi-day forecast horizon (e.g. "next 48 hours in Kanpur", "next 24 hours in Delhi")
+    if (/\b(?:next\s+24|next\s+48|24\s+hours|48\s+hours|7\s+days|5\s+days|3\s+days)\b/i.test(text)) {
+      return true;
+    }
+
+    // Temporal keywords COMBINED with meteorological terms or location phrasing
+    const hasTemporal =
+      /\b(tomorrow|kal|parso|next week|weekend|upcoming|days ahead)\b/i.test(text);
+    const hasWeatherTerm =
+      /\b(weather|mausam|rain|baarish|snow|temp|temperature|taapman|storm|toofan|sunny|cloudy|wind|windy|hot|cold|garmi|sardi|chilly|humid|humidity)\b/i.test(
+        text
+      );
+    const hasLocationPhrasing =
+      /\b(?:in|for|at)\s+(?!(?:tomorrow|today|yesterday|now|next\s+week|this\s+week|aaj|kal|parso)\b)[a-zA-Z]{2,}/i.test(
+        text
+      );
+
+    if (hasTemporal && (hasWeatherTerm || hasLocationPhrasing)) {
       return true;
     }
 
     // "hourly" or "daily" without explicit "weather", "temperature", or "mausam" is treated as forecast progression
     // e.g. "Hourly forecast", "Hourly for Kanpur", "Hourly outlook"
     // whereas "Hourly weather in Kanpur" explicitly asks for weather conditions
-    if (/\b(hourly|daily)\b/i.test(text)) {
+    if (
+      /\b(hourly|daily)\b/i.test(text) &&
+      !/\b(routine|schedule|standup|rate|wage|basis|meeting)\b/i.test(text)
+    ) {
       if (!/\b(weather|temperature|temp|mausam)\b/i.test(text)) {
         return true;
       }

@@ -11,6 +11,8 @@ export interface AICompletionOptions {
   maxTokens?: number;
   timeoutMs?: number;
   jsonMode?: boolean;
+  /** Scoped Google search grounding: scoped only to factual/weather lookups, disabled for casual chat */
+  enableGrounding?: boolean;
   image?: {
     mimeType: string;
     data: string; // Base64 encoded string

@@ -176,8 +176,20 @@ export class AIOrchestrator {
       let modelConsensus: ModelConsensusReport | undefined;
       let activitySuitability: ActivitySuitabilityReport | undefined;
 
-      // If location is unknown, or agricultural query without coordinates, return deterministic fallback
-      if (locationState.locationNotFound || (intent === "agriculture" && !targetLocation?.coordinates)) {
+      // Only require location resolution for weather-dependent queries (not general-purpose conversational queries)
+      const isWeatherDependentIntent =
+        intent === "weather" ||
+        intent === "forecast" ||
+        intent === "consensus" ||
+        intent === "agriculture" ||
+        intent === "impact" ||
+        intent === "activity";
+
+      // If location is unknown for a weather-dependent query, or agricultural query without coordinates, return deterministic fallback
+      if (
+        (isWeatherDependentIntent && locationState.locationNotFound) ||
+        (intent === "agriculture" && !targetLocation?.coordinates)
+      ) {
         return this.generateDeterministicFallback({
           userQuery: message,
           intent,
@@ -196,9 +208,16 @@ export class AIOrchestrator {
         });
       }
 
-      // Execute Weather / Forecast Tools
+      const isGreeting = /\b(hlo|hello|hi|hey|greetings|namaste)\b/i.test(message);
+
+      // Execute Weather / Forecast Tools strictly for weather-dependent intents (or location-aware greetings)
       if (
-        (intent === "weather" || intent === "forecast" || intent === "impact" || intent === "agriculture" || intent === "consensus" || intent === "general") &&
+        (intent === "weather" ||
+          intent === "forecast" ||
+          intent === "impact" ||
+          intent === "agriculture" ||
+          intent === "consensus" ||
+          (isGreeting && Boolean(targetLocation?.coordinates))) &&
         targetLocation?.coordinates
       ) {
         // Fetch current observations via get_weather tool
@@ -396,10 +415,15 @@ export class AIOrchestrator {
         const rawCompletion = await this.aiProvider.generateCompletion(
           prompt,
           systemInstruction,
-          { jsonMode: true, image: imageOption }
+          {
+            jsonMode: true,
+            image: imageOption,
+            // Grounding with search is scoped strictly to factual/weather queries, never forced on casual/general chat
+            enableGrounding: isWeatherDependentIntent && !request.image,
+          }
         );
 
-        const parsed = this.parseModelOutput(rawCompletion);
+        const parsed = this.parseModelOutput(rawCompletion, initialGroundingStatus);
         rawAnswerText = parsed.answer;
         if (parsed.groundingStatus) {
           modelGroundingStatus = parsed.groundingStatus;
@@ -858,27 +882,21 @@ export class AIOrchestrator {
   /**
    * Parse JSON output from model with resilient fallback.
    */
-  private parseModelOutput(raw: string): {
+  private parseModelOutput(
+    raw: string,
+    defaultGrounding: GroundingStatus = "partially_grounded"
+  ): {
     answer: string;
     groundingStatus?: GroundingStatus;
     uncertainty?: string | null;
   } {
-    try {
-      let clean = raw.trim();
-      const jsonBlockMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-      if (jsonBlockMatch && jsonBlockMatch[1]) {
-        clean = jsonBlockMatch[1].trim();
-      } else {
-        const firstBrace = clean.indexOf("{");
-        const lastBrace = clean.lastIndexOf("}");
-        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-          clean = clean.slice(firstBrace, lastBrace + 1);
-        }
-      }
+    const clean = raw.trim();
 
+    // 1. Direct JSON parse (safest when model output is clean JSON, even with embedded code blocks)
+    try {
       const parsed = JSON.parse(clean);
-      if (parsed.answer && typeof parsed.answer === "string") {
-        let status: GroundingStatus | undefined = undefined;
+      if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+        let status: GroundingStatus = defaultGrounding;
         if (
           parsed.groundingStatus === "grounded" ||
           parsed.groundingStatus === "partially_grounded" ||
@@ -895,16 +913,77 @@ export class AIOrchestrator {
         };
       }
     } catch {
-      // If model returned plain text instead of JSON
-      return {
-        answer: raw.trim(),
-        groundingStatus: "partially_grounded",
-      };
+      // Continue to extraction strategies if direct parse fails
     }
+
+    // 2. Code block extraction (find outermost markdown code fence)
+    if (clean.includes("```")) {
+      try {
+        const firstFence = clean.indexOf("```");
+        const firstNewline = clean.indexOf("\n", firstFence);
+        const lastFence = clean.lastIndexOf("```");
+
+        if (firstNewline !== -1 && lastFence > firstNewline) {
+          const stripped = clean.slice(firstNewline + 1, lastFence).trim();
+          const parsed = JSON.parse(stripped);
+          if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+            let status: GroundingStatus = defaultGrounding;
+            if (
+              parsed.groundingStatus === "grounded" ||
+              parsed.groundingStatus === "partially_grounded" ||
+              parsed.groundingStatus === "general_knowledge" ||
+              parsed.groundingStatus === "insufficient_evidence"
+            ) {
+              status = parsed.groundingStatus;
+            }
+
+            return {
+              answer: parsed.answer,
+              groundingStatus: status,
+              uncertainty: parsed.uncertainty || null,
+            };
+          }
+        }
+      } catch {
+        // Continue to brace extraction
+      }
+    }
+
+    // 3. First brace to last brace extraction
+    try {
+      const firstBrace = clean.indexOf("{");
+      const lastBrace = clean.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const sliced = clean.slice(firstBrace, lastBrace + 1);
+        const parsed = JSON.parse(sliced);
+        if (parsed && typeof parsed === "object" && typeof parsed.answer === "string") {
+          let status: GroundingStatus = defaultGrounding;
+          if (
+            parsed.groundingStatus === "grounded" ||
+            parsed.groundingStatus === "partially_grounded" ||
+            parsed.groundingStatus === "general_knowledge" ||
+            parsed.groundingStatus === "insufficient_evidence"
+          ) {
+            status = parsed.groundingStatus;
+          }
+
+          return {
+            answer: parsed.answer,
+            groundingStatus: status,
+            uncertainty: parsed.uncertainty || null,
+          };
+        }
+      }
+    } catch {
+      // Model returned plain text instead of JSON
+    }
+
+    const nonJsonFallbackStatus: GroundingStatus =
+      defaultGrounding === "general_knowledge" ? "general_knowledge" : "partially_grounded";
 
     return {
       answer: raw.trim(),
-      groundingStatus: "partially_grounded",
+      groundingStatus: nonJsonFallbackStatus,
     };
   }
 
@@ -948,9 +1027,9 @@ export class AIOrchestrator {
     if (isGreeting) {
       if (context.weather) {
         const c = context.weather.current;
-        answer = `Hello! I am WeatherGPT Copilot. Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h. How can I assist your weather intelligence planning today?`;
+        answer = `Hello! I am WeatherGPT Copilot. Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h. How can I assist you today?`;
       } else {
-        answer = `Hello! I am WeatherGPT Copilot, your weather and disaster intelligence assistant. Ask me about current weather, 7-day forecasts, or regional disaster impact assessments.`;
+        answer = `Hello! I am WeatherGPT Copilot, your personal AI assistant. How can I help you today?`;
       }
     } else if (
       context.locationNotFound ||
@@ -1187,6 +1266,8 @@ export class AIOrchestrator {
         answer = `Wind conditions for ${locName}: Current wind speed is ${c.windSpeed} km/h. Conditions are ${c.temperature}°C and ${c.condition}.`;
       } else if (c) {
         answer = `Current weather for ${locName}: ${c.temperature}°C, ${c.condition}. Humidity: ${c.humidity}%, Wind: ${c.windSpeed} km/h.`;
+      } else if (context.intent === "general") {
+        answer = `I am currently operating in offline mode and could not connect to the generative AI service. Please try asking your question again in a moment.`;
       } else {
         answer = `I have received your query for ${locName}. Current observations or active disaster bulletins have been correlated from verified sources.`;
       }

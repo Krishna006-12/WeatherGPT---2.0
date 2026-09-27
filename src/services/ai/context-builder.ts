@@ -34,8 +34,18 @@ export class ContextBuilder {
     const citations: AICitation[] = [];
     const contextSections: string[] = [];
 
-    // --- 1. User Target Location ---
-    if (context.targetLocation) {
+    const hasWeatherData = Boolean(
+      context.weather ||
+      (context.events && context.events.length > 0) ||
+      context.impactAssessment ||
+      context.weatherRisk ||
+      context.agricultureAssessment ||
+      context.modelConsensus ||
+      context.activitySuitability
+    );
+
+    // --- 1. User Target Location (when relevant to weather or environmental queries) ---
+    if (context.targetLocation && (context.intent !== "general" || hasWeatherData)) {
       contextSections.push(
         `<target_location>\nName: ${sanitizeText(context.targetLocation.name)}\nCity: ${sanitizeText(context.targetLocation.city || "N/A")}\nRegion: ${sanitizeText(context.targetLocation.region || "N/A")}\nCountry: ${sanitizeText(context.targetLocation.country || "N/A")}\nTimezone: ${context.targetLocation.timezone || "Auto/UTC"}\n</target_location>`
       );
@@ -115,7 +125,7 @@ export class ContextBuilder {
     }
 
     // --- 5. Verified Temporal Window ---
-    if (context.temporalResolution) {
+    if (context.temporalResolution && (context.intent !== "general" || hasWeatherData)) {
       contextSections.push(
         `<verified_temporal_window target="${context.temporalResolution.target}" label="${context.temporalResolution.label}" targetDate="${context.temporalResolution.targetDate}">\nTarget Period: ${context.temporalResolution.label} (Date: ${context.temporalResolution.targetDate})\nTimezone Context: ${context.targetLocation?.timezone || "UTC"}\n</verified_temporal_window>`
       );
@@ -363,7 +373,10 @@ ${actSnippets.join("\n\n")}
         : "";
 
     // Build the user prompt
-    const prompt = `User Query: "${sanitizeText(context.userQuery)}"
+    let prompt: string;
+
+    if (contextSections.length > 0) {
+      prompt = `User Query: "${sanitizeText(context.userQuery)}"
 Intent Detected: ${context.intent}${voiceGuidance}
 
 ${conversationHistorySection}<verified_data>
@@ -373,11 +386,25 @@ ${contextSections.join("\n\n")}
 Provide a natural, engaging conversational response strictly adhering to the verified data above.
 Respond in the following JSON format ONLY:
 {
-  "answer": "Your warm, natural, and helpful response as a personal weather assistant, delivering verified facts with practical lifestyle advice (clothing, comfort, commute, plans)",
+  "answer": "Your warm, natural, and helpful response delivering verified facts with practical takeaway or advice",
   "groundingStatus": "${initialGroundingStatus}",
   "uncertainty": "Optional note on unverified aspects or data limitations, or null if fully grounded",
   "keyPoints": ["Factual key point 1", "Factual key point 2"]
 }`;
+    } else {
+      prompt = `User Query: "${sanitizeText(context.userQuery)}"
+Intent Detected: ${context.intent}${voiceGuidance}
+
+${conversationHistorySection}Provide a comprehensive, high-quality, and helpful response as a versatile personal AI assistant. Answer the user's question directly with depth, accuracy, and clear structure where appropriate (e.g. code snippets, step-by-step explanations, drafts, or analysis).
+
+Respond in the following JSON format ONLY:
+{
+  "answer": "Your comprehensive, natural, and well-structured response to the user's question",
+  "groundingStatus": "general_knowledge",
+  "uncertainty": null,
+  "keyPoints": ["Key takeaway or insight 1", "Key takeaway or insight 2"]
+}`;
+    }
 
     return {
       systemInstruction,
