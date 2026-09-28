@@ -38,4 +38,34 @@ describe("LanguageSwitcher Component", () => {
     expect(document.documentElement.lang).toBe("hi");
     expect(localStorage.getItem("weathergpt_user_language")).toBe("hi");
   });
+
+  it("renders compact trigger and toggles language dropdown", () => {
+    render(
+      <LanguageProvider>
+        <LanguageSwitcher variant="compact" />
+      </LanguageProvider>
+    );
+
+    const trigger = screen.getByRole("button", { name: /Language:/i });
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveTextContent("EN");
+
+    // Initially menu is closed
+    expect(screen.queryByRole("menu", { name: "Select Language" })).not.toBeInTheDocument();
+
+    // Click trigger opens dropdown
+    fireEvent.click(trigger);
+    expect(screen.getByRole("menu", { name: "Select Language" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "हिंदी" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "ਪੰਜਾਬੀ" })).toBeInTheDocument();
+
+    // Select Hindi
+    fireEvent.click(screen.getByRole("menuitem", { name: "हिंदी" }));
+    expect(document.documentElement.lang).toBe("hi");
+    expect(localStorage.getItem("weathergpt_user_language")).toBe("hi");
+
+    // Dropdown closes and trigger shows 'हिं'
+    expect(screen.queryByRole("menu", { name: "Select Language" })).not.toBeInTheDocument();
+    expect(trigger).toHaveTextContent("हिं");
+  });
 });

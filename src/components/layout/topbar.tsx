@@ -35,13 +35,13 @@ export function Topbar({
       <div className="flex md:hidden flex-col px-3 py-2.5 gap-2 w-full">
         {/* Row 1: Logo + Settings Button on Left, Quick Controls on Right */}
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Link
               href="/settings"
               onClick={() => triggerHaptic("light")}
               aria-label={t("sidebar.settings", "System Intelligence Settings")}
               title={t("sidebar.settings", "System Intelligence Settings")}
-              className="p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] focus:outline-none transition-colors"
+              className="p-1.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] focus:outline-none transition-colors shrink-0"
             >
               <Settings size={18} />
             </Link>
@@ -49,22 +49,23 @@ export function Topbar({
             <Link
               href="/dashboard"
               aria-label="WeatherGPT Home"
-              className="flex items-center gap-1.5 focus:outline-none"
+              className="flex items-center gap-1.5 focus:outline-none min-w-0"
             >
               <img
                 src="/icon.svg"
                 alt="WeatherGPT"
                 width={22}
                 height={22}
-                className="w-5.5 h-5.5 object-contain rounded-md drop-shadow-[0_2px_8px_rgba(56,189,248,0.4)]"
+                className="w-5.5 h-5.5 object-contain rounded-md drop-shadow-[0_2px_8px_rgba(56,189,248,0.4)] shrink-0"
               />
-              <span className="font-bold text-xs tracking-tight text-[var(--text-primary)]">
+              <span className="font-bold text-xs tracking-tight text-[var(--text-primary)] truncate">
                 WeatherGPT <span className="text-[var(--accent)] text-[10px] font-semibold">2.0</span>
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            <LanguageSwitcher variant="compact" />
             <NotificationCenter />
             <ThemeToggle />
             <UserMenu />

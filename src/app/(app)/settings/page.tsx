@@ -1,12 +1,13 @@
 "use client";
 
-import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2, User, Phone, Mail, LogIn, LogOut, ShieldCheck } from "lucide-react";
+import { Settings, Cpu, CloudRain, Radio, Sprout, CheckCircle2, User, Phone, Mail, LogIn, LogOut, ShieldCheck, Languages, Check } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
 import { useNotification } from "@/context/notification-context";
 import { useAuth } from "@/context/auth-context";
+import { triggerHaptic } from "@/lib/motion/haptics";
 
 export default function SettingsPage() {
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { permission, requestPermission, testEmergencyNotification } = useNotification();
   const { session, isGuest, isFarmer, openAuthModal, signOut } = useAuth();
 
@@ -118,6 +119,61 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Language & Regional Localization */}
+        <div className="rounded-3xl bg-[var(--surface-1)] p-6 border border-[var(--border-subtle)] space-y-4 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2.5 text-[var(--text-primary)]">
+              <Languages className="text-cyan-400" size={20} />
+              <h2 className="font-semibold text-base">{t("settings.language_title", "Language & Regional Localization")}</h2>
+            </div>
+            <span className="text-xs text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-full font-medium">
+              {language === "hi" ? "हिन्दी" : language === "pa" ? "ਪੰਜਾਬੀ" : "English"}
+            </span>
+          </div>
+
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            {t(
+              "settings.language_desc",
+              "Select your preferred interface language. WeatherGPT will format meteorological telemetry, agrometeorological advisories, and disaster alerts in this language."
+            )}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { code: "en" as const, name: "English", native: "English", desc: "Standard meteorological terminology & telemetry" },
+              { code: "hi" as const, name: "Hindi", native: "हिन्दी", desc: "कृषि परामर्श एवं सम्पूर्ण मौसम विवरण हिन्दी में" },
+              { code: "pa" as const, name: "Punjabi", native: "ਪੰਜਾਬੀ", desc: "ਖੇਤੀਬਾੜੀ ਸਲਾਹ ਅਤੇ ਮੌਸਮ ਜਾਣਕਾਰੀ ਪੰਜਾਬੀ ਵਿੱਚ" },
+            ].map((opt) => (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => {
+                  setLanguage(opt.code);
+                  triggerHaptic("light");
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                  language === opt.code
+                    ? "bg-[var(--surface-2)] border-[var(--accent)] shadow-md ring-1 ring-[var(--accent)]"
+                    : "bg-[var(--surface-2)]/60 border-[var(--border-subtle)] hover:border-[var(--border-default)] hover:bg-[var(--surface-2)]"
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-bold text-sm text-[var(--text-primary)]">{opt.native}</span>
+                  {language === opt.code ? (
+                    <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-neutral-950 flex items-center justify-center">
+                      <Check size={12} strokeWidth={3} />
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-mono text-[var(--text-tertiary)] uppercase">{opt.code}</span>
+                  )}
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] leading-normal">{opt.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* AI Model Configuration */}
         <div className="rounded-3xl bg-[var(--surface-1)] p-6 border border-[var(--border-subtle)] space-y-4 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">

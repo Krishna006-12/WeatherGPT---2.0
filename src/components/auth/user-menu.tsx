@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useLanguage } from "@/context/language-context";
-import { User, Sprout, LogIn, LogOut, Check, Shield, Phone, Sparkles } from "lucide-react";
+import { User, Sprout, LogIn, LogOut, Check, Shield, Phone, Sparkles, Languages } from "lucide-react";
+import { triggerHaptic } from "@/lib/motion/haptics";
 
 export function UserMenu() {
   const { session, isGuest, isFarmer, openAuthModal, setRole, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -148,6 +149,38 @@ export function UserMenu() {
                 </span>
                 {!isFarmer && <Check size={12} />}
               </button>
+            </div>
+          </div>
+
+          {/* Language Selection */}
+          <div className="py-2.5 border-b border-[var(--border-subtle)]">
+            <span className="text-[10px] uppercase font-semibold text-[var(--text-tertiary)] tracking-wider flex items-center justify-between mb-1.5">
+              <span>{t("user.language", "Language / भाषा")}</span>
+              <Languages size={12} className="text-cyan-400" />
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { code: "en" as const, label: "English", short: "EN" },
+                { code: "hi" as const, label: "हिंदी", short: "हिं" },
+                { code: "pa" as const, label: "ਪੰਜਾਬੀ", short: "ਪੰ" },
+              ].map((opt) => (
+                <button
+                  key={opt.code}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    setLanguage(opt.code);
+                  }}
+                  className={`flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg text-xs font-medium transition-colors ${
+                    language === opt.code
+                      ? "bg-cyan-950/60 border border-cyan-700/50 text-cyan-300 font-semibold"
+                      : "bg-[var(--surface-1)] hover:bg-[var(--surface-3)] text-neutral-400"
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {language === opt.code && <Check size={11} />}
+                </button>
+              ))}
             </div>
           </div>
 
