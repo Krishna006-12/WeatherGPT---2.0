@@ -25,6 +25,7 @@ import { useLanguage } from "@/context/language-context";
 import { getWeatherMascot } from "@/lib/weather/mascot-helper";
 import { getLocalizedLocationName } from "@/lib/i18n/location-names";
 import { WeatherAmbientBackground } from "@/components/weather/weather-ambient-background";
+import { reconcileWeatherCondition } from "@/lib/weather-reconciler";
 
 interface WeatherHeroProps {
   weather?: WeatherSnapshot;
@@ -220,10 +221,6 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
   const { current, daily } = weather;
   const today = daily[0];
 
-  // Dynamic Mascot character based on live weather (localized)
-  const mascot = getWeatherMascot(current.condition, current.temperature, current.windSpeed, t);
-  const localizedLoc = getLocalizedLocationName(location, language);
-
   // Formatted date string corresponding to user's selected locale
   const dateString = new Intl.DateTimeFormat(locale, {
     weekday: "long",
@@ -231,32 +228,25 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
     month: "long",
   }).format(new Date(weather.observedAt || today?.date || Date.now()));
 
-  // Map condition to localized translation
-  const condLower = current.condition.toLowerCase();
-  let conditionLabel = t("condition.sunny", "Sunny");
-  let conditionTheme = "cyan"; // cyan | amber | rose | slate
-  if (condLower.includes("clear")) {
-    conditionLabel = t("condition.clear", "Clear");
-    conditionTheme = "amber";
-  } else if (condLower.includes("partly")) {
-    conditionLabel = t("condition.partly_cloudy", "Partly Cloudy");
-    conditionTheme = "amber";
-  } else if (condLower.includes("cloud") || condLower.includes("overcast")) {
-    conditionLabel = t("condition.cloudy", "Cloudy");
-    conditionTheme = "slate";
-  } else if (condLower.includes("heavy") && condLower.includes("rain")) {
-    conditionLabel = t("condition.heavy_rain", "Heavy Rain");
-    conditionTheme = "cyan";
-  } else if (condLower.includes("rain") || condLower.includes("drizzle")) {
-    conditionLabel = t("condition.rain", "Rain");
-    conditionTheme = "cyan";
-  } else if (condLower.includes("storm") || condLower.includes("thunder")) {
-    conditionLabel = t("condition.thunderstorm", "Thunderstorm");
-    conditionTheme = "rose";
-  } else if (condLower.includes("snow")) {
-    conditionLabel = t("condition.snow", "Snow");
-    conditionTheme = "cyan";
-  }
+  const localizedLoc = getLocalizedLocationName(location, language);
+
+  // Precipitation probability
+  const precipProb = today?.precipitationProbability ?? (current.humidity > 60 ? 40 : 10);
+
+  // Smart Weather Condition Reconciliation (eliminates false heavy rain on trace condensation)
+  const reconciled = reconcileWeatherCondition({
+    condition: current.condition,
+    precipitation: current.precipitation,
+    precipitationProbability: precipProb,
+    cloudCover: current.cloudCover,
+    humidity: current.humidity,
+  });
+
+  const conditionLabel = t(reconciled.labelKey, reconciled.defaultLabel);
+  const conditionTheme = reconciled.theme;
+
+  // Dynamic Mascot character based on reconciled weather condition (localized)
+  const mascot = getWeatherMascot(reconciled.effectiveCondition, current.temperature, current.windSpeed, t);
 
   // Environmental Indicator Estimates
   const uvVal = current.uvIndex ?? 4.5;
@@ -264,9 +254,6 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
 
   // Humidity status
   const humidityStatus = current.humidity > 70 ? "High" : current.humidity < 35 ? "Dry" : "Optimal";
-
-  // Precipitation probability
-  const precipProb = today?.precipitationProbability ?? (current.humidity > 60 ? 40 : 10);
 
   // Apparent temperature calculation
   const feelsLike = Math.round(current.feelsLike ?? current.temperature);
@@ -283,7 +270,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
     >
       {/* ── Dynamic Ambient Animated Weather Background ── */}
       <WeatherAmbientBackground
-        condition={current.condition}
+        condition={reconciled.effectiveCondition}
         className="rounded-[28px] sm:rounded-[32px]"
       />
 
@@ -364,7 +351,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-surface)] text-[var(--accent)] border border-[var(--accent-border)] w-fit">
                   <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                  {current.humidity > 65
+                  {current.precipitation > 0.3 && current.humidity > 65
                     ? t("hero.precip_active", "Precipitation in Progress")
                     : t("hero.stable_atmosphere", "Atmospheric Equilibrium")}
                 </span>
@@ -374,7 +361,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
             {/* Mobile Atmospheric 3D Visual (Integrated beside temperature on phone, hidden on desktop where right column is present) */}
             <div className="lg:hidden flex items-center justify-center shrink-0 pr-1">
               <FloatingElement id="hero-mobile-visual" massTier="light" envelopeScale={0.4} pressScale={false}>
-                <VolumetricWeatherIcon condition={current.condition} className="w-20 h-20 sm:w-28 sm:h-26" />
+                <VolumetricWeatherIcon condition={reconciled.effectiveCondition} className="w-20 h-20 sm:w-28 sm:h-26" />
               </FloatingElement>
             </div>
           </div>
@@ -444,7 +431,7 @@ export function WeatherHero({ weather, isLoading, location }: WeatherHeroProps) 
           <div className="relative flex items-center justify-center p-3 sm:p-5 rounded-3xl bg-[var(--surface-2)]/40 border border-[var(--border-subtle)] w-full max-w-sm">
             {/* Integrated Volumetric Weather Visual */}
             <FloatingElement id="hero-volumetric-visual" massTier="light" envelopeScale={0.6} pressScale={false}>
-              <VolumetricWeatherIcon condition={current.condition} />
+              <VolumetricWeatherIcon condition={reconciled.effectiveCondition} />
             </FloatingElement>
 
             {/* Contextual Weather Asset: Softly blended into the environment without jarring card border */}
