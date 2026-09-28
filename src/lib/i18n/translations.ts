@@ -20,17 +20,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "nav.motion": "Motion Lab",
     "nav.settings": "Settings",
 
-    // Weather Conditions
-    "condition.clear": "Clear",
-    "condition.partly_cloudy": "Partly Cloudy",
-    "condition.cloudy": "Cloudy",
-    "condition.drizzle": "Light Drizzle",
-    "condition.rain": "Rain",
-    "condition.heavy_rain": "Heavy Rain",
-    "condition.thunderstorm": "Thunderstorm",
-    "condition.snow": "Snow",
-    "condition.fog": "Fog",
-
     // Sidebar
     "sidebar.overview": "Dashboard Overview",
     "sidebar.weather": "Weather & Observations",
@@ -375,17 +364,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "nav.copilot": "एआई सह-पायलट",
     "nav.motion": "मोशन लैब",
     "nav.settings": "सेटिंग्स",
-
-    // Weather Conditions
-    "condition.clear": "साफ आसमान",
-    "condition.partly_cloudy": "आंशिक रूप से बादल",
-    "condition.cloudy": "बादल छाए रहेंगे",
-    "condition.drizzle": "हल्की बूंदाबांदी",
-    "condition.rain": "बारिश",
-    "condition.heavy_rain": "भारी बारिश",
-    "condition.thunderstorm": "गरज के साथ बारिश",
-    "condition.snow": "बर्फबारी",
-    "condition.fog": "कोहरा",
 
     // Sidebar
     "sidebar.overview": "डैशबोर्ड अवलोकन",
@@ -732,17 +710,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "nav.motion": "ਮੋਸ਼ਨ ਲੈਬ",
     "nav.settings": "ਸੈਟਿੰਗਾਂ",
 
-    // Weather Conditions
-    "condition.clear": "ਸਾਫ਼ ਅਸਮਾਨ",
-    "condition.partly_cloudy": "ਅੰਸ਼ਕ ਬੱਦਲਵਾਈ",
-    "condition.cloudy": "ਬੱਦਲਵਾਈ",
-    "condition.drizzle": "ਹਲਕੀ ਬੂੰਦਾ-ਬਾਂਦੀ",
-    "condition.rain": "ਮੀਂਹ",
-    "condition.heavy_rain": "ਭਾਰੀ ਮੀਂਹ",
-    "condition.thunderstorm": "ਗਰਜ ਨਾਲ ਤੂਫ਼ਾਨ",
-    "condition.snow": "ਬਰਫ਼ਬਾਰੀ",
-    "condition.fog": "ਧੁੰਦ",
-
     // Sidebar
     "sidebar.overview": "ਡੈਸ਼ਬੋਰਡ ਸੰਖੇਪ",
     "sidebar.weather": "ਮੌਸਮ ਅਤੇ ਨਿਗਰਾਨੀ",
@@ -1087,17 +1054,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "nav.copilot": "AI Copilot",
     "nav.motion": "Motion Lab",
     "nav.settings": "Settings",
-
-    // Weather Conditions
-    "condition.clear": "Clear Sky",
-    "condition.partly_cloudy": "Partly Cloudy",
-    "condition.cloudy": "Cloudy",
-    "condition.drizzle": "Halki Boondabaandi (Drizzle)",
-    "condition.rain": "Baarish (Rain)",
-    "condition.heavy_rain": "Bhaari Baarish (Heavy Rain)",
-    "condition.thunderstorm": "Toofan (Thunderstorm)",
-    "condition.snow": "Barfbari (Snow)",
-    "condition.fog": "Kohra (Fog)",
 
     // Sidebar
     "sidebar.overview": "Dashboard Overview",
