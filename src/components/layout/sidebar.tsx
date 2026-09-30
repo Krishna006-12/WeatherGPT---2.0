@@ -19,7 +19,9 @@ import {
   Radar,
   Navigation,
   Camera,
+  HelpCircle,
 } from "lucide-react";
+import { ProductTourModal } from "@/components/onboarding/product-tour-modal";
 
 interface NavItem {
   href: string;
@@ -34,6 +36,7 @@ export function Sidebar() {
   const { t } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isOpen = isPinned || isHovered;
@@ -258,8 +261,26 @@ export function Sidebar() {
             ))}
           </nav>
 
-          {/* Settings link pinned to bottom */}
-          <div className="mt-auto pb-2 w-full pt-4 border-t border-[var(--border-subtle)]">
+          {/* App Tour and Settings link pinned to bottom */}
+          <div className="mt-auto pb-2 w-full pt-4 border-t border-[var(--border-subtle)] flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setShowTour(true);
+                handleLinkClick();
+              }}
+              aria-label="Take Feature Tour"
+              title="Interactive Feature Tutorial Tour"
+              className={`relative flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group transition-all duration-200 overflow-hidden shrink-0 ${
+                isOpen
+                  ? "px-3 py-2 gap-3.5 w-full justify-start text-xs font-medium min-h-[40px]"
+                  : "justify-center w-11 h-11 min-h-[44px] min-w-[44px] mx-auto"
+              } text-[var(--text-secondary)] hover:text-cyan-400 hover:bg-[var(--surface-3)]`}
+            >
+              <HelpCircle size={20} className="shrink-0 text-cyan-400" />
+              {isOpen && <span>App Feature Tour</span>}
+            </button>
+
             <NavLink
               href="/settings"
               icon={<Settings size={20} />}
@@ -271,6 +292,11 @@ export function Sidebar() {
           </div>
         </aside>
       </div>
+
+      <ProductTourModal
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+      />
     </>
   );
 }

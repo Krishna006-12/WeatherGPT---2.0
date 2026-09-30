@@ -17,6 +17,7 @@ import { DecisionSupportCard } from "@/components/persona/decision-support-card"
 import { ScreenReaderAnnouncer } from "@/components/common/screen-reader-announcer";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 import { PilotOnboardingModal } from "@/components/onboarding/pilot-onboarding-modal";
+import { ProductTourModal } from "@/components/onboarding/product-tour-modal";
 import { VoiceBriefingModal } from "@/components/audio/voice-briefing-modal";
 import { useState } from "react";
 import { HelpCircle, Sparkles, Radio } from "lucide-react";
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const { t } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showVoiceBriefing, setShowVoiceBriefing] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const {
     data: weather,
@@ -66,6 +68,10 @@ export default function DashboardPage() {
         isOpen={showOnboarding}
         onClose={() => setShowOnboarding(false)}
       />
+      <ProductTourModal
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+      />
       <VoiceBriefingModal
         isOpen={showVoiceBriefing}
         onClose={() => setShowVoiceBriefing(false)}
@@ -86,6 +92,16 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowTour(true)}
+            className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg font-medium text-xs bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 hover:bg-cyan-500/20 transition active:scale-95 shadow-sm"
+            title="Interactive Feature Tutorial Tour"
+          >
+            <Sparkles size={13} className="text-cyan-400" />
+            <span>{t("tour.button", "App Tour")}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setShowVoiceBriefing(true)}
