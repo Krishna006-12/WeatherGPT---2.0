@@ -72,12 +72,21 @@ export function InteractiveRadarMap({ location }: InteractiveRadarMapProps) {
           zoomControl: false,
         });
 
-        // High quality CartoDB Dark Matter tiles for sleek cyber/dark aesthetic
+        // High quality Esri Dark Gray Canvas tiles (100% free, zero watermarks, no API key needed)
         L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
           {
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
-            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &copy; OpenStreetMap',
+            maxZoom: 16,
+          }
+        ).addTo(map);
+
+        // Dark Gray reference labels on top
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+          {
+            maxZoom: 16,
+            zIndex: 600,
           }
         ).addTo(map);
 
