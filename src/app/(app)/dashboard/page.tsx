@@ -17,13 +17,15 @@ import { DecisionSupportCard } from "@/components/persona/decision-support-card"
 import { ScreenReaderAnnouncer } from "@/components/common/screen-reader-announcer";
 import { AICopilotCard } from "@/components/chat/ai-copilot-card";
 import { PilotOnboardingModal } from "@/components/onboarding/pilot-onboarding-modal";
+import { VoiceBriefingModal } from "@/components/audio/voice-briefing-modal";
 import { useState } from "react";
-import { HelpCircle, Sparkles } from "lucide-react";
+import { HelpCircle, Sparkles, Radio } from "lucide-react";
 
 export default function DashboardPage() {
   const { selectedLocation } = useLocation();
   const { t } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showVoiceBriefing, setShowVoiceBriefing] = useState(false);
 
   const {
     data: weather,
@@ -64,6 +66,12 @@ export default function DashboardPage() {
         isOpen={showOnboarding}
         onClose={() => setShowOnboarding(false)}
       />
+      <VoiceBriefingModal
+        isOpen={showVoiceBriefing}
+        onClose={() => setShowVoiceBriefing(false)}
+        weather={weather}
+        location={selectedLocation}
+      />
 
       {/* 1. PRIMARY: Dominant Weather Hero Centerpiece */}
       <WeatherHero weather={weather} isLoading={isWeatherLoading} location={selectedLocation} />
@@ -78,6 +86,16 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowVoiceBriefing(true)}
+            className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg font-medium text-xs bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25 transition active:scale-95 shadow-sm"
+            title="Listen to 60-second AI Voice Meteorological Briefing"
+          >
+            <Radio size={13} className="animate-pulse text-cyan-400" />
+            <span>AI Voice Briefing</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setShowOnboarding(true)}

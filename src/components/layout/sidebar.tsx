@@ -16,6 +16,9 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
+  Radar,
+  Navigation,
+  Camera,
 } from "lucide-react";
 
 interface NavItem {
@@ -85,6 +88,33 @@ export function Sidebar() {
         </span>
       ),
       badgeVariant: "rose",
+    },
+    {
+      href: "/radar",
+      label: t("sidebar.radar", "Live Doppler Radar"),
+      icon: <Radar size={20} strokeWidth={1.8} />,
+      badge: (
+        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          Live
+        </span>
+      ),
+      badgeVariant: "cyan",
+    },
+    {
+      href: "/routes",
+      label: t("sidebar.routes", "Route & Travel Weather"),
+      icon: <Navigation size={20} strokeWidth={1.8} />,
+    },
+    {
+      href: "/sky-vision",
+      label: t("sidebar.sky_vision", "Sky & Cloud Vision"),
+      icon: <Camera size={20} strokeWidth={1.8} />,
+      badge: (
+        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+          AI
+        </span>
+      ),
+      badgeVariant: "cyan",
     },
     {
       href: "/impact",

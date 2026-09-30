@@ -15,7 +15,9 @@ import {
   ShieldCheck,
   Volume2,
   X,
+  Car,
 } from "lucide-react";
+import { CommuteAlertModal } from "@/components/notifications/commute-alert-modal";
 import { useNotification, type EmergencyNotificationItem } from "@/context/notification-context";
 import { useLanguage } from "@/context/language-context";
 import { triggerHaptic } from "@/lib/motion/haptics";
@@ -54,6 +56,7 @@ function getSeverityBadge(severity: string) {
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showCommuteModal, setShowCommuteModal] = useState(false);
   const {
     permission,
     isSupported,
@@ -291,14 +294,17 @@ export function NotificationCenter() {
 
           {/* Footer Quick Action */}
           <div className="p-2.5 bg-[var(--surface-2)]/60 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px]">
-            <Link
-              href="/intelligence"
-              onClick={() => setIsOpen(false)}
-              className="text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1"
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                setShowCommuteModal(true);
+              }}
+              className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5"
             >
-              {t("notifications.live_intel", "Live Disaster Board")}
-              <ExternalLink size={11} />
-            </Link>
+              <Car size={13} />
+              <span>Commute Alerts</span>
+            </button>
 
             <button
               onClick={handleTestAlert}
@@ -309,6 +315,11 @@ export function NotificationCenter() {
           </div>
         </div>
       )}
+
+      <CommuteAlertModal
+        isOpen={showCommuteModal}
+        onClose={() => setShowCommuteModal(false)}
+      />
     </div>
   );
 }
